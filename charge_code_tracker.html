@@ -289,6 +289,31 @@
   .note-input::placeholder { color: var(--fg-2); }
   .note-input:focus        { outline: none; border-color: var(--bd-0); }
 
+  /* ── live tracker ── */
+  .cc-card.active-tracking { background: rgba(77,171,144,.05); border-color: rgba(77,171,144,.35); }
+  .pg-row.active-tracking  { background: rgba(77,171,144,.05); }
+
+  .btn-track {
+    font-size: 11px; font-family: var(--font-mono);
+    padding: 3px 8px; border: 1px solid var(--bd-2); border-radius: 2px;
+    background: transparent; color: var(--fg-2); cursor: pointer;
+    transition: color .1s, border-color .1s, background .1s; white-space: nowrap;
+  }
+  .btn-track:hover { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.08); }
+
+  .btn-track-stop {
+    font-size: 11px; font-family: var(--font-mono);
+    padding: 3px 8px; border: 1px solid rgba(224,85,85,.4); border-radius: 2px;
+    background: transparent; color: var(--red); cursor: pointer;
+  }
+  .btn-track-stop:hover { background: var(--bg-red); }
+
+  .tracker-elapsed {
+    font-size: 11px; font-family: var(--font-mono); color: var(--green);
+    padding: 2px 6px; background: rgba(77,171,144,.1); border: 1px solid rgba(77,171,144,.3);
+    border-radius: 2px; white-space: nowrap;
+  }
+
   /* ── per-CC log ── */
   .log-toggle {
     font-size: 10px;
@@ -626,6 +651,12 @@ function dayData(date) {
 let state = load();
 let viewDate = today();
 
+// Clear stale active timer from a previous day
+if (state.activeTimer && state.activeTimer.startedDate !== today()) {
+  state.activeTimer = null;
+  save(state);
+}
+
 // ── Day navigation ───────────────────────────────────────────────────────────
 function navigate(delta) {
   const d = new Date(viewDate + 'T12:00:00');
@@ -659,10 +690,26 @@ function addTime(id, delta) {
   render();
 }
 
+function formatElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+    : `${m}:${String(sec).padStart(2,'0')}`;
+}
+
 function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
   const ccLog = day.log.filter(e => e.id === cc.id);
   const hasLog = ccLog.length > 0;
+  const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+  const isToday = viewDate === today();
+  const trackControls = isToday
+    ? (isTracking
+        ? `<span class="tracker-elapsed" id="timer-elapsed-${cc.id}">${formatElapsed(Date.now() - state.activeTimer.startedAt)}</span>` +
+          `<button class="btn-track-stop" onclick="stopTracking()">&#9632;&nbsp;Stop</button>`
+        : `<button class="btn-track" onclick="startTracking('${cc.id}')">&#9654;&nbsp;Track</button>`)
+    : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name">${esc(cc.name)}</div>
@@ -674,6 +721,7 @@ function renderCCControls(cc, day) {
         ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
         ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
         <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
+        ${trackControls}
       </div>
       ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
       <div class="log-list" id="log-${cc.id}" style="display:none">
@@ -682,12 +730,16 @@ function renderCCControls(cc, day) {
 }
 
 function renderIndividualCard(cc, day) {
-  return `<div class="cc-card">${renderCCControls(cc, day)}</div>`;
+  const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+  return `<div class="cc-card${isTracking?' active-tracking':''}">${renderCCControls(cc, day)}</div>`;
 }
 
 function renderProgramCard(programName, codes, day) {
   const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
-  const rows = codes.map(cc => `<div class="pg-row">${renderCCControls(cc, day)}</div>`).join('');
+  const rows = codes.map(cc => {
+    const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+    return `<div class="pg-row${isTracking?' active-tracking':''}">${renderCCControls(cc, day)}</div>`;
+  }).join('');
   return `<div class="pg-card">
     <div class="pg-header">
       <div class="pg-name">${esc(programName)}</div>
@@ -744,6 +796,43 @@ function toggleLog(id) {
   const el = document.getElementById('log-'+id);
   if (el) { el.style.display = el.style.display==='none'?'flex':'none'; el.style.flexDirection='column'; }
 }
+
+// ── Live CC tracker ──────────────────────────────────────────────────────────
+function commitActiveTimer() {
+  if (!state.activeTimer) return;
+  const {ccId, startedAt, startedDate} = state.activeTimer;
+  if (startedDate !== today()) return;
+  const cc = state.codes.find(c => c.id === ccId);
+  if (!cc) return;
+  const delta = parseFloat(((Date.now() - startedAt) / 3600000).toFixed(1));
+  if (delta <= 0) return;
+  const day = dayData(today());
+  const prev = day.hours[ccId] || 0;
+  day.hours[ccId] = parseFloat((prev + delta).toFixed(1));
+  const noteEl = document.getElementById('note-' + ccId);
+  const note = noteEl ? noteEl.value.trim() : '';
+  if (noteEl) noteEl.value = '';
+  const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  day.log.push({id: ccId, delta, result: day.hours[ccId], note, ts, timer: true});
+}
+
+function startTracking(ccId) {
+  if (state.activeTimer) commitActiveTimer();
+  state.activeTimer = {ccId, startedAt: Date.now(), startedDate: today()};
+  save(state);
+  render();
+  renderClock();
+}
+
+function stopTracking() {
+  if (!state.activeTimer) return;
+  commitActiveTimer();
+  state.activeTimer = null;
+  save(state);
+  render();
+  renderClock();
+}
+// ── end live CC tracker ───────────────────────────────────────────────────────
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1083,7 +1172,9 @@ function renderClock() {
   const totalHrs = clockTotalHours();
   const displayHrs = (Math.floor(totalHrs*10)/10).toFixed(1);
   const active = clockSessions().find(s => s.end===null);
-  const statusText = running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock';
+  const activeCC = state.activeTimer ? state.codes.find(c => c.id === state.activeTimer.ccId) : null;
+  const activeCCText = activeCC ? `&nbsp;&nbsp;<span style="color:var(--green)">&#9654;&nbsp;${esc(activeCC.code)}</span>` : '';
+  const statusText = (running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock') + activeCCText;
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
   bar.className = `clock-bar ${running?'running':'stopped'}`;
@@ -1163,9 +1254,20 @@ function addClockSession() {
 let _tickDate = today();
 setInterval(() => {
   const t = today();
-  if (t !== _tickDate) { if (viewDate===_tickDate) { viewDate=t; render(); } _tickDate=t; }
+  if (t !== _tickDate) {
+    if (state.activeTimer) { state.activeTimer = null; save(state); }
+    if (viewDate===_tickDate) { viewDate=t; render(); }
+    _tickDate=t;
+  }
   renderClock();
 }, 30000);
+
+// Update live elapsed display every second without a full re-render
+setInterval(() => {
+  if (!state.activeTimer) return;
+  const el = document.getElementById('timer-elapsed-' + state.activeTimer.ccId);
+  if (el) el.textContent = formatElapsed(Date.now() - state.activeTimer.startedAt);
+}, 1000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
 render();
