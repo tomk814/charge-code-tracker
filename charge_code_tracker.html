@@ -174,6 +174,51 @@
     font-size: 12px;
   }
 
+  /* ── program group cards ── */
+  .pg-card {
+    background: var(--bg-0);
+    border: 1px solid var(--bd-2);
+    border-radius: 3px;
+    transition: border-color .1s;
+  }
+
+  .pg-card:hover { border-color: var(--bd-1); }
+
+  .pg-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 12px 6px;
+    border-bottom: 1px solid var(--bd-2);
+  }
+
+  .pg-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--fg-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pg-total {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--fg-0);
+    min-width: 44px;
+    text-align: right;
+    letter-spacing: -.02em;
+  }
+
+  .pg-total.zero { color: var(--fg-2); }
+
+  .pg-row { padding: 9px 12px; }
+  .pg-row + .pg-row { border-top: 1px dashed var(--bd-2); }
+
   .cc-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
   .cc-label { flex: 1; min-width: 0; }
 
@@ -614,6 +659,44 @@ function addTime(id, delta) {
   render();
 }
 
+function renderCCControls(cc, day) {
+  const hrs = day.hours[cc.id] || 0;
+  const ccLog = day.log.filter(e => e.id === cc.id);
+  const hasLog = ccLog.length > 0;
+  return `<div class="cc-top">
+        <div class="cc-label">
+          <div class="cc-name">${esc(cc.name)}</div>
+          <div class="cc-code">${esc(cc.code)}</div>
+        </div>
+        <div class="cc-hours ${hrs===0?'zero':''}">${hrs.toFixed(1)}</div>
+      </div>
+      <div class="cc-bottom">
+        ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
+        ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
+        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
+      </div>
+      ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
+      <div class="log-list" id="log-${cc.id}" style="display:none">
+        ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
+      </div>` : ''}`;
+}
+
+function renderIndividualCard(cc, day) {
+  return `<div class="cc-card">${renderCCControls(cc, day)}</div>`;
+}
+
+function renderProgramCard(programName, codes, day) {
+  const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
+  const rows = codes.map(cc => `<div class="pg-row">${renderCCControls(cc, day)}</div>`).join('');
+  return `<div class="pg-card">
+    <div class="pg-header">
+      <div class="pg-name">${esc(programName)}</div>
+      <div class="pg-total ${pgTotal===0?'zero':''}">${pgTotal.toFixed(1)}</div>
+    </div>
+    ${rows}
+  </div>`;
+}
+
 function render() {
   const isToday = viewDate === today();
   const viewDt = new Date(viewDate + 'T12:00:00');
@@ -637,29 +720,24 @@ function render() {
     return;
   }
 
-  list.innerHTML = state.codes.map(cc => {
-    const hrs = day.hours[cc.id] || 0;
-    const ccLog = day.log.filter(e => e.id === cc.id);
-    const hasLog = ccLog.length > 0;
-    return `<div class="cc-card">
-      <div class="cc-top">
-        <div class="cc-label">
-          <div class="cc-name">${esc(cc.name)}</div>
-          <div class="cc-code">${esc(cc.code)}</div>
-        </div>
-        <div class="cc-hours ${hrs===0?'zero':''}">${hrs.toFixed(1)}</div>
-      </div>
-      <div class="cc-bottom">
-        ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
-        ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
-        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
-      </div>
-      ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
-      <div class="log-list" id="log-${cc.id}" style="display:none">
-        ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
-      </div>` : ''}
-    </div>`;
-  }).join('');
+  const grouped = {};
+  const ungrouped = [];
+  state.codes.forEach(cc => {
+    const prog = (cc.program || '').trim();
+    if (prog) {
+      if (!grouped[prog]) grouped[prog] = [];
+      grouped[prog].push(cc);
+    } else {
+      ungrouped.push(cc);
+    }
+  });
+  const programNames = Object.keys(grouped)
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+  list.innerHTML = [
+    ...programNames.map(n => renderProgramCard(n, grouped[n], day)),
+    ...ungrouped.map(cc => renderIndividualCard(cc, day))
+  ].join('');
 }
 
 function toggleLog(id) {
@@ -677,7 +755,8 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
-    <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. Program A — design" autocomplete="off"></div>
+    <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
+    <div class="field"><label>Program (optional)</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
@@ -688,8 +767,9 @@ function openAddCC() {
 function submitAddCC() {
   const code = document.getElementById('m-code').value.trim();
   const name = document.getElementById('m-name').value.trim();
+  const program = document.getElementById('m-program').value.trim();
   if (!code) return;
-  state.codes.push({id:uid(), code, name: name||code});
+  state.codes.push({id:uid(), code, name: name||code, program});
   save(state);
   closeModal();
   render();
@@ -697,14 +777,51 @@ function submitAddCC() {
 
 function openManage() {
   const rows = state.codes.length
-    ? state.codes.map(cc=>`<div class="cc-manage-item">
-        <span class="cc-manage-code">${esc(cc.code)}</span>
-        <span class="cc-manage-name">${esc(cc.name)}</span>
-        <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
-      </div>`).join('')
+    ? state.codes.map(cc => {
+        const prog = (cc.program || '').trim();
+        const progTag = prog
+          ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
+          : `<span style="min-width:0;flex-shrink:0"></span>`;
+        return `<div class="cc-manage-item">
+          <span class="cc-manage-code">${esc(cc.code)}</span>
+          ${progTag}
+          <span class="cc-manage-name">${esc(cc.name)}</span>
+          <button class="tool-btn" style="margin-left:auto" onclick="openEditCC('${cc.id}')">Edit</button>
+          <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+        </div>`;
+      }).join('')
     : '<p style="font-size:13px;color:var(--color-text-tertiary)">No charge codes yet.</p>';
   showModal(`<h2>Manage charge codes</h2>${rows}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
+}
+
+function openEditCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  showModal(`<h2>Edit charge code</h2>
+    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
+    <div class="field"><label>Label / description</label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
+    <div class="field"><label>Program (optional)</label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="openManage()">Cancel</button>
+      <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('e-program')?.focus(),50);
+}
+
+function submitEditCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  const code = document.getElementById('e-code').value.trim();
+  const name = document.getElementById('e-name').value.trim();
+  const program = document.getElementById('e-program').value.trim();
+  if (!code) return;
+  cc.code = code;
+  cc.name = name || code;
+  cc.program = program;
+  save(state);
+  render();
+  openManage();
 }
 
 function deleteCC(id) {
@@ -818,13 +935,17 @@ function openSpread() {
 
   _pendingSpread = computeSpread(activeCCs, day.hours, clockHrs);
 
-  const rows = _pendingSpread.map(s =>
-    `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
-      <span style="flex:1;font-size:12px;color:var(--fg-0)">${esc(s.name)}</span>
+  const rows = _pendingSpread.map(s => {
+    const cc = state.codes.find(c => c.id === s.id);
+    const prog = (cc?.program || '').trim();
+    const label = prog ? `${prog}: ${s.name}` : s.name;
+    return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
+      <span style="flex:1;font-size:12px;color:var(--fg-0)">${esc(label)}</span>
       <span style="font-family:var(--font-mono);font-size:12px;color:var(--fg-2);min-width:32px;text-align:right">${s.before.toFixed(1)}</span>
       <span style="font-family:var(--font-mono);font-size:12px;color:var(--blue);min-width:36px;text-align:right">+${s.add.toFixed(1)}</span>
       <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--green);min-width:36px;text-align:right">${s.after.toFixed(1)}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   const newTotal = _pendingSpread.reduce((s,r) => s + Math.round(r.after*10), 0) / 10;
 
