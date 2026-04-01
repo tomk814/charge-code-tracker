@@ -62,6 +62,81 @@ Key: `cc_tracker_v2`
 - Clicking the modal backdrop closes the modal. Escape key also closes.
 - The per-CC log is hidden by default; a "history (N)" toggle shows it.
 
+## Component nomenclature
+
+Use these names when referring to parts of the UI. CSS class is given in parentheses where applicable.
+
+### Page-level regions
+
+| Name | CSS | Description |
+|---|---|---|
+| **Header** | `.header` | Sticky top bar; always visible while scrolling |
+| **Toolbar** | `.toolbar` | Row of action buttons directly below the header |
+| **Card list** | `#cc-list` / `.cc-list` | Vertical stack of all CC cards |
+
+### Header elements
+
+| Name | CSS | Description |
+|---|---|---|
+| **App title** | `.title` | "TIME TRACKER" label on the left |
+| **Date badge** | `.date-badge` | Current date ("Wed Apr 1") on the right |
+| **Total badge** | `.total-badge` | "Total: X.X hr" counter on the right |
+
+### Toolbar elements
+
+| Name | CSS | Description |
+|---|---|---|
+| **Toolbar button** | `.tool-btn` | Any action button in the toolbar |
+| **Primary toolbar button** | `.tool-btn.primary` | Blue-accented variant ("+ Add charge code") |
+
+### CC card (`cc-card`)
+
+Each charge code gets one card. The card has two internal zones:
+
+| Name | CSS | Description |
+|---|---|---|
+| **Card summary** | `.cc-top` | Upper zone: CC identity and current hours |
+| **Label stack** | `.cc-label` | Stacked name + number inside the card summary |
+| **CC name** | `.cc-name` | Human-readable description ("Program A — design") |
+| **CC number** | `.cc-code` | The charge code string ("1234-001"), monospace |
+| **Hours counter** | `.cc-hours` | Large numeric hours display, right-aligned |
+| **Card controls** | `.cc-bottom` | Lower zone: increment/decrement buttons + note field |
+| **Increment button** | `.btn-inc` (positive) | +0.1 / +0.5 / +1.0 buttons |
+| **Decrement button** | `.btn-inc.neg` (negative) | −0.1 / −0.5 / −1.0 buttons, red |
+| **Note field** | `.note-input` | Optional free-text input in the controls zone |
+
+### History section (per CC card)
+
+| Name | CSS | Description |
+|---|---|---|
+| **History toggle** | `.log-toggle` | "history (N)" clickable text; shows/hides the panel |
+| **History panel** | `.log-list` | Expandable list of log entries for one CC |
+| **Log entry** | `.log-entry` | One row in the history panel |
+| **Entry timestamp** | `.log-time` | Time of the adjustment ("09:15 AM") |
+| **Entry delta** | `.log-delta` | Signed change value ("+0.5", "−0.1") |
+| **Entry note** | *(last span in `.log-entry`)* | Optional note text attached to the entry |
+
+### Modals
+
+| Name | CSS | Description |
+|---|---|---|
+| **Modal backdrop** | `.modal-bg` | Full-screen dimmed overlay; click closes modal |
+| **Modal panel** | `.modal` | Centered dialog container |
+| **Modal title** | `.modal h2` | Uppercase heading at top of panel |
+| **Modal footer** | `.modal-actions` | Button row at bottom of panel |
+| **Form field** | `.field` | Label + input pair used in Add CC modal |
+
+#### Named modals (opened by toolbar buttons)
+
+| Name | Opened by |
+|---|---|
+| **Add CC modal** | "+ Add charge code" |
+| **Manage modal** | "Manage CCs" — lists all CCs; each row is a **manage row** (`.cc-manage-item`) with a **remove button** (`.del-btn`) |
+| **Export modal** | "Export / copy" — contains an **export preview** (`.export-box`) |
+| **Reset modal** | "Reset day" |
+
+---
+
 ## What good looks like
 
 - Adding time to a CC is 1–2 clicks with no typing required.
