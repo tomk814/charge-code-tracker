@@ -1,0 +1,270 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+#app{padding:1rem 0}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.title{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.total-badge{font-size:13px;color:var(--color-text-secondary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:4px 10px}
+.total-badge span{font-weight:500;color:var(--color-text-primary)}
+.cc-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.cc-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.cc-card.empty-state{border-style:dashed;text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:14px}
+.cc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cc-label{flex:1;min-width:0}
+.cc-name{font-size:14px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-code{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.cc-hours{font-size:22px;font-weight:500;color:var(--color-text-primary);min-width:50px;text-align:right}
+.cc-hours.zero{color:var(--color-text-tertiary)}
+.cc-bottom{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.btn-inc{font-size:12px;font-weight:500;padding:4px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;transition:background 0.1s}
+.btn-inc:hover{background:var(--color-background-secondary)}
+.btn-inc:active{transform:scale(0.97)}
+.btn-inc.neg{color:var(--color-text-danger);border-color:var(--color-border-tertiary)}
+.btn-inc.neg:hover{background:var(--color-background-danger)}
+.note-input{flex:1;min-width:120px;font-size:12px;padding:4px 8px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);font-family:var(--font-sans)}
+.note-input::placeholder{color:var(--color-text-tertiary)}
+.note-input:focus{outline:none;border-color:var(--color-border-primary)}
+.log-btn{font-size:11px;padding:4px 8px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.log-btn:hover{background:var(--color-background-secondary)}
+.log-toggle{font-size:11px;color:var(--color-text-tertiary);cursor:pointer;text-decoration:underline;text-underline-offset:2px;margin-top:4px;display:inline-block}
+.log-list{margin-top:6px;border-top:0.5px solid var(--color-border-tertiary);padding-top:6px;display:flex;flex-direction:column;gap:3px}
+.log-entry{font-size:11px;color:var(--color-text-secondary);display:flex;gap:6px}
+.log-time{color:var(--color-text-tertiary);white-space:nowrap}
+.log-delta{font-family:var(--font-mono);min-width:36px}
+.log-delta.pos{color:var(--color-text-success)}
+.log-delta.neg{color:var(--color-text-danger)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.tool-btn{font-size:12px;padding:5px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.tool-btn:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.tool-btn.primary{color:var(--color-text-info);border-color:var(--color-border-info)}
+.tool-btn.primary:hover{background:var(--color-background-info)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;width:min(420px,90vw);max-height:80vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)}
+.field{margin-bottom:10px}
+.field label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+.field input{width:100%;font-size:14px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);font-family:var(--font-sans)}
+.field input:focus{outline:none;border-color:var(--color-border-primary)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.cc-manage-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.cc-manage-item:last-child{border-bottom:none}
+.cc-manage-name{flex:1;font-size:13px;color:var(--color-text-primary)}
+.cc-manage-code{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono);min-width:80px}
+.del-btn{font-size:11px;padding:3px 8px;border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-danger);cursor:pointer}
+.del-btn:hover{background:var(--color-background-danger)}
+.export-box{font-family:var(--font-mono);font-size:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;white-space:pre;margin-bottom:10px;color:var(--color-text-primary)}
+.date-badge{font-size:11px;color:var(--color-text-tertiary);margin-left:auto}
+.reset-warn{font-size:12px;color:var(--color-text-danger);margin-top:8px}
+</style>
+
+<div id="app">
+  <div class="header">
+    <div class="title">Time tracker</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="date-badge" id="date-badge"></span>
+      <div class="total-badge">Total: <span id="grand-total">0.0</span> hr</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="tool-btn primary" onclick="openAddCC()">+ Add charge code</button>
+    <button class="tool-btn" onclick="openManage()">Manage CCs</button>
+    <button class="tool-btn" onclick="openExport()">Export / copy</button>
+    <button class="tool-btn" onclick="confirmReset()">Reset day</button>
+  </div>
+
+  <div class="cc-list" id="cc-list"></div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+const INCS = [0.1, 0.5, 1.0];
+const NEG_INCS = [-0.1, -0.5, -1.0];
+const STORAGE_KEY = 'cc_tracker_v2';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {codes:[],log:[]}; } catch(e) { return {codes:[],log:[]}; }
+}
+function save(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = load();
+
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function ensureToday() {
+  if (state.date !== today()) {
+    state.date = today();
+    state.codes.forEach(c => c.hours = 0);
+    state.log = [];
+    save(state);
+  }
+}
+
+function addTime(id, delta) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  const noteEl = document.getElementById('note-'+id);
+  const note = noteEl ? noteEl.value.trim() : '';
+  const prev = cc.hours;
+  cc.hours = Math.max(0, parseFloat((cc.hours + delta).toFixed(1)));
+  state.log.push({id, delta, result: cc.hours, note, ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+  if (noteEl) noteEl.value = '';
+  save(state);
+  render();
+}
+
+function render() {
+  ensureToday();
+  document.getElementById('date-badge').textContent = new Date().toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+  const total = state.codes.reduce((s,c) => s + c.hours, 0);
+  document.getElementById('grand-total').textContent = total.toFixed(1);
+
+  const list = document.getElementById('cc-list');
+  if (!state.codes.length) {
+    list.innerHTML = '<div class="cc-card empty-state">No charge codes yet — add one above</div>';
+    return;
+  }
+
+  list.innerHTML = state.codes.map(cc => {
+    const ccLog = state.log.filter(e => e.id === cc.id);
+    const hasLog = ccLog.length > 0;
+    return `<div class="cc-card">
+      <div class="cc-top">
+        <div class="cc-label">
+          <div class="cc-name">${esc(cc.name)}</div>
+          <div class="cc-code">${esc(cc.code)}</div>
+        </div>
+        <div class="cc-hours ${cc.hours===0?'zero':''}">${cc.hours.toFixed(1)}</div>
+      </div>
+      <div class="cc-bottom">
+        ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
+        ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
+        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)" onkeydown="if(event.key==='Enter'){}">
+      </div>
+      ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
+      <div class="log-list" id="log-${cc.id}" style="display:none">
+        ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleLog(id) {
+  const el = document.getElementById('log-'+id);
+  if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+  if (el) el.style.flexDirection = 'column';
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function uid() { return Math.random().toString(36).slice(2,8); }
+
+function openAddCC() {
+  showModal(`<h2>Add charge code</h2>
+    <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
+    <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. Program A — design" autocomplete="off"></div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('m-code')?.focus(),50);
+}
+
+function submitAddCC() {
+  const code = document.getElementById('m-code').value.trim();
+  const name = document.getElementById('m-name').value.trim();
+  if (!code) return;
+  state.codes.push({id:uid(), code, name: name||code, hours:0});
+  save(state);
+  closeModal();
+  render();
+}
+
+function openManage() {
+  const rows = state.codes.length
+    ? state.codes.map(cc=>`<div class="cc-manage-item">
+        <span class="cc-manage-code">${esc(cc.code)}</span>
+        <span class="cc-manage-name">${esc(cc.name)}</span>
+        <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+      </div>`).join('')
+    : '<p style="font-size:13px;color:var(--color-text-tertiary)">No charge codes yet.</p>';
+  showModal(`<h2>Manage charge codes</h2>${rows}
+    <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
+}
+
+function deleteCC(id) {
+  state.codes = state.codes.filter(c => c.id !== id);
+  state.log = state.log.filter(e => e.id !== id);
+  save(state);
+  openManage();
+  render();
+}
+
+function openExport() {
+  const dateStr = new Date().toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const total = state.codes.reduce((s,c) => s + c.hours, 0);
+  const lines = [`Time summary — ${dateStr}`, ''];
+  state.codes.forEach(cc => {
+    lines.push(`${cc.code}  ${cc.name}`);
+    lines.push(`  ${cc.hours.toFixed(1)} hr`);
+    const ccLog = state.log.filter(e => e.id === cc.id && e.note);
+    ccLog.forEach(e => lines.push(`  ${e.ts}  ${e.note}`));
+    lines.push('');
+  });
+  lines.push(`Total: ${total.toFixed(1)} hr`);
+  const text = lines.join('\n');
+
+  showModal(`<h2>Export</h2>
+    <div class="export-box" id="export-text">${esc(text)}</div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Close</button>
+      <button class="tool-btn primary" onclick="copyExport()">Copy to clipboard</button>
+    </div>`);
+  window._exportText = text;
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(window._exportText||'').then(()=>{
+    const btn = document.querySelector('#modal-root .primary');
+    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy to clipboard',1500);}
+  });
+}
+
+function confirmReset() {
+  showModal(`<h2>Reset day</h2>
+    <p style="font-size:14px;color:var(--color-text-secondary)">This clears all hours and history for today. Charge codes are kept.</p>
+    <p class="reset-warn">This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn" style="color:var(--color-text-danger);border-color:var(--color-border-danger)" onclick="doReset()">Reset</button>
+    </div>`);
+}
+
+function doReset() {
+  state.codes.forEach(c => c.hours = 0);
+  state.log = [];
+  save(state);
+  closeModal();
+  render();
+}
+
+function showModal(html) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+}
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+ensureToday();
+render();
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
