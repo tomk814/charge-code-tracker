@@ -407,14 +407,11 @@
     transition: border-left-color .3s;
   }
 
-  .clock-bar.running { border-left-color: var(--green); }
+  .clock-bar.running  { border-left-color: var(--green); }
+  .clock-bar.stopped  { border-left-color: var(--red); }
 
-  .clock-indicator { font-size: 9px; color: var(--fg-2); }
-
-  .clock-indicator.running {
-    color: var(--green);
-    animation: clock-pulse 2s infinite;
-  }
+  .clock-indicator         { font-size: 9px; color: var(--red); }
+  .clock-indicator.running { color: var(--green); animation: clock-pulse 2s infinite; }
 
   @keyframes clock-pulse {
     0%, 100% { opacity: 1; }
@@ -427,6 +424,8 @@
     font-family: var(--font-mono);
     flex: 1;
   }
+
+  .clock-status-text.stopped { color: var(--red); font-weight: 600; }
 
   .clock-total-display {
     font-size: 16px;
@@ -742,10 +741,10 @@ function renderClock() {
 
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
-  bar.className = `clock-bar${running ? ' running' : ''}`;
+  bar.className = `clock-bar ${running ? 'running' : 'stopped'}`;
   bar.innerHTML =
     `<span class="clock-indicator${running ? ' running' : ''}">&#9679;</span>` +
-    `<span class="clock-status-text">${statusText}</span>` +
+    `<span class="clock-status-text${running ? '' : ' stopped'}">${statusText}</span>` +
     `<span class="clock-total-display${totalHrs === 0 ? ' zero' : ''}">${displayHrs} hr</span>` +
     `<button class="tool-btn${running ? '' : ' primary'}" onclick="${running ? 'openClockStop()' : 'openClockStart()'}">` +
       `${running ? 'Stop' : 'Start'}` +
@@ -754,53 +753,19 @@ function renderClock() {
 }
 
 function openClockStart() {
-  const t = currentHHMM();
-  showModal(`<h2>Start clock</h2>
-    <div class="field"><label>Start time</label>
-    <input id="cs-time" class="time-input" value="${t}"
-      style="width:100%;text-align:left" autocomplete="off"
-      onkeydown="if(event.key==='Enter')doClockStart()"></div>
-    <div class="modal-actions">
-      <button class="tool-btn" onclick="closeModal()">Cancel</button>
-      <button class="tool-btn primary" onclick="doClockStart()">Start</button>
-    </div>`);
-  setTimeout(() => { const el = document.getElementById('cs-time'); if(el){el.select();el.focus();} }, 50);
-}
-
-function doClockStart() {
-  const val = document.getElementById('cs-time').value.trim();
-  if (!isValidHHMM(val)) return;
   ensureClockToday();
   if (clockIsRunning()) return;
-  clockState.sessions.push({start: val, end: null});
+  clockState.sessions.push({start: currentHHMM(), end: null});
   saveClock(clockState);
-  closeModal();
   renderClock();
 }
 
 function openClockStop() {
-  const t = currentHHMM();
-  showModal(`<h2>Stop clock</h2>
-    <div class="field"><label>Stop time</label>
-    <input id="cs-time" class="time-input" value="${t}"
-      style="width:100%;text-align:left" autocomplete="off"
-      onkeydown="if(event.key==='Enter')doClockStop()"></div>
-    <div class="modal-actions">
-      <button class="tool-btn" onclick="closeModal()">Cancel</button>
-      <button class="tool-btn primary" onclick="doClockStop()">Stop</button>
-    </div>`);
-  setTimeout(() => { const el = document.getElementById('cs-time'); if(el){el.select();el.focus();} }, 50);
-}
-
-function doClockStop() {
-  const val = document.getElementById('cs-time').value.trim();
-  if (!isValidHHMM(val)) return;
   ensureClockToday();
   const running = clockState.sessions.find(s => s.end === null);
   if (!running) return;
-  running.end = val;
+  running.end = currentHHMM();
   saveClock(clockState);
-  closeModal();
   renderClock();
 }
 
