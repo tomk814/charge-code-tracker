@@ -463,15 +463,45 @@
 
   .time-input:focus { outline: none; border-color: var(--bd-0); }
   .time-input.running-end { color: var(--fg-2); }
+
+  /* ── day navigation ── */
+  .nav-btn {
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 3px;
+    border: none;
+    background: transparent;
+    color: var(--fg-2);
+    cursor: pointer;
+    transition: color .1s;
+  }
+  .nav-btn:hover:not(:disabled) { color: var(--fg-0); }
+  .nav-btn:disabled { opacity: .2; cursor: default; }
+
+  .past-day-banner {
+    font-size: 11px;
+    color: var(--blue);
+    background: var(--bg-blue);
+    border: 1px solid var(--bd-blue);
+    border-radius: 2px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 </style>
 </head>
 <body>
 <div id="app">
   <div class="header">
     <div class="title">Time tracker</div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="nav-btn" onclick="navigate(-1)" title="Previous day">&#8249;</button>
       <span class="date-badge" id="date-badge"></span>
-      <div class="total-badge">Total: <span id="grand-total">0.0</span> hr</div>
+      <button class="nav-btn" id="nav-fwd" onclick="navigate(1)" title="Next day">&#8250;</button>
+      <div class="total-badge" style="margin-left:4px">Total: <span id="grand-total">0.0</span> hr</div>
     </div>
   </div>
 
@@ -482,6 +512,10 @@
     <button class="tool-btn" onclick="confirmReset()">Reset day</button>
   </div>
 
+  <div id="past-day-banner" style="display:none" class="past-day-banner">
+    Viewing a past day &mdash; edits apply to that day.
+    <button class="tool-btn" style="margin-left:auto" onclick="goToToday()">Go to today</button>
+  </div>
   <div id="clock-bar" class="clock-bar"></div>
 
   <div class="cc-list" id="cc-list"></div>
@@ -492,47 +526,108 @@
 <script>
 const INCS = [0.1, 0.5, 1.0];
 const NEG_INCS = [-0.1, -0.5, -1.0];
-const STORAGE_KEY = 'cc_tracker_v2';
+const STORAGE_KEY = 'cc_tracker_v3';
+
+// ── Persistence ─────────────────────────────────────────────────────────────
+// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},log:[],clock:{sessions:[]}}} }
+// Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function migrateFromV2() {
+  try {
+    const raw = localStorage.getItem('cc_tracker_v2');
+    if (!raw) return null;
+    const v2 = JSON.parse(raw);
+    const v3 = {codes: [], days: {}};
+    v3.codes = (v2.codes || []).map(({id, code, name}) => ({id, code, name}));
+    if (v2.date) {
+      const hours = {};
+      (v2.codes || []).forEach(c => { hours[c.id] = c.hours || 0; });
+      v3.days[v2.date] = {hours, log: v2.log || [], clock: {sessions: []}};
+      try {
+        const cs = JSON.parse(localStorage.getItem('cc_tracker_clock_v1') || '{}');
+        if (cs.date === v2.date && cs.sessions) v3.days[v2.date].clock = {sessions: cs.sessions};
+      } catch(e) {}
+    }
+    return v3;
+  } catch(e) { return null; }
+}
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {codes:[],log:[]}; } catch(e) { return {codes:[],log:[]}; }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return migrateFromV2() || {codes: [], days: {}};
 }
-function save(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+function save(s) {
+  // keep at most 14 days
+  const keys = Object.keys(s.days || {}).sort();
+  while (keys.length > 14) delete s.days[keys.shift()];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+
+function dayData(date) {
+  if (!state.days) state.days = {};
+  if (!state.days[date]) state.days[date] = {hours: {}, log: [], clock: {sessions: []}};
+  const d = state.days[date];
+  if (!d.clock) d.clock = {sessions: []};
+  return d;
 }
 
 let state = load();
+let viewDate = today();
 
-function today() {
-  return new Date().toISOString().slice(0,10);
+// ── Day navigation ───────────────────────────────────────────────────────────
+function navigate(delta) {
+  const d = new Date(viewDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const next = d.toISOString().slice(0,10);
+  if (next > today()) return;
+  viewDate = next;
+  render();
+  renderClock();
 }
 
-function ensureToday() {
-  if (state.date !== today()) {
-    state.date = today();
-    state.codes.forEach(c => c.hours = 0);
-    state.log = [];
-    save(state);
-  }
+function goToToday() {
+  viewDate = today();
+  render();
+  renderClock();
 }
 
+// ── CC logic ─────────────────────────────────────────────────────────────────
 function addTime(id, delta) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   const noteEl = document.getElementById('note-'+id);
   const note = noteEl ? noteEl.value.trim() : '';
-  const prev = cc.hours;
-  cc.hours = Math.max(0, parseFloat((cc.hours + delta).toFixed(1)));
-  state.log.push({id, delta, result: cc.hours, note, ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+  const day = dayData(viewDate);
+  const prev = day.hours[id] || 0;
+  day.hours[id] = Math.max(0, parseFloat((prev + delta).toFixed(1)));
+  day.log.push({id, delta, result: day.hours[id], note,
+    ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
   if (noteEl) noteEl.value = '';
   save(state);
   render();
 }
 
 function render() {
-  ensureToday();
-  document.getElementById('date-badge').textContent = new Date().toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
-  const total = state.codes.reduce((s,c) => s + c.hours, 0);
+  const isToday = viewDate === today();
+  const viewDt = new Date(viewDate + 'T12:00:00');
+  document.getElementById('date-badge').textContent =
+    viewDt.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'}) +
+    (isToday ? ' — today' : '');
+
+  const navFwd = document.getElementById('nav-fwd');
+  if (navFwd) navFwd.disabled = isToday;
+
+  const banner = document.getElementById('past-day-banner');
+  if (banner) banner.style.display = isToday ? 'none' : 'flex';
+
+  const day = dayData(viewDate);
+  const total = state.codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
   document.getElementById('grand-total').textContent = total.toFixed(1);
 
   const list = document.getElementById('cc-list');
@@ -542,7 +637,8 @@ function render() {
   }
 
   list.innerHTML = state.codes.map(cc => {
-    const ccLog = state.log.filter(e => e.id === cc.id);
+    const hrs = day.hours[cc.id] || 0;
+    const ccLog = day.log.filter(e => e.id === cc.id);
     const hasLog = ccLog.length > 0;
     return `<div class="cc-card">
       <div class="cc-top">
@@ -550,12 +646,12 @@ function render() {
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        <div class="cc-hours ${cc.hours===0?'zero':''}">${cc.hours.toFixed(1)}</div>
+        <div class="cc-hours ${hrs===0?'zero':''}">${hrs.toFixed(1)}</div>
       </div>
       <div class="cc-bottom">
         ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
         ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
-        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)" onkeydown="if(event.key==='Enter'){}">
+        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
       </div>
       ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
       <div class="log-list" id="log-${cc.id}" style="display:none">
@@ -567,8 +663,7 @@ function render() {
 
 function toggleLog(id) {
   const el = document.getElementById('log-'+id);
-  if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
-  if (el) el.style.flexDirection = 'column';
+  if (el) { el.style.display = el.style.display==='none'?'flex':'none'; el.style.flexDirection='column'; }
 }
 
 function esc(s) {
@@ -577,6 +672,7 @@ function esc(s) {
 
 function uid() { return Math.random().toString(36).slice(2,8); }
 
+// ── Modals ───────────────────────────────────────────────────────────────────
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
@@ -592,7 +688,7 @@ function submitAddCC() {
   const code = document.getElementById('m-code').value.trim();
   const name = document.getElementById('m-name').value.trim();
   if (!code) return;
-  state.codes.push({id:uid(), code, name: name||code, hours:0});
+  state.codes.push({id:uid(), code, name: name||code});
   save(state);
   closeModal();
   render();
@@ -612,26 +708,30 @@ function openManage() {
 
 function deleteCC(id) {
   state.codes = state.codes.filter(c => c.id !== id);
-  state.log = state.log.filter(e => e.id !== id);
+  Object.values(state.days||{}).forEach(day => {
+    delete day.hours[id];
+    day.log = day.log.filter(e => e.id !== id);
+  });
   save(state);
   openManage();
   render();
 }
 
 function openExport() {
-  const dateStr = new Date().toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const total = state.codes.reduce((s,c) => s + c.hours, 0);
+  const viewDt = new Date(viewDate + 'T12:00:00');
+  const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const day = dayData(viewDate);
+  const total = state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0);
   const lines = [`Time summary — ${dateStr}`, ''];
   state.codes.forEach(cc => {
+    const hrs = day.hours[cc.id] || 0;
     lines.push(`${cc.code}  ${cc.name}`);
-    lines.push(`  ${cc.hours.toFixed(1)} hr`);
-    const ccLog = state.log.filter(e => e.id === cc.id && e.note);
-    ccLog.forEach(e => lines.push(`  ${e.ts}  ${e.note}`));
+    lines.push(`  ${hrs.toFixed(1)} hr`);
+    day.log.filter(e => e.id===cc.id && e.note).forEach(e => lines.push(`  ${e.ts}  ${e.note}`));
     lines.push('');
   });
   lines.push(`Total: ${total.toFixed(1)} hr`);
   const text = lines.join('\n');
-
   showModal(`<h2>Export</h2>
     <div class="export-box" id="export-text">${esc(text)}</div>
     <div class="modal-actions">
@@ -649,8 +749,11 @@ function copyExport() {
 }
 
 function confirmReset() {
+  const viewDt = new Date(viewDate + 'T12:00:00');
+  const label = viewDate===today() ? 'today'
+    : viewDt.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
   showModal(`<h2>Reset day</h2>
-    <p style="font-size:14px;color:var(--color-text-secondary)">This clears all hours and history for today. Charge codes are kept.</p>
+    <p style="font-size:14px;color:var(--color-text-secondary)">This clears all hours, history, and clock sessions for ${label}. Charge codes are kept.</p>
     <p class="reset-warn">This cannot be undone.</p>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
@@ -659,57 +762,36 @@ function confirmReset() {
 }
 
 function doReset() {
-  state.codes.forEach(c => c.hours = 0);
-  state.log = [];
+  const day = dayData(viewDate);
+  state.codes.forEach(c => { day.hours[c.id] = 0; });
+  day.log = [];
+  day.clock = {sessions: []};
   save(state);
   closeModal();
   render();
+  renderClock();
 }
 
 function showModal(html) {
   const root = document.getElementById('modal-root');
   root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
 }
-function closeModal() {
-  document.getElementById('modal-root').innerHTML = '';
-}
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
-// ── Wall clock ──────────────────────────────────────────────────────────────
-const CLOCK_KEY = 'cc_tracker_clock_v1';
-
-function loadClock() {
-  try { return JSON.parse(localStorage.getItem(CLOCK_KEY)) || {date: today(), sessions: []}; }
-  catch(e) { return {date: today(), sessions: []}; }
-}
-function saveClock(cs) { localStorage.setItem(CLOCK_KEY, JSON.stringify(cs)); }
-
-let clockState = loadClock();
-
-function ensureClockToday() {
-  if (clockState.date !== today()) {
-    clockState = {date: today(), sessions: []};
-    saveClock(clockState);
-  }
-}
-
-function clockIsRunning() {
-  return clockState.sessions.some(s => s.end === null);
-}
+// ── Wall clock ───────────────────────────────────────────────────────────────
+function clockSessions() { return dayData(viewDate).clock.sessions; }
+function clockIsRunning() { return clockSessions().some(s => s.end === null); }
 
 function parseHHMM(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d;
+  const [h,m] = hhmm.split(':').map(Number);
+  const d = new Date(); d.setHours(h,m,0,0); return d;
 }
 
 function clockTotalHours() {
-  ensureClockToday();
   const now = new Date();
-  return clockState.sessions.reduce((sum, s) => {
-    const start = parseHHMM(s.start);
+  return clockSessions().reduce((sum,s) => {
     const end = s.end ? parseHHMM(s.end) : now;
-    return sum + Math.max(0, (end - start) / 3600000);
+    return sum + Math.max(0, (end - parseHHMM(s.start)) / 3600000);
   }, 0);
 }
 
@@ -720,77 +802,66 @@ function currentHHMM() {
 
 function isValidHHMM(val) {
   if (!/^\d{1,2}:\d{2}$/.test(val)) return false;
-  const [h, m] = val.split(':').map(Number);
-  return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+  const [h,m] = val.split(':').map(Number);
+  return h>=0 && h<=23 && m>=0 && m<=59;
 }
 
 function to12h(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 || 12;
+  const [h,m] = hhmm.split(':').map(Number);
+  const ampm = h>=12?'PM':'AM', h12 = h%12||12;
   return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
 }
 
 function renderClock() {
-  ensureClockToday();
   const running = clockIsRunning();
   const totalHrs = clockTotalHours();
-  const displayHrs = (Math.floor(totalHrs * 10) / 10).toFixed(1);
-  const active = clockState.sessions.find(s => s.end === null);
+  const displayHrs = (Math.floor(totalHrs*10)/10).toFixed(1);
+  const active = clockSessions().find(s => s.end===null);
   const statusText = running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock';
-
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
-  bar.className = `clock-bar ${running ? 'running' : 'stopped'}`;
+  bar.className = `clock-bar ${running?'running':'stopped'}`;
   bar.innerHTML =
-    `<span class="clock-indicator${running ? ' running' : ''}">&#9679;</span>` +
-    `<span class="clock-status-text${running ? '' : ' stopped'}">${statusText}</span>` +
-    `<span class="clock-total-display${totalHrs === 0 ? ' zero' : ''}">${displayHrs} hr</span>` +
-    `<button class="tool-btn${running ? '' : ' primary'}" onclick="${running ? 'openClockStop()' : 'openClockStart()'}">` +
-      `${running ? 'Stop' : 'Start'}` +
+    `<span class="clock-indicator${running?' running':''}">&#9679;</span>` +
+    `<span class="clock-status-text${running?'':' stopped'}">${statusText}</span>` +
+    `<span class="clock-total-display${totalHrs===0?' zero':''}">${displayHrs} hr</span>` +
+    `<button class="tool-btn${running?'':' primary'}" onclick="${running?'openClockStop()':'openClockStart()'}">` +
+      `${running?'Stop':'Start'}` +
     `</button>` +
     `<button class="tool-btn" onclick="openClockSessions()">Sessions</button>`;
 }
 
 function openClockStart() {
-  ensureClockToday();
   if (clockIsRunning()) return;
-  clockState.sessions.push({start: currentHHMM(), end: null});
-  saveClock(clockState);
-  renderClock();
+  clockSessions().push({start: currentHHMM(), end: null});
+  save(state); renderClock();
 }
 
 function openClockStop() {
-  ensureClockToday();
-  const running = clockState.sessions.find(s => s.end === null);
+  const running = clockSessions().find(s => s.end===null);
   if (!running) return;
   running.end = currentHHMM();
-  saveClock(clockState);
-  renderClock();
+  save(state); renderClock();
 }
 
-function openClockSessions() {
-  renderClockSessionsModal();
-}
+function openClockSessions() { renderClockSessionsModal(); }
 
 function renderClockSessionsModal() {
-  ensureClockToday();
-  const rows = clockState.sessions.length
-    ? clockState.sessions.map((s, i) =>
+  const sessions = clockSessions();
+  const rows = sessions.length
+    ? sessions.map((s,i) =>
         `<div class="session-row">
           <input class="time-input" value="${s.start}"
             onchange="updateClockSession(${i},'start',this.value)" placeholder="HH:MM">
           <span style="color:var(--fg-2);font-size:11px">&rarr;</span>
-          <input class="time-input${s.end === null ? ' running-end' : ''}"
-            value="${s.end || ''}"
+          <input class="time-input${s.end===null?' running-end':''}"
+            value="${s.end||''}"
             onchange="updateClockSession(${i},'end',this.value)"
-            placeholder="${s.end === null ? 'running' : 'HH:MM'}">
+            placeholder="${s.end===null?'running':'HH:MM'}">
           <button class="del-btn" onclick="deleteClockSession(${i})">&#10005;</button>
         </div>`).join('')
     : '<p style="font-size:12px;color:var(--fg-2);padding:6px 0">No sessions yet.</p>';
-
-  const displayHrs = (Math.floor(clockTotalHours() * 10) / 10).toFixed(1);
-
+  const displayHrs = (Math.floor(clockTotalHours()*10)/10).toFixed(1);
   showModal(`<h2>Clock sessions</h2>
     <p style="font-size:10px;color:var(--fg-2);margin-bottom:8px;font-family:var(--font-mono)">24h format &mdash; HH:MM &nbsp;|&nbsp; leave end blank for running session</p>
     <div id="clock-session-list">${rows}</div>
@@ -804,42 +875,37 @@ function renderClockSessionsModal() {
 }
 
 function updateClockSession(i, field, val) {
-  ensureClockToday();
+  const sessions = clockSessions();
   const trimmed = val.trim();
-  if (field === 'end' && trimmed === '') {
-    clockState.sessions[i].end = null;
-  } else if (isValidHHMM(trimmed)) {
-    clockState.sessions[i][field] = trimmed;
-  } else {
-    return; // invalid — leave unchanged, modal stays
-  }
-  saveClock(clockState);
-  renderClockSessionsModal();
+  if (field==='end' && trimmed==='') { sessions[i].end = null; }
+  else if (isValidHHMM(trimmed))     { sessions[i][field] = trimmed; }
+  else return;
+  save(state); renderClockSessionsModal();
 }
 
 function deleteClockSession(i) {
-  ensureClockToday();
-  clockState.sessions.splice(i, 1);
-  saveClock(clockState);
-  renderClockSessionsModal();
+  clockSessions().splice(i,1);
+  save(state); renderClockSessionsModal();
 }
 
 function addClockSession() {
-  ensureClockToday();
-  clockState.sessions.push({start: currentHHMM(), end: null});
-  saveClock(clockState);
-  renderClockSessionsModal();
+  clockSessions().push({start: currentHHMM(), end: null});
+  save(state); renderClockSessionsModal();
 }
 
-// Refresh display every 30 s — visually ticks in 0.1 hr steps (~every 6 min)
-setInterval(renderClock, 30000);
+// Refresh every 30 s; auto-advance viewDate at midnight if user was on today
+let _tickDate = today();
+setInterval(() => {
+  const t = today();
+  if (t !== _tickDate) { if (viewDate===_tickDate) { viewDate=t; render(); } _tickDate=t; }
+  renderClock();
+}, 30000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
-ensureToday();
 render();
 renderClock();
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
 </script>
 </body>
 </html>
