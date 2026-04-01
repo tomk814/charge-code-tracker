@@ -392,6 +392,78 @@
   }
 
   .reset-warn { font-size: 12px; color: var(--red); margin-top: 8px; }
+
+  /* ── clock bar ── */
+  .clock-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    margin-bottom: 12px;
+    background: var(--bg-0);
+    border: 1px solid var(--bd-2);
+    border-left: 3px solid var(--bd-2);
+    border-radius: 3px;
+    transition: border-left-color .3s;
+  }
+
+  .clock-bar.running { border-left-color: var(--green); }
+
+  .clock-indicator { font-size: 9px; color: var(--fg-2); }
+
+  .clock-indicator.running {
+    color: var(--green);
+    animation: clock-pulse 2s infinite;
+  }
+
+  @keyframes clock-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .35; }
+  }
+
+  .clock-status-text {
+    font-size: 11px;
+    color: var(--fg-1);
+    font-family: var(--font-mono);
+    flex: 1;
+  }
+
+  .clock-total-display {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--fg-0);
+    min-width: 44px;
+    text-align: right;
+  }
+
+  .clock-total-display.zero { color: var(--fg-2); }
+
+  /* ── sessions modal ── */
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--bd-2);
+  }
+
+  .session-row:last-child { border-bottom: none; }
+
+  .time-input {
+    width: 68px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    padding: 3px 6px;
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    background: var(--bg);
+    color: var(--fg-0);
+    text-align: center;
+  }
+
+  .time-input:focus { outline: none; border-color: var(--bd-0); }
+  .time-input.running-end { color: var(--fg-2); }
 </style>
 </head>
 <body>
@@ -410,6 +482,8 @@
     <button class="tool-btn" onclick="openExport()">Export / copy</button>
     <button class="tool-btn" onclick="confirmReset()">Reset day</button>
   </div>
+
+  <div id="clock-bar" class="clock-bar"></div>
 
   <div class="cc-list" id="cc-list"></div>
 </div>
@@ -601,8 +675,204 @@ function closeModal() {
   document.getElementById('modal-root').innerHTML = '';
 }
 
+// ── Wall clock ──────────────────────────────────────────────────────────────
+const CLOCK_KEY = 'cc_tracker_clock_v1';
+
+function loadClock() {
+  try { return JSON.parse(localStorage.getItem(CLOCK_KEY)) || {date: today(), sessions: []}; }
+  catch(e) { return {date: today(), sessions: []}; }
+}
+function saveClock(cs) { localStorage.setItem(CLOCK_KEY, JSON.stringify(cs)); }
+
+let clockState = loadClock();
+
+function ensureClockToday() {
+  if (clockState.date !== today()) {
+    clockState = {date: today(), sessions: []};
+    saveClock(clockState);
+  }
+}
+
+function clockIsRunning() {
+  return clockState.sessions.some(s => s.end === null);
+}
+
+function parseHHMM(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function clockTotalHours() {
+  ensureClockToday();
+  const now = new Date();
+  return clockState.sessions.reduce((sum, s) => {
+    const start = parseHHMM(s.start);
+    const end = s.end ? parseHHMM(s.end) : now;
+    return sum + Math.max(0, (end - start) / 3600000);
+  }, 0);
+}
+
+function currentHHMM() {
+  const n = new Date();
+  return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+function isValidHHMM(val) {
+  if (!/^\d{1,2}:\d{2}$/.test(val)) return false;
+  const [h, m] = val.split(':').map(Number);
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+}
+
+function to12h(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function renderClock() {
+  ensureClockToday();
+  const running = clockIsRunning();
+  const totalHrs = clockTotalHours();
+  const displayHrs = (Math.floor(totalHrs * 10) / 10).toFixed(1);
+  const active = clockState.sessions.find(s => s.end === null);
+  const statusText = running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock';
+
+  const bar = document.getElementById('clock-bar');
+  if (!bar) return;
+  bar.className = `clock-bar${running ? ' running' : ''}`;
+  bar.innerHTML =
+    `<span class="clock-indicator${running ? ' running' : ''}">&#9679;</span>` +
+    `<span class="clock-status-text">${statusText}</span>` +
+    `<span class="clock-total-display${totalHrs === 0 ? ' zero' : ''}">${displayHrs} hr</span>` +
+    `<button class="tool-btn${running ? '' : ' primary'}" onclick="${running ? 'openClockStop()' : 'openClockStart()'}">` +
+      `${running ? 'Stop' : 'Start'}` +
+    `</button>` +
+    `<button class="tool-btn" onclick="openClockSessions()">Sessions</button>`;
+}
+
+function openClockStart() {
+  const t = currentHHMM();
+  showModal(`<h2>Start clock</h2>
+    <div class="field"><label>Start time</label>
+    <input id="cs-time" class="time-input" value="${t}"
+      style="width:100%;text-align:left" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doClockStart()"></div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn primary" onclick="doClockStart()">Start</button>
+    </div>`);
+  setTimeout(() => { const el = document.getElementById('cs-time'); if(el){el.select();el.focus();} }, 50);
+}
+
+function doClockStart() {
+  const val = document.getElementById('cs-time').value.trim();
+  if (!isValidHHMM(val)) return;
+  ensureClockToday();
+  if (clockIsRunning()) return;
+  clockState.sessions.push({start: val, end: null});
+  saveClock(clockState);
+  closeModal();
+  renderClock();
+}
+
+function openClockStop() {
+  const t = currentHHMM();
+  showModal(`<h2>Stop clock</h2>
+    <div class="field"><label>Stop time</label>
+    <input id="cs-time" class="time-input" value="${t}"
+      style="width:100%;text-align:left" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doClockStop()"></div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn primary" onclick="doClockStop()">Stop</button>
+    </div>`);
+  setTimeout(() => { const el = document.getElementById('cs-time'); if(el){el.select();el.focus();} }, 50);
+}
+
+function doClockStop() {
+  const val = document.getElementById('cs-time').value.trim();
+  if (!isValidHHMM(val)) return;
+  ensureClockToday();
+  const running = clockState.sessions.find(s => s.end === null);
+  if (!running) return;
+  running.end = val;
+  saveClock(clockState);
+  closeModal();
+  renderClock();
+}
+
+function openClockSessions() {
+  renderClockSessionsModal();
+}
+
+function renderClockSessionsModal() {
+  ensureClockToday();
+  const rows = clockState.sessions.length
+    ? clockState.sessions.map((s, i) =>
+        `<div class="session-row">
+          <input class="time-input" value="${s.start}"
+            onchange="updateClockSession(${i},'start',this.value)" placeholder="HH:MM">
+          <span style="color:var(--fg-2);font-size:11px">&rarr;</span>
+          <input class="time-input${s.end === null ? ' running-end' : ''}"
+            value="${s.end || ''}"
+            onchange="updateClockSession(${i},'end',this.value)"
+            placeholder="${s.end === null ? 'running' : 'HH:MM'}">
+          <button class="del-btn" onclick="deleteClockSession(${i})">&#10005;</button>
+        </div>`).join('')
+    : '<p style="font-size:12px;color:var(--fg-2);padding:6px 0">No sessions yet.</p>';
+
+  const displayHrs = (Math.floor(clockTotalHours() * 10) / 10).toFixed(1);
+
+  showModal(`<h2>Clock sessions</h2>
+    <p style="font-size:10px;color:var(--fg-2);margin-bottom:8px;font-family:var(--font-mono)">24h format &mdash; HH:MM &nbsp;|&nbsp; leave end blank for running session</p>
+    <div id="clock-session-list">${rows}</div>
+    <button class="tool-btn" style="margin-top:8px" onclick="addClockSession()">+ Add session</button>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bd-2);font-size:12px;color:var(--fg-1);font-family:var(--font-mono)">
+      Total on clock: <strong style="color:var(--fg-0)">${displayHrs} hr</strong>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn primary" onclick="closeModal();renderClock()">Done</button>
+    </div>`);
+}
+
+function updateClockSession(i, field, val) {
+  ensureClockToday();
+  const trimmed = val.trim();
+  if (field === 'end' && trimmed === '') {
+    clockState.sessions[i].end = null;
+  } else if (isValidHHMM(trimmed)) {
+    clockState.sessions[i][field] = trimmed;
+  } else {
+    return; // invalid — leave unchanged, modal stays
+  }
+  saveClock(clockState);
+  renderClockSessionsModal();
+}
+
+function deleteClockSession(i) {
+  ensureClockToday();
+  clockState.sessions.splice(i, 1);
+  saveClock(clockState);
+  renderClockSessionsModal();
+}
+
+function addClockSession() {
+  ensureClockToday();
+  clockState.sessions.push({start: currentHHMM(), end: null});
+  saveClock(clockState);
+  renderClockSessionsModal();
+}
+
+// Refresh display every 30 s — visually ticks in 0.1 hr steps (~every 6 min)
+setInterval(renderClock, 30000);
+// ── end wall clock ───────────────────────────────────────────────────────────
+
 ensureToday();
 render();
+renderClock();
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
