@@ -290,6 +290,20 @@
   .note-input:focus        { outline: none; border-color: var(--bd-0); }
 
   /* ── per-CC log ── */
+  .spread-excl-label {
+    font-size: 10px;
+    color: var(--fg-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    user-select: none;
+  }
+  .spread-excl-label:hover { color: var(--fg-1); }
+  .spread-excl-label input[type="checkbox"] { cursor: pointer; accent-color: var(--blue); margin: 0; }
+
   .log-toggle {
     font-size: 10px;
     color: var(--fg-2);
@@ -675,6 +689,7 @@ function renderCCControls(cc, day) {
         ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
         <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
       </div>
+      <label class="spread-excl-label"><input type="checkbox" ${cc.spreadExcluded?'':'checked'} onchange="toggleSpreadExclude('${cc.id}',this.checked)"> spread</label>
       ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
       <div class="log-list" id="log-${cc.id}" style="display:none">
         ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
@@ -890,6 +905,14 @@ function doReset() {
   renderClock();
 }
 
+function toggleSpreadExclude(id, included) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  cc.spreadExcluded = !included;
+  save(state);
+  render();
+}
+
 // ── Spread hours ─────────────────────────────────────────────────────────────
 // Distributes unallocated clock time proportionally across CCs that already
 // have logged hours.  Uses integer tenths throughout to avoid float drift.
@@ -921,7 +944,7 @@ let _pendingSpread = null;
 function openSpread() {
   const day = dayData(viewDate);
   const clockHrs = parseFloat((Math.floor(clockTotalHours()*10)/10).toFixed(1));
-  const activeCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0);
+  const activeCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0 && !c.spreadExcluded);
   const loggedHrs = parseFloat(state.codes.reduce((s,c) => s+(day.hours[c.id]||0), 0).toFixed(1));
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
 
