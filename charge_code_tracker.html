@@ -103,18 +103,6 @@
     color: var(--fg-1);
   }
 
-  .total-badge {
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--fg-1);
-    background: var(--bg-0);
-    border: 1px solid var(--bd-2);
-    border-radius: 2px;
-    padding: 3px 9px;
-  }
-
-  .total-badge span { font-weight: 600; color: var(--fg-0); }
-
   .date-badge {
     font-size: 11px;
     color: var(--fg-2);
@@ -566,7 +554,6 @@
       <button class="nav-btn" onclick="navigate(-1)" title="Previous day">&#8249;</button>
       <span class="date-badge" id="date-badge"></span>
       <button class="nav-btn" id="nav-fwd" onclick="navigate(1)" title="Next day">&#8250;</button>
-      <div class="total-badge" style="margin-left:4px">Total: <span id="grand-total">0.0</span> hr</div>
     </div>
   </div>
 
@@ -749,8 +736,6 @@ function render() {
   if (banner) banner.style.display = isToday ? 'none' : 'flex';
 
   const day = dayData(viewDate);
-  const total = state.codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
-  document.getElementById('grand-total').textContent = total.toFixed(1);
 
   const list = document.getElementById('cc-list');
   if (!state.codes.length) {
@@ -1266,8 +1251,6 @@ setInterval(() => {
     save(state);
     const hoursEl = document.getElementById('cc-hours-' + ccId);
     if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours accumulating`; }
-    const totalEl = document.getElementById('grand-total');
-    if (totalEl) totalEl.textContent = state.codes.reduce((s,c) => s+(dayData(today()).hours[c.id]||0), 0).toFixed(1);
     renderClock();
   }
 }, 1000);

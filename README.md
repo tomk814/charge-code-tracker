@@ -22,7 +22,7 @@ Use these names when describing changes to the interface.
 
 | Name | Description | CSS selector |
 |------|-------------|--------------|
-| **Header** | Sticky top bar; contains the app title, date navigation, and grand total | `.header` |
+| **Header** | Sticky top bar; contains the app title and date navigation | `.header` |
 | **Toolbar** | Row of action buttons directly below the header | `.toolbar` |
 | **Past-day banner** | Warning strip shown only when viewing a prior day | `#past-day-banner` |
 | **Clock bar** | Wall-clock tracker showing running/stopped state, elapsed time, and Start/Stop controls | `#clock-bar` |
@@ -34,7 +34,6 @@ Use these names when describing changes to the interface.
 |------|-------------|
 | **Date badge** | Shows the current date ("Mon, Apr 1 — today"); click the `‹` / `›` nav buttons on either side to move between days |
 | **Nav buttons** | The `‹` (back) and `›` (forward) arrow buttons flanking the date badge |
-| **Grand total badge** | Displays the sum of all CC hours ("Total: 4.5 hr") |
 
 ### Toolbar buttons
 
