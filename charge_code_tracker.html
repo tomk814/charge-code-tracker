@@ -801,8 +801,8 @@ function setActiveCC(ccId) {
     state.activeTimer = null;
   } else {
     if (state.activeTimer) finalizeActiveTimer();
-    state.activeTimer = {ccId, startedDate: today(),
-      sessionStart: clockIsRunning() ? Date.now() : null, committedTenths: 0};
+    if (!clockIsRunning()) clockSessions().push({start: currentHHMM(), end: null});
+    state.activeTimer = {ccId, startedDate: today(), sessionStart: Date.now(), committedTenths: 0};
   }
   save(state);
   render();
@@ -1181,6 +1181,7 @@ function openClockStop() {
   const running = clockSessions().find(s => s.end===null);
   if (!running) return;
   finalizeActiveTimer();
+  state.activeTimer = null;
   running.end = currentHHMM();
   save(state); renderClock(); render();
 }
