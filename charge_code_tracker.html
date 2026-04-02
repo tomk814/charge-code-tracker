@@ -207,7 +207,7 @@
   .pg-row { padding: 9px 12px; }
   .pg-row + .pg-row { border-top: 1px dashed var(--bd-2); }
 
-  .cc-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .cc-top { display: flex; align-items: baseline; gap: 10px; }
   .cc-label { flex: 1; min-width: 0; }
 
   .cc-name {
@@ -244,9 +244,6 @@
     0%, 100% { color: var(--fg-0); }
     50%       { color: var(--green); }
   }
-
-  /* ── card controls ── */
-  .cc-bottom { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
 
   /* ── live tracker ── */
   .cc-card.active-tracking { background: rgba(77,171,144,.05); border-color: rgba(77,171,144,.35); }
@@ -611,10 +608,8 @@ function renderCCControls(cc, day) {
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
-      </div>
-      <div class="cc-bottom">
         ${trackControls}
+        <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
       </div>`;
 }
 
