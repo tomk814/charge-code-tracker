@@ -718,6 +718,8 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 // ── Modals ───────────────────────────────────────────────────────────────────
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
+    <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
+    <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
     <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
     <div class="field"><label>Program (optional)</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
@@ -725,7 +727,21 @@ function openAddCC() {
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
     </div>`);
-  setTimeout(()=>document.getElementById('m-code')?.focus(),50);
+  setTimeout(()=>document.getElementById('m-import')?.focus(),50);
+}
+
+function parseDayforce() {
+  const raw = document.getElementById('m-import').value;
+  const parts = raw.split('|').map(s => s.trim());
+  if (parts.length < 2) return;
+  const codeRaw = parts[0].replace(/^Proj:/i, '').trim();
+  const program = parts[1] || '';
+  const label = parts[parts.length - 1] || '';
+  if (codeRaw) document.getElementById('m-code').value = codeRaw;
+  if (program) document.getElementById('m-program').value = program;
+  if (label) document.getElementById('m-name').value = label;
+  document.getElementById('m-import').value = '';
+  document.getElementById('m-code').focus();
 }
 
 function submitAddCC() {
