@@ -1173,7 +1173,8 @@ function renderClock() {
   const displayHrs = (Math.floor(totalHrs*10)/10).toFixed(1);
   const active = clockSessions().find(s => s.end===null);
   const activeCC = state.activeTimer ? state.codes.find(c => c.id === state.activeTimer.ccId) : null;
-  const activeCCText = activeCC ? `&nbsp;&nbsp;<span style="color:var(--green)">&#9654;&nbsp;${esc(activeCC.name)}</span>` : '';
+  const activeCCLabel = activeCC ? ((activeCC.program||'').trim() ? `${esc(activeCC.program)} \u2014 ${esc(activeCC.name)}` : esc(activeCC.name)) : '';
+  const activeCCText = activeCC ? `&nbsp;&nbsp;<span style="color:var(--green)">&#9654;&nbsp;${activeCCLabel}</span>` : '';
   const statusText = (running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock') + activeCCText;
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
