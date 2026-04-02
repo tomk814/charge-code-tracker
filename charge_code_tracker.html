@@ -585,7 +585,11 @@ const STORAGE_KEY = 'cc_tracker_v3';
 // v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},log:[],clock:{sessions:[]}}} }
 // Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
 
-function today() { return new Date().toISOString().slice(0,10); }
+function ymdLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function today() { return ymdLocal(new Date()); }
 
 function migrateFromV2() {
   try {
@@ -643,7 +647,7 @@ if (state.activeTimer && state.activeTimer.startedDate !== today()) {
 function navigate(delta) {
   const d = new Date(viewDate + 'T12:00:00');
   d.setDate(d.getDate() + delta);
-  const next = d.toISOString().slice(0,10);
+  const next = ymdLocal(d);
   if (next > today()) return;
   viewDate = next;
   render();
