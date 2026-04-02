@@ -250,6 +250,12 @@
   }
 
   .cc-hours.zero { color: var(--fg-2); }
+  .cc-hours.accumulating { animation: hours-pulse 2s ease-in-out infinite; }
+
+  @keyframes hours-pulse {
+    0%, 100% { color: var(--fg-0); }
+    50%       { color: var(--green); }
+  }
 
   /* ── increment buttons ── */
   .cc-bottom { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
@@ -695,7 +701,7 @@ function renderCCControls(cc, day) {
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        <div class="cc-hours${hrs===0?' zero':''}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
+        <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
       </div>
       <div class="cc-bottom">
         ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
@@ -1259,7 +1265,7 @@ setInterval(() => {
     day.hours[ccId] = parseFloat(((day.hours[ccId] || 0) + delta).toFixed(1));
     save(state);
     const hoursEl = document.getElementById('cc-hours-' + ccId);
-    if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours${day.hours[ccId]===0?' zero':''}`; }
+    if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours accumulating`; }
     const totalEl = document.getElementById('grand-total');
     if (totalEl) totalEl.textContent = state.codes.reduce((s,c) => s+(dayData(today()).hours[c.id]||0), 0).toFixed(1);
     renderClock();
