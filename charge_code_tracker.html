@@ -580,7 +580,7 @@ function load() {
 function save(s) {
   // keep at most 14 days
   const keys = Object.keys(s.days || {}).sort();
-  while (keys.length > 14) delete s.days[keys.shift()];
+  while (keys.length > 21) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
