@@ -248,21 +248,6 @@
   /* ── card controls ── */
   .cc-bottom { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
 
-  .note-input {
-    flex: 1;
-    min-width: 100px;
-    font-size: 11px;
-    font-family: var(--font-sans);
-    padding: 3px 7px;
-    border: 1px solid var(--bd-2);
-    border-radius: 2px;
-    background: var(--bg);
-    color: var(--fg-0);
-  }
-
-  .note-input::placeholder { color: var(--fg-2); }
-  .note-input:focus        { outline: none; border-color: var(--bd-0); }
-
   /* ── live tracker ── */
   .cc-card.active-tracking { background: rgba(77,171,144,.05); border-color: rgba(77,171,144,.35); }
   .pg-row.active-tracking  { background: rgba(77,171,144,.05); }
@@ -276,43 +261,6 @@
   .btn-track:hover      { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
   .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
   .btn-track.on:hover   { background: rgba(77,171,144,.18); }
-
-  /* ── per-CC log ── */
-  .log-toggle {
-    font-size: 10px;
-    color: var(--fg-2);
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    margin-top: 5px;
-    display: inline-block;
-    font-family: var(--font-mono);
-  }
-
-  .log-toggle:hover { color: var(--fg-1); }
-
-  .log-list {
-    margin-top: 5px;
-    border-top: 1px solid var(--bd-2);
-    padding-top: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .log-entry {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--fg-1);
-    display: flex;
-    gap: 8px;
-  }
-
-  .log-time  { color: var(--fg-2); white-space: nowrap; }
-  .log-delta { min-width: 36px; }
-  .log-delta.pos { color: var(--green); }
-  .log-delta.neg { color: var(--red); }
-  .log-entry span:last-child { font-family: var(--font-sans); }
 
   /* ── modals ── */
   .modal-bg {
@@ -560,7 +508,7 @@
 const STORAGE_KEY = 'cc_tracker_v3';
 
 // ── Persistence ─────────────────────────────────────────────────────────────
-// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},log:[],clock:{sessions:[]}}} }
+// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
 // Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
 
 function ymdLocal(d) {
@@ -579,7 +527,7 @@ function migrateFromV2() {
     if (v2.date) {
       const hours = {};
       (v2.codes || []).forEach(c => { hours[c.id] = c.hours || 0; });
-      v3.days[v2.date] = {hours, log: v2.log || [], clock: {sessions: []}};
+      v3.days[v2.date] = {hours, clock: {sessions: []}};
       try {
         const cs = JSON.parse(localStorage.getItem('cc_tracker_clock_v1') || '{}');
         if (cs.date === v2.date && cs.sessions) v3.days[v2.date].clock = {sessions: cs.sessions};
@@ -606,7 +554,7 @@ function save(s) {
 
 function dayData(date) {
   if (!state.days) state.days = {};
-  if (!state.days[date]) state.days[date] = {hours: {}, log: [], clock: {sessions: []}};
+  if (!state.days[date]) state.days[date] = {hours: {}, clock: {sessions: []}};
   const d = state.days[date];
   if (!d.clock) d.clock = {sessions: []};
   return d;
@@ -642,14 +590,9 @@ function goToToday() {
 function addTime(id, delta) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
-  const noteEl = document.getElementById('note-'+id);
-  const note = noteEl ? noteEl.value.trim() : '';
   const day = dayData(viewDate);
   const prev = day.hours[id] || 0;
   day.hours[id] = Math.max(0, parseFloat((prev + delta).toFixed(1)));
-  day.log.push({id, delta, result: day.hours[id], note,
-    ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
-  if (noteEl) noteEl.value = '';
   save(state);
   render();
 }
@@ -657,8 +600,6 @@ function addTime(id, delta) {
 
 function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
-  const ccLog = day.log.filter(e => e.id === cc.id);
-  const hasLog = ccLog.length > 0;
   const isActive = state.activeTimer && state.activeTimer.ccId === cc.id;
   const isRunning = isActive && !!state.activeTimer.sessionStart && clockIsRunning();
   const isToday = viewDate === today();
@@ -673,13 +614,8 @@ function renderCCControls(cc, day) {
         <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
       </div>
       <div class="cc-bottom">
-        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
         ${trackControls}
-      </div>
-      ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
-      <div class="log-list" id="log-${cc.id}" style="display:none">
-        ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
-      </div>` : ''}`;
+      </div>`;
 }
 
 function handleCardWheel(id, e) {
@@ -750,11 +686,6 @@ function render() {
   ].join('');
 }
 
-function toggleLog(id) {
-  const el = document.getElementById('log-'+id);
-  if (el) { el.style.display = el.style.display==='none'?'flex':'none'; el.style.flexDirection='column'; }
-}
-
 // ── Live CC tracker ──────────────────────────────────────────────────────────
 // Writes a single log entry for a completed session then resets sessionStart.
 // Does NOT add hours (those were already auto-committed by the 1s tick).
@@ -763,11 +694,6 @@ function finalizeActiveTimer() {
   const {ccId, committedTenths = 0} = state.activeTimer;
   if (committedTenths > 0) {
     const day = dayData(today());
-    const noteEl = document.getElementById('note-' + ccId);
-    const note = noteEl ? noteEl.value.trim() : '';
-    if (noteEl) noteEl.value = '';
-    const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    day.log.push({id: ccId, delta: committedTenths / 10, result: day.hours[ccId], note, ts, timer: true});
   }
   state.activeTimer.sessionStart = null;
   state.activeTimer.committedTenths = 0;
@@ -872,7 +798,6 @@ function deleteCC(id) {
   state.codes = state.codes.filter(c => c.id !== id);
   Object.values(state.days||{}).forEach(day => {
     delete day.hours[id];
-    day.log = day.log.filter(e => e.id !== id);
   });
   save(state);
   openManage();
@@ -889,7 +814,6 @@ function openExport() {
     const hrs = day.hours[cc.id] || 0;
     lines.push(`${cc.code}  ${cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
-    day.log.filter(e => e.id===cc.id && e.note).forEach(e => lines.push(`  ${e.ts}  ${e.note}`));
     lines.push('');
   });
   lines.push(`Total: ${total.toFixed(1)} hr`);
@@ -926,7 +850,6 @@ function confirmReset() {
 function doReset() {
   const day = dayData(viewDate);
   state.codes.forEach(c => { day.hours[c.id] = 0; });
-  day.log = [];
   day.clock = {sessions: []};
   if (viewDate === today()) state.activeTimer = null;
   save(state);
@@ -1071,10 +994,8 @@ function refreshSpreadPreview() {
 function applySpread() {
   if (!_pendingSpread) return;
   const day = dayData(viewDate);
-  const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   _pendingSpread.forEach(s => {
     day.hours[s.id] = s.after;
-    day.log.push({id: s.id, delta: s.add, result: s.after, note: 'spread', ts});
   });
   _pendingSpread = null;
   save(state);

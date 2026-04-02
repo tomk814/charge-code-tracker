@@ -48,23 +48,24 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 
 ## localStorage schema
 
-Key: `cc_tracker_v2`
+Key: `cc_tracker_v3`
 
 ```json
 {
-  "date": "2026-03-31",
   "codes": [
-    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "hours": 2.5 }
+    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A" }
   ],
-  "log": [
-    { "id": "abc123", "delta": 0.5, "result": 2.5, "note": "standup", "ts": "09:15 AM" }
-  ]
+  "days": {
+    "2026-03-31": {
+      "hours": { "abc123": 2.5 },
+      "clock": { "sessions": [] }
+    }
+  }
 }
 ```
 
-- `date` is `YYYY-MM-DD`. If it doesn't match today, hours and log are cleared on load and `date` is updated.
-- `codes` order determines display order.
-- `log` is append-only within a day; cleared on day rollover or manual reset.
+- `codes` order determines display order. Hours are not stored on the code object.
+- On load, if a day entry is missing it is created with empty hours and clock.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 
 ## Conventions
@@ -74,11 +75,8 @@ Key: `cc_tracker_v2`
 - Escape user-supplied strings before inserting into innerHTML (`esc()` function).
 - Modals are injected into `#modal-root` and removed on close. No `display:none` toggling.
 - Clicking the modal backdrop closes the modal. Escape key also closes.
-- The per-CC log is hidden by default; a "history (N)" toggle shows it.
-
 ## What good looks like
 
 - Adding time to a CC is 1–2 clicks with no typing required.
-- The note field is optional and never blocks an increment.
 - The export output is plain text, pasteable directly into an email or the formal system.
 - The whole app feels like a native browser UI, not a web app.
