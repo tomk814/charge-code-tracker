@@ -34,14 +34,13 @@ charge_code_tracker/
 **Throughout the day**
 - Scroll up/down on a charge code card to add or subtract time in 0.1 hr increments.
 - Hold **Shift** while scrolling for 0.5 hr increments.
-- Use the **+/−** buttons if you prefer clicking.
 - Click **Active** on a charge code to start auto-accruing time to it as the clock runs.
 - Set **Active** to a different CC when you switch tasks.
 
 **End of day**
 - Click **Stop** on the clock bar.
 - If you have unallocated clock time, use **Spread hours** to distribute it proportionally across your logged CCs.
-- Click **Export / copy** to get a plain-text summary, then paste the totals into Costpoint (or whatever your formal system is).
+- Click **Export / copy** to get a plain-text summary.
 
 ---
 
@@ -74,7 +73,7 @@ charge_code_tracker/
 ### Day navigation
 - Use the **‹ ›** arrows in the header to browse previous days.
 - You can edit past days — useful for corrections.
-- Data is retained for the last 14 days.
+- Data is retained for the last TBD days.
 
 ---
 
