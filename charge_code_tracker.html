@@ -303,12 +303,6 @@
   .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
   .btn-track.on:hover   { background: rgba(77,171,144,.18); }
 
-  .tracker-elapsed {
-    font-size: 11px; font-family: var(--font-mono); color: var(--green);
-    padding: 2px 6px; background: rgba(77,171,144,.1); border: 1px solid rgba(77,171,144,.3);
-    border-radius: 2px; white-space: nowrap;
-  }
-
   /* ── per-CC log ── */
   .log-toggle {
     font-size: 10px;
@@ -685,13 +679,6 @@ function addTime(id, delta) {
   render();
 }
 
-function formatElapsed(ms) {
-  const s = Math.floor(ms / 1000);
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  return h > 0
-    ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
-    : `${m}:${String(sec).padStart(2,'0')}`;
-}
 
 function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
@@ -701,8 +688,7 @@ function renderCCControls(cc, day) {
   const isRunning = isActive && !!state.activeTimer.sessionStart && clockIsRunning();
   const isToday = viewDate === today();
   const trackControls = isToday
-    ? `${isRunning ? `<span class="tracker-elapsed" id="timer-elapsed-${cc.id}">${formatElapsed(Date.now() - state.activeTimer.sessionStart)}</span>` : ''}` +
-      `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
+    ? `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
     : '';
   return `<div class="cc-top">
         <div class="cc-label">
@@ -1277,8 +1263,6 @@ setInterval(() => {
     if (totalEl) totalEl.textContent = state.codes.reduce((s,c) => s+(dayData(today()).hours[c.id]||0), 0).toFixed(1);
     renderClock();
   }
-  const el = document.getElementById('timer-elapsed-' + ccId);
-  if (el) el.textContent = formatElapsed(Date.now() - sessionStart);
 }, 1000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
