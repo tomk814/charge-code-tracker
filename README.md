@@ -1,91 +1,117 @@
-# charge-code-tracker
+# Time Tracker
 
-## UI component terminology
+A lightweight, single-file HTML time tracker for engineers who charge time against multiple charge codes throughout the day, then transcribe totals into a formal system (e.g. Deltek Costpoint) at end of day.
 
-Use these names when describing changes to the interface.
+No install. No account. No internet required. Just open the file.
 
-### Page-level sections
+---
 
-| Name | Description | CSS selector |
-|------|-------------|--------------|
-| **Header** | Sticky top bar; contains the app title, date navigation, and grand total | `.header` |
-| **Toolbar** | Row of action buttons directly below the header | `.toolbar` |
-| **Past-day banner** | Warning strip shown only when viewing a prior day | `#past-day-banner` |
-| **Clock bar** | Wall-clock tracker showing running/stopped state, elapsed time, and Start/Stop controls | `#clock-bar` |
-| **CC list** | Scrollable area containing all charge code cards | `#cc-list` |
+## Setup
 
-### Header sub-elements
+1. Download `charge_code_tracker.html`
+2. Create a folder for it somewhere convenient, e.g. `Documents/charge_code_tracker/`
+3. Double-click the file — it opens in your browser
+4. Optionally, pin the tab so it persists across browser sessions
 
-| Name | Description |
-|------|-------------|
-| **Date badge** | Shows the current date ("Mon, Apr 1 — today"); click the `‹` / `›` nav buttons on either side to move between days |
-| **Nav buttons** | The `‹` (back) and `›` (forward) arrow buttons flanking the date badge |
-| **Grand total badge** | Displays the sum of all CC hours ("Total: 4.5 hr") |
+That's it. Your charge codes and daily data are saved automatically in your browser.
 
-### Toolbar buttons
-
-| Name | `onclick` |
-|------|-----------|
-| **Add charge code** | `openAddCC()` |
-| **Manage CCs** | `openManage()` |
-| **Export / copy** | `openExport()` |
-| **Spread hours** | `openSpread()` |
-| **Reset day** | `confirmReset()` |
-
-### Clock bar sub-elements
-
-| Name | Description |
-|------|-------------|
-| **Clock indicator** | Animated dot (●) that pulses green when the clock is running |
-| **Clock status text** | Human-readable state, e.g., "on clock — since 2:30 PM" or "off clock" |
-| **Clock total display** | Large monospace number showing total clocked hours for the day |
-| **Clock Start / Stop button** | Toggles the running state |
-| **Sessions button** | Opens the Clock Sessions modal |
-
-### Charge code card
-
-Each charge code gets one **card** (`.cc-card`). A card has two rows:
+### Recommended folder layout
 
 ```
-Card
-├── Card top row          (.cc-top)
-│   ├── Code label        (.cc-label)
-│   │   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
-│   │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
-│   └── Hours display     (.cc-hours)  — current total, e.g. "3.5"
-└── Card controls row     (.cc-bottom)
-    ├── Increment buttons (.btn-inc)           — "+0.1", "+0.5", "+1.0"
-    ├── Decrement buttons (.btn-inc.neg)       — "−0.1", "−0.5", "−1.0"
-    └── Note field        (.note-input)        — optional free-text input
+charge_code_tracker/
+├── charge_code_tracker.html
+└── backups/          ← keep your JSON backups here (see Data Safety below)
 ```
 
-Below the two rows, when log entries exist:
+---
 
-| Name | Description |
-|------|-------------|
-| **History toggle** | `"history (N)"` link that expands/collapses the log (`.log-toggle`) |
-| **History log** | The expanded list of log entries (`.log-list`) |
-| **Log entry** | One line in the history log: timestamp, delta (±N.N), optional note (`.log-entry`) |
+## Daily workflow
 
-### Modals
+**Morning**
+- The tracker auto-advances to the current day. Yesterday's hours are preserved and browsable.
+- Click **Start** on the clock bar when you sit down.
 
-Every modal shares this shell:
+**Throughout the day**
+- Scroll up/down on a charge code card to add or subtract time in 0.1 hr increments.
+- Hold **Shift** while scrolling for 0.5 hr increments.
+- Click **Active** on a charge code to start auto-accruing time to it as the clock runs.
+- Set **Active** to a different CC when you switch tasks.
 
-| Name | Description |
-|------|-------------|
-| **Modal overlay** | Full-screen dark backdrop; clicking it closes the modal (`.modal-bg`) |
-| **Modal dialog** | Centered content box (`.modal`) |
-| **Modal actions bar** | Bottom row of buttons, right-aligned (`.modal-actions`) |
+**End of day**
+- Click **Stop** on the clock bar.
+- If you have unallocated clock time, use **Spread hours** to distribute it proportionally across your logged CCs.
+- Click **Export / copy** to get a plain-text summary.
 
-Named modals:
+---
 
-| Modal name | Opened by |
-|------------|-----------|
-| **Add CC modal** | "Add charge code" toolbar button |
-| **Manage CCs modal** | "Manage CCs" toolbar button |
-| **Export modal** | "Export / copy" toolbar button |
-| **Spread Hours modal** | "Spread hours" toolbar button |
-| **Reset Day modal** | "Reset day" toolbar button |
-| **Clock Sessions modal** | "Sessions" button in the clock bar |
-| **Clock Start modal** | "Start" button in the clock bar |
-| **Clock Stop modal** | "Stop" button in the clock bar |
+## Features
+
+### Charge codes
+- Add codes via **+ Add charge code**. You can paste a Dayforce-formatted string directly into the import field and it will auto-parse the code, program, and label.
+- Assign a **Program** to group related CCs under a shared header with a combined subtotal.
+- Edit or remove codes anytime from **Manage CCs**.
+- Codes persist indefinitely — you only set them up once.
+
+### Clock
+- The clock bar tracks wall-clock time for the day via manual sessions (Start/Stop).
+- Click **Sessions** to view, edit, or manually add sessions if you forgot to start the clock.
+- Sessions use 24h HH:MM format.
+- The clock total feeds into **Spread hours** to detect unallocated time.
+
+### Active CC tracking
+- Click **Active** on any charge code to begin auto-accruing time to it as the clock runs.
+- The active CC's hours update in real time (every ~6 minutes / 0.1 hr).
+- Only one CC can be active at a time. Clicking **Active** on a different CC switches tracking.
+- Clicking **Active** again on the current CC deactivates tracking without stopping the clock.
+
+### Spread hours
+- Compares your total clock time against your logged CC hours.
+- Distributes the difference proportionally across CCs that already have hours logged.
+- You can check/uncheck individual CCs to include or exclude them from the spread.
+- Shows a before/after preview before you commit.
+
+### Day navigation
+- Use the **‹ ›** arrows in the header to browse previous days.
+- You can edit past days — useful for corrections.
+- Data is retained for the last TBD days.
+
+---
+
+## Data safety
+
+> **Important:** your data lives in your browser's `localStorage`. This is a small local database managed by your browser. It is **not** a file on your hard drive, and it can be wiped by:
+> - Clearing your browser's site data or browsing history
+> - Browser profile resets or reinstalls
+> - Opening the file from a different path or in a different browser
+
+**To protect yourself, export a JSON backup regularly** — at minimum at the end of each pay period.
+
+*Export JSON / Import JSON buttons are planned for an upcoming version.* Until then, be cautious about clearing browser data.
+
+### Rules to avoid data loss
+
+- Always open `charge_code_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
+- Always use the **same browser**. Chrome and Edge have separate localStorage.
+- Do **not** use "Clear browsing data" without first being aware that it may wipe your tracker history.
+- If you get a new machine or reinstall your browser, you will need to restore from a backup (once that feature is available).
+
+---
+
+## Keyboard shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Close any open modal |
+| `Scroll up` on a CC card | +0.1 hr |
+| `Scroll down` on a CC card | −0.1 hr |
+| `Shift` + scroll | ±0.5 hr |
+
+---
+
+## Technical notes
+
+- Single HTML file — no dependencies, no build step, works fully offline.
+- localStorage key: `cc_tracker_v3`
+- Data is retained for the last 14 days. Older days are pruned automatically.
+- Migrates automatically from earlier versions (`cc_tracker_v2`).
+- Tested in Chrome and Edge on Windows. Other browsers should work but are not the primary target.

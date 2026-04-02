@@ -9,48 +9,63 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ```
 /
 ├── CLAUDE.md
-└── timetracker.html   ← the entire app; do not split into multiple files
+├── NAMES_FOR_THINGS.md
+├── README.md
+└── charge_code_tracker.html   ← the entire app; do not split into multiple files
 ```
 
 ## Constraints — read before touching anything
 
-- **Single HTML file, always.** No build step, no bundler, no node_modules, no external dependencies. Everything — HTML, CSS, JS — lives in `timetracker.html`.
+- **Single HTML file, always.** No build step, no bundler, no node_modules, no external dependencies. Everything — HTML, CSS, JS — lives in `charge_code_tracker.html`.
 - **No CDN imports.** The file must work fully offline and when opened via `file://` in Chrome or Edge on Windows.
 - **No backend, no server.** Persistence is `localStorage` only.
 - **Target environment:** local file opened in Chrome or Edge on Windows. `file://` origin has stricter localStorage scoping than `http://` — don't assume anything about origin.
 
 ## Current features
 
-- Charge codes (code + label) persist in localStorage; survive browser close and reboot
+- Charge codes (code + label + optional program group) persist in localStorage; survive browser close and reboot
+- Charge codes can be grouped by program; grouped codes render under a shared program card (`.pg-card`) with a subtotal
 - Per-CC increment buttons: +0.1, +0.5, +1.0 and matching negatives (−0.1, −0.5, −1.0)
 - Optional note field per entry; note is attached to the log entry when an increment button is clicked
 - Expandable per-CC history log with timestamps and notes
 - Running grand total displayed in header
+- Day navigation: browse any past day's log with `‹` / `›` buttons; past days show a banner and are read-only for increments
+- Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
+- Spread hours: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
 - Export / copy: generates a plain-text summary of totals and notes for EOD transcription into Costpoint
 - Manual "Reset day" button (clears hours and log, keeps charge codes)
-- Add / remove charge codes via modal UI
+- Add / edit / remove charge codes via modal UI
 - Escape key closes modals
+
+## Keeping docs in sync
+
+**When you add, remove, or rename a UI component or feature, update `NAMES_FOR_THINGS.md` to match.**
+
+- New CSS selectors or named UI elements → add a row to the relevant table in README
+- New toolbar button or modal → add to the toolbar or modals table
+- New top-level feature → add to the "Current features" list above
 
 ## localStorage schema
 
-Key: `cc_tracker_v2`
+Key: `cc_tracker_v3`
 
 ```json
 {
-  "date": "2026-03-31",
   "codes": [
-    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "hours": 2.5 }
+    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A" }
   ],
-  "log": [
-    { "id": "abc123", "delta": 0.5, "result": 2.5, "note": "standup", "ts": "09:15 AM" }
-  ]
+  "days": {
+    "2026-03-31": {
+      "hours": { "abc123": 2.5 },
+      "clock": { "sessions": [] }
+    }
+  }
 }
 ```
 
-- `date` is `YYYY-MM-DD`. If it doesn't match today, hours and log are cleared on load and `date` is updated.
-- `codes` order determines display order.
-- `log` is append-only within a day; cleared on day rollover or manual reset.
+- `codes` order determines display order. Hours are not stored on the code object.
+- On load, if a day entry is missing it is created with empty hours and clock.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 
 ## Conventions
@@ -60,11 +75,8 @@ Key: `cc_tracker_v2`
 - Escape user-supplied strings before inserting into innerHTML (`esc()` function).
 - Modals are injected into `#modal-root` and removed on close. No `display:none` toggling.
 - Clicking the modal backdrop closes the modal. Escape key also closes.
-- The per-CC log is hidden by default; a "history (N)" toggle shows it.
-
 ## What good looks like
 
 - Adding time to a CC is 1–2 clicks with no typing required.
-- The note field is optional and never blocks an increment.
 - The export output is plain text, pasteable directly into an email or the formal system.
 - The whole app feels like a native browser UI, not a web app.

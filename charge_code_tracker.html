@@ -86,13 +86,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 0 10px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--bd-2);
+    padding: 12px 0 6px;
+    margin-bottom: 0;
     position: sticky;
     top: 0;
     background: var(--bg);
     z-index: 10;
+  }
+
+  .pay-period-bar {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--fg-2);
+    padding: 3px 0 8px;
+    border-bottom: 1px solid var(--bd-2);
+    margin-bottom: 10px;
   }
 
   .title {
@@ -102,18 +110,6 @@
     text-transform: uppercase;
     color: var(--fg-1);
   }
-
-  .total-badge {
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--fg-1);
-    background: var(--bg-0);
-    border: 1px solid var(--bd-2);
-    border-radius: 2px;
-    padding: 3px 9px;
-  }
-
-  .total-badge span { font-weight: 600; color: var(--fg-0); }
 
   .date-badge {
     font-size: 11px;
@@ -154,6 +150,30 @@
     flex-direction: column;
     gap: 4px;
     margin-bottom: 0;
+  }
+
+  /* ── data footer ── */
+  .data-footer {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #last-saved-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--fg-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #last-saved-label:hover { color: var(--fg-1); }
+
+  #data-btns {
+    display: none;
+    gap: 6px;
   }
 
   .cc-card {
@@ -219,7 +239,7 @@
   .pg-row { padding: 9px 12px; }
   .pg-row + .pg-row { border-top: 1px dashed var(--bd-2); }
 
-  .cc-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .cc-top { display: flex; align-items: baseline; gap: 10px; }
   .cc-label { flex: 1; min-width: 0; }
 
   .cc-name {
@@ -250,81 +270,26 @@
   }
 
   .cc-hours.zero { color: var(--fg-2); }
+  .cc-hours.accumulating { animation: hours-pulse 2s ease-in-out infinite; }
 
-  /* ── increment buttons ── */
-  .cc-bottom { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
-
-  .btn-inc {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    padding: 3px 7px;
-    border: 1px solid var(--bd-1);
-    border-radius: 2px;
-    background: transparent;
-    color: var(--fg-0);
-    cursor: pointer;
-    transition: background .08s;
-    min-width: 36px;
-    text-align: center;
+  @keyframes hours-pulse {
+    0%, 100% { color: var(--fg-0); }
+    50%       { color: var(--green); }
   }
 
-  .btn-inc:hover  { background: var(--bg-2); }
-  .btn-inc:active { transform: scale(0.95); }
+  /* ── live tracker ── */
+  .cc-card.active-tracking { background: rgba(77,171,144,.05); border-color: rgba(77,171,144,.35); }
+  .pg-row.active-tracking  { background: rgba(77,171,144,.05); }
 
-  .btn-inc.neg       { color: var(--red); border-color: var(--bd-2); }
-  .btn-inc.neg:hover { background: var(--bg-red); }
-
-  .note-input {
-    flex: 1;
-    min-width: 100px;
-    font-size: 11px;
-    font-family: var(--font-sans);
-    padding: 3px 7px;
-    border: 1px solid var(--bd-2);
-    border-radius: 2px;
-    background: var(--bg);
-    color: var(--fg-0);
+  .btn-track {
+    font-size: 11px; font-family: var(--font-mono);
+    padding: 3px 8px; border: 1px solid var(--bd-2); border-radius: 2px;
+    background: transparent; color: var(--fg-2); cursor: pointer;
+    transition: color .1s, border-color .1s, background .1s; white-space: nowrap;
   }
-
-  .note-input::placeholder { color: var(--fg-2); }
-  .note-input:focus        { outline: none; border-color: var(--bd-0); }
-
-  /* ── per-CC log ── */
-  .log-toggle {
-    font-size: 10px;
-    color: var(--fg-2);
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    margin-top: 5px;
-    display: inline-block;
-    font-family: var(--font-mono);
-  }
-
-  .log-toggle:hover { color: var(--fg-1); }
-
-  .log-list {
-    margin-top: 5px;
-    border-top: 1px solid var(--bd-2);
-    padding-top: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .log-entry {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--fg-1);
-    display: flex;
-    gap: 8px;
-  }
-
-  .log-time  { color: var(--fg-2); white-space: nowrap; }
-  .log-delta { min-width: 36px; }
-  .log-delta.pos { color: var(--green); }
-  .log-delta.neg { color: var(--red); }
-  .log-entry span:last-child { font-family: var(--font-sans); }
+  .btn-track:hover      { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
+  .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
+  .btn-track.on:hover   { background: rgba(77,171,144,.18); }
 
   /* ── modals ── */
   .modal-bg {
@@ -382,6 +347,16 @@
   }
 
   .field input:focus { outline: none; border-color: var(--bd-0); }
+
+  .eod-note {
+    width: 100%; box-sizing: border-box;
+    font-size: 11px; font-family: var(--font-sans);
+    padding: 3px 7px; margin: 3px 0 6px;
+    border: 1px solid var(--bd-2); border-radius: 2px;
+    background: var(--bg); color: var(--fg-0);
+  }
+  .eod-note::placeholder { color: var(--fg-2); }
+  .eod-note:focus { outline: none; border-color: var(--bd-0); }
 
   .modal-actions {
     display: flex;
@@ -546,15 +521,16 @@
       <button class="nav-btn" onclick="navigate(-1)" title="Previous day">&#8249;</button>
       <span class="date-badge" id="date-badge"></span>
       <button class="nav-btn" id="nav-fwd" onclick="navigate(1)" title="Next day">&#8250;</button>
-      <div class="total-badge" style="margin-left:4px">Total: <span id="grand-total">0.0</span> hr</div>
     </div>
   </div>
+
+  <div class="pay-period-bar" id="pay-period-bar"></div>
 
   <div class="toolbar">
     <button class="tool-btn primary" onclick="openAddCC()">+ Add charge code</button>
     <button class="tool-btn" onclick="openManage()">Manage CCs</button>
-    <button class="tool-btn" onclick="openExport()">Export / copy</button>
     <button class="tool-btn" onclick="openSpread()">Spread hours</button>
+    <button class="tool-btn" onclick="openEndOfDay()">End of day</button>
     <button class="tool-btn" onclick="confirmReset()">Reset day</button>
   </div>
 
@@ -565,20 +541,33 @@
   <div id="clock-bar" class="clock-bar"></div>
 
   <div class="cc-list" id="cc-list"></div>
+
+  <div class="data-footer">
+    <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
+    <div id="data-btns">
+      <button class="tool-btn" onclick="importJSON()">Import JSON</button>
+      <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+    </div>
+  </div>
 </div>
+<input type="file" id="json-file-input" accept=".json,application/json" style="display:none" onchange="handleJSONFile(event)">
 
 <div id="modal-root"></div>
 
 <script>
-const INCS = [0.1, 0.5, 1.0];
-const NEG_INCS = [-0.1, -0.5, -1.0];
 const STORAGE_KEY = 'cc_tracker_v3';
+let lastSavedAt = null;
+let _dataBtnTimer = null;
 
 // ── Persistence ─────────────────────────────────────────────────────────────
-// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},log:[],clock:{sessions:[]}}} }
+// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
 // Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
 
-function today() { return new Date().toISOString().slice(0,10); }
+function ymdLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function today() { return ymdLocal(new Date()); }
 
 function migrateFromV2() {
   try {
@@ -590,7 +579,7 @@ function migrateFromV2() {
     if (v2.date) {
       const hours = {};
       (v2.codes || []).forEach(c => { hours[c.id] = c.hours || 0; });
-      v3.days[v2.date] = {hours, log: v2.log || [], clock: {sessions: []}};
+      v3.days[v2.date] = {hours, clock: {sessions: []}};
       try {
         const cs = JSON.parse(localStorage.getItem('cc_tracker_clock_v1') || '{}');
         if (cs.date === v2.date && cs.sessions) v3.days[v2.date].clock = {sessions: cs.sessions};
@@ -611,13 +600,67 @@ function load() {
 function save(s) {
   // keep at most 14 days
   const keys = Object.keys(s.days || {}).sort();
-  while (keys.length > 14) delete s.days[keys.shift()];
+  while (keys.length > 21) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  lastSavedAt = new Date();
+  updateLastSaved();
+}
+
+function updateLastSaved() {
+  const el = document.getElementById('last-saved-label');
+  if (!el) return;
+  if (!lastSavedAt) { el.textContent = 'not saved yet'; return; }
+  const t = lastSavedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  el.textContent = `last saved ${t}`;
+}
+
+function revealDataButtons() {
+  const btns = document.getElementById('data-btns');
+  if (!btns) return;
+  btns.style.display = 'flex';
+  clearTimeout(_dataBtnTimer);
+  _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
+}
+
+function exportJSON() {
+  const json = localStorage.getItem(STORAGE_KEY) || '{}';
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `time_tracker_backup_${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON() {
+  document.getElementById('json-file-input').value = '';
+  document.getElementById('json-file-input').click();
+}
+
+function handleJSONFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      state = loadState();
+      render();
+      renderClock();
+      lastSavedAt = new Date();
+      updateLastSaved();
+    } catch {
+      alert('Invalid JSON file.');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function dayData(date) {
   if (!state.days) state.days = {};
-  if (!state.days[date]) state.days[date] = {hours: {}, log: [], clock: {sessions: []}};
+  if (!state.days[date]) state.days[date] = {hours: {}, clock: {sessions: []}};
   const d = state.days[date];
   if (!d.clock) d.clock = {sessions: []};
   return d;
@@ -626,11 +669,17 @@ function dayData(date) {
 let state = load();
 let viewDate = today();
 
+// Clear stale active timer from a previous day
+if (state.activeTimer && state.activeTimer.startedDate !== today()) {
+  state.activeTimer = null;
+  save(state);
+}
+
 // ── Day navigation ───────────────────────────────────────────────────────────
 function navigate(delta) {
   const d = new Date(viewDate + 'T12:00:00');
   d.setDate(d.getDate() + delta);
-  const next = d.toISOString().slice(0,10);
+  const next = ymdLocal(d);
   if (next > today()) return;
   viewDate = next;
   render();
@@ -647,47 +696,50 @@ function goToToday() {
 function addTime(id, delta) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
-  const noteEl = document.getElementById('note-'+id);
-  const note = noteEl ? noteEl.value.trim() : '';
   const day = dayData(viewDate);
   const prev = day.hours[id] || 0;
   day.hours[id] = Math.max(0, parseFloat((prev + delta).toFixed(1)));
-  day.log.push({id, delta, result: day.hours[id], note,
-    ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
-  if (noteEl) noteEl.value = '';
   save(state);
   render();
 }
 
+
 function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
-  const ccLog = day.log.filter(e => e.id === cc.id);
-  const hasLog = ccLog.length > 0;
+  const isActive = state.activeTimer && state.activeTimer.ccId === cc.id;
+  const isRunning = isActive && !!state.activeTimer.sessionStart && clockIsRunning();
+  const isToday = viewDate === today();
+  const trackControls = isToday
+    ? `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
+    : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        <div class="cc-hours ${hrs===0?'zero':''}">${hrs.toFixed(1)}</div>
-      </div>
-      <div class="cc-bottom">
-        ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
-        ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
-        <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
-      </div>
-      ${hasLog ? `<span class="log-toggle" onclick="toggleLog('${cc.id}')">history (${ccLog.length})</span>
-      <div class="log-list" id="log-${cc.id}" style="display:none">
-        ${ccLog.slice().reverse().map(e=>`<div class="log-entry"><span class="log-time">${e.ts}</span><span class="log-delta ${e.delta>0?'pos':'neg'}">${e.delta>0?'+':''}${e.delta.toFixed(1)}</span><span>${e.note||''}</span></div>`).join('')}
-      </div>` : ''}`;
+        ${trackControls}
+        <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
+      </div>`;
+}
+
+function handleCardWheel(id, e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const step = e.shiftKey ? 1.0 : 0.1;
+  addTime(id, e.deltaY < 0 ? step : -step);
 }
 
 function renderIndividualCard(cc, day) {
-  return `<div class="cc-card">${renderCCControls(cc, day)}</div>`;
+  const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+  return `<div class="cc-card${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
 }
 
 function renderProgramCard(programName, codes, day) {
   const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
-  const rows = codes.map(cc => `<div class="pg-row">${renderCCControls(cc, day)}</div>`).join('');
+  const rows = codes.map(cc => {
+    const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+    return `<div class="pg-row${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
+  }).join('');
   return `<div class="pg-card">
     <div class="pg-header">
       <div class="pg-name">${esc(programName)}</div>
@@ -697,7 +749,58 @@ function renderProgramCard(programName, codes, day) {
   </div>`;
 }
 
+// ── Pay period ───────────────────────────────────────────────────────────────
+const PP_ANCHOR = new Date('2026-04-04T12:00:00'); // known period-end Saturday
+
+function payPeriodEnd(fromDateStr) {
+  const d = new Date(fromDateStr + 'T12:00:00');
+  const diffDays = Math.round((d - PP_ANCHOR) / 86400000);
+  const daysIntoPeriod = ((diffDays % 14) + 14) % 14;
+  const daysUntilEnd = daysIntoPeriod === 0 ? 0 : 14 - daysIntoPeriod;
+  const end = new Date(d);
+  end.setDate(end.getDate() + daysUntilEnd);
+  return end;
+}
+
+function workingDaysRemaining(fromDateStr, endDate) {
+  const from = new Date(fromDateStr + 'T12:00:00');
+  let count = 0;
+  const d = new Date(from);
+  while (d <= endDate) {
+    const dow = d.getDay();
+    if (dow >= 1 && dow <= 5) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+
+function payPeriodHours(endDate) {
+  const start = new Date(endDate);
+  start.setDate(start.getDate() - 13);
+  let total = 0;
+  for (const [dateStr, day] of Object.entries(state.days || {})) {
+    const d = new Date(dateStr + 'T12:00:00');
+    if (d >= start && d <= endDate) {
+      total += Object.values(day.hours || {}).reduce((s, h) => s + h, 0);
+    }
+  }
+  return parseFloat(total.toFixed(1));
+}
+
+function renderPayPeriod() {
+  const el = document.getElementById('pay-period-bar');
+  if (!el) return;
+  const end = payPeriodEnd(today());
+  const dayAbbr = end.toLocaleDateString([], {weekday:'short'});
+  const dateStr = `${end.getMonth()+1}/${end.getDate()}`;
+  const wdLeft = workingDaysRemaining(today(), end);
+  const hrs = payPeriodHours(end);
+  const hrsStr = `<span${hrs >= 80 ? ' style="color:var(--green)"' : ''}>${hrs.toFixed(1)}</span>`;
+  el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrsStr}`;
+}
+
 function render() {
+  renderPayPeriod();
   const isToday = viewDate === today();
   const viewDt = new Date(viewDate + 'T12:00:00');
   document.getElementById('date-badge').textContent =
@@ -711,8 +814,6 @@ function render() {
   if (banner) banner.style.display = isToday ? 'none' : 'flex';
 
   const day = dayData(viewDate);
-  const total = state.codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
-  document.getElementById('grand-total').textContent = total.toFixed(1);
 
   const list = document.getElementById('cc-list');
   if (!state.codes.length) {
@@ -740,10 +841,33 @@ function render() {
   ].join('');
 }
 
-function toggleLog(id) {
-  const el = document.getElementById('log-'+id);
-  if (el) { el.style.display = el.style.display==='none'?'flex':'none'; el.style.flexDirection='column'; }
+// ── Live CC tracker ──────────────────────────────────────────────────────────
+// Writes a single log entry for a completed session then resets sessionStart.
+// Does NOT add hours (those were already auto-committed by the 1s tick).
+function finalizeActiveTimer() {
+  if (!state.activeTimer || !state.activeTimer.sessionStart) return;
+  const {ccId, committedTenths = 0} = state.activeTimer;
+  if (committedTenths > 0) {
+    const day = dayData(today());
+  }
+  state.activeTimer.sessionStart = null;
+  state.activeTimer.committedTenths = 0;
 }
+
+function setActiveCC(ccId) {
+  if (state.activeTimer && state.activeTimer.ccId === ccId) {
+    finalizeActiveTimer();
+    state.activeTimer = null;
+  } else {
+    if (state.activeTimer) finalizeActiveTimer();
+    if (!clockIsRunning()) clockSessions().push({start: currentHHMM(), end: null});
+    state.activeTimer = {ccId, startedDate: today(), sessionStart: Date.now(), committedTenths: 0};
+  }
+  save(state);
+  render();
+  renderClock();
+}
+// ── end live CC tracker ───────────────────────────────────────────────────────
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -754,6 +878,8 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 // ── Modals ───────────────────────────────────────────────────────────────────
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
+    <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
+    <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
     <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
     <div class="field"><label>Program (optional)</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
@@ -761,7 +887,21 @@ function openAddCC() {
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
     </div>`);
-  setTimeout(()=>document.getElementById('m-code')?.focus(),50);
+  setTimeout(()=>document.getElementById('m-import')?.focus(),50);
+}
+
+function parseDayforce() {
+  const raw = document.getElementById('m-import').value;
+  const parts = raw.split('|').map(s => s.trim());
+  if (parts.length < 2) return;
+  const codeRaw = parts[0].replace(/^Proj:/i, '').trim();
+  const program = parts[1] || '';
+  const label = parts[parts.length - 1] || '';
+  if (codeRaw) document.getElementById('m-code').value = codeRaw;
+  if (program) document.getElementById('m-program').value = program;
+  if (label) document.getElementById('m-name').value = label;
+  document.getElementById('m-import').value = '';
+  document.getElementById('m-code').focus();
 }
 
 function submitAddCC() {
@@ -825,44 +965,80 @@ function submitEditCC(id) {
 }
 
 function deleteCC(id) {
+  if (state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   state.codes = state.codes.filter(c => c.id !== id);
   Object.values(state.days||{}).forEach(day => {
     delete day.hours[id];
-    day.log = day.log.filter(e => e.id !== id);
   });
   save(state);
   openManage();
   render();
 }
 
-function openExport() {
+function openEndOfDay() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const day = dayData(viewDate);
-  const total = state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0);
+  const activeCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0);
+  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
+
+  if (!activeCCs.length) {
+    showModal(`<h2>End of day</h2>
+      <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">No hours logged for this day.</p>
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+    return;
+  }
+
+  const rows = activeCCs.map(cc => {
+    const prog = (cc.program || '').trim();
+    const label = prog ? `${prog}: ${cc.name}` : cc.name;
+    return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
+      <span style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--fg-0)">${esc(label)}</div>
+        <div style="font-size:10px;color:var(--fg-2);font-family:var(--font-mono)">${esc(cc.code)}</div>
+      </span>
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0">${(day.hours[cc.id]||0).toFixed(1)}</span>
+    </div>
+    <input class="eod-note" id="eod-note-${cc.id}" placeholder="note (optional)">`;
+  }).join('');
+
+  showModal(`<h2>End of day</h2>
+    <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${dateStr}</p>
+    <div style="display:flex;gap:10px;padding:2px 0 5px;font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd-1)">
+      <span style="flex:1">Charge code</span>
+      <span style="min-width:36px;text-align:right">Hours</span>
+    </div>
+    ${rows}
+    <div style="display:flex;gap:10px;padding:6px 0 2px;font-size:12px;font-family:var(--font-mono)">
+      <span style="flex:1;color:var(--fg-2)">Total</span>
+      <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Close</button>
+      <button class="tool-btn primary" onclick="copyEndOfDay()">Copy to clipboard</button>
+    </div>`);
+}
+
+function copyEndOfDay() {
+  const viewDt = new Date(viewDate + 'T12:00:00');
+  const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const day = dayData(viewDate);
+  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
   const lines = [`Time summary — ${dateStr}`, ''];
   state.codes.forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
+    if (!hrs) return;
+    const note = (document.getElementById('eod-note-' + cc.id)?.value || '').trim();
     lines.push(`${cc.code}  ${cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
-    day.log.filter(e => e.id===cc.id && e.note).forEach(e => lines.push(`  ${e.ts}  ${e.note}`));
+    if (note) lines.push(`  ${note}`);
     lines.push('');
   });
   lines.push(`Total: ${total.toFixed(1)} hr`);
   const text = lines.join('\n');
-  showModal(`<h2>Export</h2>
-    <div class="export-box" id="export-text">${esc(text)}</div>
-    <div class="modal-actions">
-      <button class="tool-btn" onclick="closeModal()">Close</button>
-      <button class="tool-btn primary" onclick="copyExport()">Copy to clipboard</button>
-    </div>`);
-  window._exportText = text;
-}
-
-function copyExport() {
-  navigator.clipboard.writeText(window._exportText||'').then(()=>{
+  navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('#modal-root .primary');
-    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy to clipboard',1500);}
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 1500); }
   });
 }
 
@@ -882,13 +1058,14 @@ function confirmReset() {
 function doReset() {
   const day = dayData(viewDate);
   state.codes.forEach(c => { day.hours[c.id] = 0; });
-  day.log = [];
   day.clock = {sessions: []};
+  if (viewDate === today()) state.activeTimer = null;
   save(state);
   closeModal();
   render();
   renderClock();
 }
+
 
 // ── Spread hours ─────────────────────────────────────────────────────────────
 // Distributes unallocated clock time proportionally across CCs that already
@@ -928,9 +1105,9 @@ function openSpread() {
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
     <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
 
-  if (clockHrs === 0)           return bail('No clock time recorded for this day.');
+  if (clockHrs === 0)            return bail('No clock time recorded for this day.');
   if (candidateCCs.length === 0) return bail('No charge code hours to spread from — log some time first.');
-  if (unallocHrs <= 0)          return bail(`No unallocated time: logged <strong>${loggedHrs.toFixed(1)} hr</strong> already meets or exceeds clock time <strong>${clockHrs.toFixed(1)} hr</strong>.`);
+  if (unallocHrs <= 0)           return bail(`No unallocated time: logged <strong>${loggedHrs.toFixed(1)} hr</strong> already meets or exceeds clock time <strong>${clockHrs.toFixed(1)} hr</strong>.`);
 
   _spreadState = {candidateCCs, day, unallocTenths: Math.round(unallocHrs * 10)};
 
@@ -984,7 +1161,6 @@ function refreshSpreadPreview() {
     return el && el.checked;
   });
 
-  // Persist exclusion choices
   candidateCCs.forEach(cc => {
     const el = document.getElementById('sc-' + cc.id);
     if (el) cc.spreadExcluded = !el.checked;
@@ -993,11 +1169,10 @@ function refreshSpreadPreview() {
 
   _pendingSpread = selected.length > 0 ? computeSpread(selected, day.hours, unallocTenths) : null;
 
-  // Reset all rows to blank
   candidateCCs.forEach(cc => {
     const addEl   = document.getElementById('sp-add-'   + cc.id);
     const afterEl = document.getElementById('sp-after-' + cc.id);
-    if (addEl)   { addEl.textContent = ''; }
+    if (addEl)   addEl.textContent = '';
     if (afterEl) { afterEl.textContent = (day.hours[cc.id]||0).toFixed(1); afterEl.style.color = 'var(--fg-2)'; }
   });
 
@@ -1010,15 +1185,15 @@ function refreshSpreadPreview() {
     });
   }
 
-  const totalEl = document.getElementById('sp-new-total');
+  const totalEl  = document.getElementById('sp-new-total');
   const applyBtn = document.getElementById('sp-apply-btn');
   if (_pendingSpread) {
     const spreadById = Object.fromEntries(_pendingSpread.map(s => [s.id, s.after]));
     const newTotal = state.codes.reduce((s,c) => s + (spreadById[c.id] ?? (day.hours[c.id]||0)), 0);
-    if (totalEl) totalEl.textContent = newTotal.toFixed(1);
+    if (totalEl)  totalEl.textContent = newTotal.toFixed(1);
     if (applyBtn) applyBtn.disabled = false;
   } else {
-    if (totalEl) totalEl.textContent = '—';
+    if (totalEl)  totalEl.textContent = '—';
     if (applyBtn) applyBtn.disabled = true;
   }
 }
@@ -1026,17 +1201,12 @@ function refreshSpreadPreview() {
 function applySpread() {
   if (!_pendingSpread) return;
   const day = dayData(viewDate);
-  const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  _pendingSpread.forEach(s => {
-    day.hours[s.id] = s.after;
-    day.log.push({id: s.id, delta: s.add, result: s.after, note: 'spread', ts});
-  });
+  _pendingSpread.forEach(s => { day.hours[s.id] = s.after; });
   _pendingSpread = null;
   save(state);
   closeModal();
   render();
 }
-// ── end spread ────────────────────────────────────────────────────────────────
 
 function showModal(html) {
   const root = document.getElementById('modal-root');
@@ -1083,7 +1253,10 @@ function renderClock() {
   const totalHrs = clockTotalHours();
   const displayHrs = (Math.floor(totalHrs*10)/10).toFixed(1);
   const active = clockSessions().find(s => s.end===null);
-  const statusText = running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock';
+  const activeCC = state.activeTimer ? state.codes.find(c => c.id === state.activeTimer.ccId) : null;
+  const activeCCLabel = activeCC ? ((activeCC.program||'').trim() ? `${esc(activeCC.program)} \u2014 ${esc(activeCC.name)}` : esc(activeCC.name)) : '';
+  const activeCCText = activeCC ? `&nbsp;&nbsp;<span style="color:var(--green)">&#9654;&nbsp;${activeCCLabel}</span>` : '';
+  const statusText = (running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock') + activeCCText;
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
   bar.className = `clock-bar ${running?'running':'stopped'}`;
@@ -1100,14 +1273,20 @@ function renderClock() {
 function openClockStart() {
   if (clockIsRunning()) return;
   clockSessions().push({start: currentHHMM(), end: null});
-  save(state); renderClock();
+  if (state.activeTimer && !state.activeTimer.sessionStart) {
+    state.activeTimer.sessionStart = Date.now();
+    state.activeTimer.committedTenths = 0;
+  }
+  save(state); renderClock(); render();
 }
 
 function openClockStop() {
   const running = clockSessions().find(s => s.end===null);
   if (!running) return;
+  finalizeActiveTimer();
+  state.activeTimer = null;
   running.end = currentHHMM();
-  save(state); renderClock();
+  save(state); renderClock(); render();
 }
 
 function openClockSessions() { renderClockSessionsModal(); }
@@ -1159,13 +1338,34 @@ function addClockSession() {
   save(state); renderClockSessionsModal();
 }
 
-// Refresh every 30 s; auto-advance viewDate at midnight if user was on today
+// Refresh every 30 s; auto-advance viewDate at midnight
 let _tickDate = today();
 setInterval(() => {
   const t = today();
-  if (t !== _tickDate) { if (viewDate===_tickDate) { viewDate=t; render(); } _tickDate=t; }
+  if (t !== _tickDate) {
+    if (state.activeTimer) { finalizeActiveTimer(); state.activeTimer = null; save(state); }
+    if (viewDate===_tickDate) { viewDate=t; render(); }
+    _tickDate=t;
+  }
   renderClock();
 }, 30000);
+
+// 1-second tick: auto-commit elapsed tenths and update displays
+setInterval(() => {
+  if (!state.activeTimer || !state.activeTimer.sessionStart || !clockIsRunning()) return;
+  const {ccId, sessionStart, committedTenths = 0} = state.activeTimer;
+  const elapsedTenths = Math.floor((Date.now() - sessionStart) / 360000);
+  if (elapsedTenths > committedTenths) {
+    const delta = (elapsedTenths - committedTenths) / 10;
+    state.activeTimer.committedTenths = elapsedTenths;
+    const day = dayData(today());
+    day.hours[ccId] = parseFloat(((day.hours[ccId] || 0) + delta).toFixed(1));
+    save(state);
+    const hoursEl = document.getElementById('cc-hours-' + ccId);
+    if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours accumulating`; }
+    renderClock();
+  }
+}, 1000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
 render();
