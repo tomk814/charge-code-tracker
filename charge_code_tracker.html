@@ -144,6 +144,30 @@
     margin-bottom: 0;
   }
 
+  /* ── data footer ── */
+  .data-footer {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #last-saved-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--fg-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #last-saved-label:hover { color: var(--fg-1); }
+
+  #data-btns {
+    display: none;
+    gap: 6px;
+  }
+
   .cc-card {
     background: var(--bg-0);
     border: 1px solid var(--bd-2);
@@ -497,12 +521,23 @@
   <div id="clock-bar" class="clock-bar"></div>
 
   <div class="cc-list" id="cc-list"></div>
+
+  <div class="data-footer">
+    <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
+    <div id="data-btns">
+      <button class="tool-btn" onclick="importJSON()">Import JSON</button>
+      <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+    </div>
+  </div>
 </div>
+<input type="file" id="json-file-input" accept=".json,application/json" style="display:none" onchange="handleJSONFile(event)">
 
 <div id="modal-root"></div>
 
 <script>
 const STORAGE_KEY = 'cc_tracker_v3';
+let lastSavedAt = null;
+let _dataBtnTimer = null;
 
 // ── Persistence ─────────────────────────────────────────────────────────────
 // v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
@@ -547,6 +582,60 @@ function save(s) {
   const keys = Object.keys(s.days || {}).sort();
   while (keys.length > 14) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  lastSavedAt = new Date();
+  updateLastSaved();
+}
+
+function updateLastSaved() {
+  const el = document.getElementById('last-saved-label');
+  if (!el) return;
+  if (!lastSavedAt) { el.textContent = 'not saved yet'; return; }
+  const t = lastSavedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  el.textContent = `last saved ${t}`;
+}
+
+function revealDataButtons() {
+  const btns = document.getElementById('data-btns');
+  if (!btns) return;
+  btns.style.display = 'flex';
+  clearTimeout(_dataBtnTimer);
+  _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
+}
+
+function exportJSON() {
+  const json = localStorage.getItem(STORAGE_KEY) || '{}';
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `time_tracker_backup_${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON() {
+  document.getElementById('json-file-input').value = '';
+  document.getElementById('json-file-input').click();
+}
+
+function handleJSONFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      state = loadState();
+      render();
+      renderClock();
+      lastSavedAt = new Date();
+      updateLastSaved();
+    } catch {
+      alert('Invalid JSON file.');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function dayData(date) {
