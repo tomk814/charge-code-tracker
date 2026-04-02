@@ -8,8 +8,8 @@ No install. No account. No internet required. Just open the file.
 
 ## Setup
 
-1. Download `timetracker.html`
-2. Create a folder for it somewhere convenient, e.g. `Documents/timetracker/`
+1. Download `charge_code_tracker.html`
+2. Create a folder for it somewhere convenient, e.g. `Documents/charge_code_tracker/`
 3. Double-click the file — it opens in your browser
 4. Optionally, pin the tab so it persists across browser sessions
 
@@ -18,8 +18,8 @@ That's it. Your charge codes and daily data are saved automatically in your brow
 ### Recommended folder layout
 
 ```
-timetracker/
-├── timetracker.html
+charge_code_tracker/
+├── charge_code_tracker.html
 └── backups/          ← keep your JSON backups here (see Data Safety below)
 ```
 
@@ -91,7 +91,7 @@ timetracker/
 
 ### Rules to avoid data loss
 
-- Always open `timetracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
+- Always open `charge_code_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
 - Always use the **same browser**. Chrome and Edge have separate localStorage.
 - Do **not** use "Clear browsing data" without first being aware that it may wipe your tracker history.
 - If you get a new machine or reinstall your browser, you will need to restore from a backup (once that feature is available).
