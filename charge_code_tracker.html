@@ -348,6 +348,16 @@
 
   .field input:focus { outline: none; border-color: var(--bd-0); }
 
+  .eod-note {
+    width: 100%; box-sizing: border-box;
+    font-size: 11px; font-family: var(--font-sans);
+    padding: 3px 7px; margin: 3px 0 6px;
+    border: 1px solid var(--bd-2); border-radius: 2px;
+    background: var(--bg); color: var(--fg-0);
+  }
+  .eod-note::placeholder { color: var(--fg-2); }
+  .eod-note:focus { outline: none; border-color: var(--bd-0); }
+
   .modal-actions {
     display: flex;
     gap: 6px;
@@ -519,8 +529,8 @@
   <div class="toolbar">
     <button class="tool-btn primary" onclick="openAddCC()">+ Add charge code</button>
     <button class="tool-btn" onclick="openManage()">Manage CCs</button>
-    <button class="tool-btn" onclick="openExport()">Export / copy</button>
     <button class="tool-btn" onclick="openSpread()">Spread hours</button>
+    <button class="tool-btn" onclick="openEndOfDay()">End of day</button>
     <button class="tool-btn" onclick="confirmReset()">Reset day</button>
   </div>
 
@@ -965,33 +975,70 @@ function deleteCC(id) {
   render();
 }
 
-function openExport() {
+function openEndOfDay() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const day = dayData(viewDate);
-  const total = state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0);
+  const activeCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0);
+  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
+
+  if (!activeCCs.length) {
+    showModal(`<h2>End of day</h2>
+      <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">No hours logged for this day.</p>
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+    return;
+  }
+
+  const rows = activeCCs.map(cc => {
+    const prog = (cc.program || '').trim();
+    const label = prog ? `${prog}: ${cc.name}` : cc.name;
+    return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
+      <span style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--fg-0)">${esc(label)}</div>
+        <div style="font-size:10px;color:var(--fg-2);font-family:var(--font-mono)">${esc(cc.code)}</div>
+      </span>
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0">${(day.hours[cc.id]||0).toFixed(1)}</span>
+    </div>
+    <input class="eod-note" id="eod-note-${cc.id}" placeholder="note (optional)">`;
+  }).join('');
+
+  showModal(`<h2>End of day</h2>
+    <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${dateStr}</p>
+    <div style="display:flex;gap:10px;padding:2px 0 5px;font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd-1)">
+      <span style="flex:1">Charge code</span>
+      <span style="min-width:36px;text-align:right">Hours</span>
+    </div>
+    ${rows}
+    <div style="display:flex;gap:10px;padding:6px 0 2px;font-size:12px;font-family:var(--font-mono)">
+      <span style="flex:1;color:var(--fg-2)">Total</span>
+      <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Close</button>
+      <button class="tool-btn primary" onclick="copyEndOfDay()">Copy to clipboard</button>
+    </div>`);
+}
+
+function copyEndOfDay() {
+  const viewDt = new Date(viewDate + 'T12:00:00');
+  const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const day = dayData(viewDate);
+  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
   const lines = [`Time summary — ${dateStr}`, ''];
   state.codes.forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
+    if (!hrs) return;
+    const note = (document.getElementById('eod-note-' + cc.id)?.value || '').trim();
     lines.push(`${cc.code}  ${cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
+    if (note) lines.push(`  ${note}`);
     lines.push('');
   });
   lines.push(`Total: ${total.toFixed(1)} hr`);
   const text = lines.join('\n');
-  showModal(`<h2>Export</h2>
-    <div class="export-box" id="export-text">${esc(text)}</div>
-    <div class="modal-actions">
-      <button class="tool-btn" onclick="closeModal()">Close</button>
-      <button class="tool-btn primary" onclick="copyExport()">Copy to clipboard</button>
-    </div>`);
-  window._exportText = text;
-}
-
-function copyExport() {
-  navigator.clipboard.writeText(window._exportText||'').then(()=>{
+  navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('#modal-root .primary');
-    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy to clipboard',1500);}
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 1500); }
   });
 }
 
@@ -1018,6 +1065,7 @@ function doReset() {
   render();
   renderClock();
 }
+
 
 // ── Spread hours ─────────────────────────────────────────────────────────────
 // Distributes unallocated clock time proportionally across CCs that already
@@ -1057,9 +1105,9 @@ function openSpread() {
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
     <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
 
-  if (clockHrs === 0)           return bail('No clock time recorded for this day.');
+  if (clockHrs === 0)            return bail('No clock time recorded for this day.');
   if (candidateCCs.length === 0) return bail('No charge code hours to spread from — log some time first.');
-  if (unallocHrs <= 0)          return bail(`No unallocated time: logged <strong>${loggedHrs.toFixed(1)} hr</strong> already meets or exceeds clock time <strong>${clockHrs.toFixed(1)} hr</strong>.`);
+  if (unallocHrs <= 0)           return bail(`No unallocated time: logged <strong>${loggedHrs.toFixed(1)} hr</strong> already meets or exceeds clock time <strong>${clockHrs.toFixed(1)} hr</strong>.`);
 
   _spreadState = {candidateCCs, day, unallocTenths: Math.round(unallocHrs * 10)};
 
@@ -1113,7 +1161,6 @@ function refreshSpreadPreview() {
     return el && el.checked;
   });
 
-  // Persist exclusion choices
   candidateCCs.forEach(cc => {
     const el = document.getElementById('sc-' + cc.id);
     if (el) cc.spreadExcluded = !el.checked;
@@ -1122,11 +1169,10 @@ function refreshSpreadPreview() {
 
   _pendingSpread = selected.length > 0 ? computeSpread(selected, day.hours, unallocTenths) : null;
 
-  // Reset all rows to blank
   candidateCCs.forEach(cc => {
     const addEl   = document.getElementById('sp-add-'   + cc.id);
     const afterEl = document.getElementById('sp-after-' + cc.id);
-    if (addEl)   { addEl.textContent = ''; }
+    if (addEl)   addEl.textContent = '';
     if (afterEl) { afterEl.textContent = (day.hours[cc.id]||0).toFixed(1); afterEl.style.color = 'var(--fg-2)'; }
   });
 
@@ -1139,15 +1185,15 @@ function refreshSpreadPreview() {
     });
   }
 
-  const totalEl = document.getElementById('sp-new-total');
+  const totalEl  = document.getElementById('sp-new-total');
   const applyBtn = document.getElementById('sp-apply-btn');
   if (_pendingSpread) {
     const spreadById = Object.fromEntries(_pendingSpread.map(s => [s.id, s.after]));
     const newTotal = state.codes.reduce((s,c) => s + (spreadById[c.id] ?? (day.hours[c.id]||0)), 0);
-    if (totalEl) totalEl.textContent = newTotal.toFixed(1);
+    if (totalEl)  totalEl.textContent = newTotal.toFixed(1);
     if (applyBtn) applyBtn.disabled = false;
   } else {
-    if (totalEl) totalEl.textContent = '—';
+    if (totalEl)  totalEl.textContent = '—';
     if (applyBtn) applyBtn.disabled = true;
   }
 }
@@ -1155,15 +1201,12 @@ function refreshSpreadPreview() {
 function applySpread() {
   if (!_pendingSpread) return;
   const day = dayData(viewDate);
-  _pendingSpread.forEach(s => {
-    day.hours[s.id] = s.after;
-  });
+  _pendingSpread.forEach(s => { day.hours[s.id] = s.after; });
   _pendingSpread = null;
   save(state);
   closeModal();
   render();
 }
-// ── end spread ────────────────────────────────────────────────────────────────
 
 function showModal(html) {
   const root = document.getElementById('modal-root');
