@@ -785,7 +785,8 @@ function renderPayPeriod() {
   const dateStr = `${end.getMonth()+1}/${end.getDate()}`;
   const wdLeft = workingDaysRemaining(today(), end);
   const hrs = payPeriodHours(end);
-  el.textContent = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrs.toFixed(1)}`;
+  const hrsStr = `<span${hrs >= 80 ? ' style="color:var(--green)"' : ''}>${hrs.toFixed(1)}</span>`;
+  el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrsStr}`;
 }
 
 function render() {
