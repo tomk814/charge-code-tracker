@@ -1,5 +1,19 @@
 # charge-code-tracker
 
+## Features
+
+- Charge codes (code + label + optional program group) stored in `localStorage` — survive browser close and reboot
+- Charge codes can be grouped by program; each group renders as a collapsible card with a subtotal
+- Per-CC increment/decrement buttons: ±0.1, ±0.5, ±1.0
+- Optional per-entry note attached to history log
+- Expandable per-CC history log with timestamps and notes
+- Day navigation: browse past days with `‹` / `›`; past days are read-only
+- Wall-clock tracker with Start/Stop, animated running indicator, and session log
+- Spread hours: distribute unallocated clock time across selected charge codes
+- Export / copy: plain-text EOD summary for pasting into Deltek Costpoint
+- Auto-reset at midnight (hours + log cleared; charge codes kept)
+- Manual "Reset day" and add/edit/remove charge codes via modal UI
+
 ## UI component terminology
 
 Use these names when describing changes to the interface.
@@ -41,6 +55,18 @@ Use these names when describing changes to the interface.
 | **Clock total display** | Large monospace number showing total clocked hours for the day |
 | **Clock Start / Stop button** | Toggles the running state |
 | **Sessions button** | Opens the Clock Sessions modal |
+
+### Program group card
+
+When one or more charge codes share a **Program** label, they are rendered together inside a **program group card** (`.pg-card`).
+
+| Name | Description | CSS selector |
+|------|-------------|--------------|
+| **Program group card** | Container grouping all CCs under one program | `.pg-card` |
+| **Program header** | Row showing the program name and group subtotal | `.pg-header` |
+| **Program name** | The program label, e.g. "Program A" | `.pg-name` |
+| **Program total** | Sum of hours for all CCs in the group | `.pg-total` |
+| **Program row** | One CC's controls inside the group card | `.pg-row` |
 
 ### Charge code card
 
