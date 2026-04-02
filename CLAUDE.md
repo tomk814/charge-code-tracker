@@ -9,6 +9,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ```
 /
 ├── CLAUDE.md
+├── NAMES_FOR_THINGS.md
 ├── README.md
 └── charge_code_tracker.html   ← the entire app; do not split into multiple files
 ```
@@ -39,7 +40,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 
 ## Keeping docs in sync
 
-**When you add, remove, or rename a UI component or feature, update `README.md` to match.**
+**When you add, remove, or rename a UI component or feature, update `NAMES_FOR_THINGS.md` to match.**
 
 - New CSS selectors or named UI elements → add a row to the relevant table in README
 - New toolbar button or modal → add to the toolbar or modals table
