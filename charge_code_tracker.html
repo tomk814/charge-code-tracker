@@ -86,13 +86,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 0 10px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--bd-2);
+    padding: 12px 0 6px;
+    margin-bottom: 0;
     position: sticky;
     top: 0;
     background: var(--bg);
     z-index: 10;
+  }
+
+  .pay-period-bar {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--fg-2);
+    padding: 3px 0 8px;
+    border-bottom: 1px solid var(--bd-2);
+    margin-bottom: 10px;
   }
 
   .title {
@@ -506,6 +514,8 @@
     </div>
   </div>
 
+  <div class="pay-period-bar" id="pay-period-bar"></div>
+
   <div class="toolbar">
     <button class="tool-btn primary" onclick="openAddCC()">+ Add charge code</button>
     <button class="tool-btn" onclick="openManage()">Manage CCs</button>
@@ -729,7 +739,57 @@ function renderProgramCard(programName, codes, day) {
   </div>`;
 }
 
+// ── Pay period ───────────────────────────────────────────────────────────────
+const PP_ANCHOR = new Date('2026-04-04T12:00:00'); // known period-end Saturday
+
+function payPeriodEnd(fromDateStr) {
+  const d = new Date(fromDateStr + 'T12:00:00');
+  const diffDays = Math.round((d - PP_ANCHOR) / 86400000);
+  const daysIntoPeriod = ((diffDays % 14) + 14) % 14;
+  const daysUntilEnd = daysIntoPeriod === 0 ? 0 : 14 - daysIntoPeriod;
+  const end = new Date(d);
+  end.setDate(end.getDate() + daysUntilEnd);
+  return end;
+}
+
+function workingDaysRemaining(fromDateStr, endDate) {
+  const from = new Date(fromDateStr + 'T12:00:00');
+  let count = 0;
+  const d = new Date(from);
+  while (d <= endDate) {
+    const dow = d.getDay();
+    if (dow >= 1 && dow <= 5) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+
+function payPeriodHours(endDate) {
+  const start = new Date(endDate);
+  start.setDate(start.getDate() - 13);
+  let total = 0;
+  for (const [dateStr, day] of Object.entries(state.days || {})) {
+    const d = new Date(dateStr + 'T12:00:00');
+    if (d >= start && d <= endDate) {
+      total += Object.values(day.hours || {}).reduce((s, h) => s + h, 0);
+    }
+  }
+  return parseFloat(total.toFixed(1));
+}
+
+function renderPayPeriod() {
+  const el = document.getElementById('pay-period-bar');
+  if (!el) return;
+  const end = payPeriodEnd(today());
+  const dayAbbr = end.toLocaleDateString([], {weekday:'short'});
+  const dateStr = `${end.getMonth()+1}/${end.getDate()}`;
+  const wdLeft = workingDaysRemaining(today(), end);
+  const hrs = payPeriodHours(end);
+  el.textContent = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrs.toFixed(1)}`;
+}
+
 function render() {
+  renderPayPeriod();
   const isToday = viewDate === today();
   const viewDt = new Date(viewDate + 'T12:00:00');
   document.getElementById('date-badge').textContent =
