@@ -4,7 +4,7 @@
 
 - Charge codes (code + label + optional program group) stored in `localStorage` — survive browser close and reboot
 - Charge codes can be grouped by program; each group renders as a collapsible card with a subtotal
-- Per-CC increment/decrement buttons: ±0.1, ±0.5, ±1.0
+- Per-CC mouse wheel adjustment: scroll up/down for ±0.1 hr; hold Shift for ±1.0 hr (floor at 0)
 - Optional per-entry note attached to history log
 - Expandable per-CC history log with timestamps and notes
 - Day navigation: browse past days with `‹` / `›`; past days are read-only
@@ -79,8 +79,7 @@ Card
 │   │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
 │   └── Hours display     (.cc-hours)  — current total, e.g. "3.5"
 └── Card controls row     (.cc-bottom)
-    ├── Increment buttons (.btn-inc)           — "+0.1", "+0.5", "+1.0"
-    ├── Decrement buttons (.btn-inc.neg)       — "−0.1", "−0.5", "−1.0"
+    ├── Scroll wheel — up/down ±0.1 hr; Shift+scroll ±1.0 hr
     └── Note field        (.note-input)        — optional free-text input
 ```
 

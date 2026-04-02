@@ -245,28 +245,8 @@
     50%       { color: var(--green); }
   }
 
-  /* ── increment buttons ── */
+  /* ── card controls ── */
   .cc-bottom { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
-
-  .btn-inc {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    padding: 3px 7px;
-    border: 1px solid var(--bd-1);
-    border-radius: 2px;
-    background: transparent;
-    color: var(--fg-0);
-    cursor: pointer;
-    transition: background .08s;
-    min-width: 36px;
-    text-align: center;
-  }
-
-  .btn-inc:hover  { background: var(--bg-2); }
-  .btn-inc:active { transform: scale(0.95); }
-
-  .btn-inc.neg       { color: var(--red); border-color: var(--bd-2); }
-  .btn-inc.neg:hover { background: var(--bg-red); }
 
   .note-input {
     flex: 1;
@@ -577,8 +557,6 @@
 <div id="modal-root"></div>
 
 <script>
-const INCS = [0.1, 0.5, 1.0];
-const NEG_INCS = [-0.1, -0.5, -1.0];
 const STORAGE_KEY = 'cc_tracker_v3';
 
 // ── Persistence ─────────────────────────────────────────────────────────────
@@ -695,8 +673,6 @@ function renderCCControls(cc, day) {
         <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
       </div>
       <div class="cc-bottom">
-        ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
-        ${NEG_INCS.map(d=>`<button class="btn-inc neg" onclick="addTime('${cc.id}',${d})">${d.toFixed(1)}</button>`).join('')}
         <input class="note-input" id="note-${cc.id}" placeholder="note (optional)">
         ${trackControls}
       </div>
@@ -706,16 +682,23 @@ function renderCCControls(cc, day) {
       </div>` : ''}`;
 }
 
+function handleCardWheel(id, e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const step = e.shiftKey ? 1.0 : 0.1;
+  addTime(id, e.deltaY < 0 ? step : -step);
+}
+
 function renderIndividualCard(cc, day) {
   const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
-  return `<div class="cc-card${isTracking?' active-tracking':''}">${renderCCControls(cc, day)}</div>`;
+  return `<div class="cc-card${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
 }
 
 function renderProgramCard(programName, codes, day) {
   const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
   const rows = codes.map(cc => {
     const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
-    return `<div class="pg-row${isTracking?' active-tracking':''}">${renderCCControls(cc, day)}</div>`;
+    return `<div class="pg-row${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
   }).join('');
   return `<div class="pg-card">
     <div class="pg-header">
