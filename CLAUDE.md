@@ -16,7 +16,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 
 ## Constraints — read before touching anything
 
-- **Single HTML file, always.** No build step, no bundler, no node_modules, no external dependencies. Everything — HTML, CSS, JS — lives in `timetracker.html`.
+- **Single HTML file, always.** No build step, no bundler, no node_modules, no external dependencies. Everything — HTML, CSS, JS — lives in `charge_code_tracker.html`.
 - **No CDN imports.** The file must work fully offline and when opened via `file://` in Chrome or Edge on Windows.
 - **No backend, no server.** Persistence is `localStorage` only.
 - **Target environment:** local file opened in Chrome or Edge on Windows. `file://` origin has stricter localStorage scoping than `http://` — don't assume anything about origin.
