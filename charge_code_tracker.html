@@ -299,14 +299,9 @@
     background: transparent; color: var(--fg-2); cursor: pointer;
     transition: color .1s, border-color .1s, background .1s; white-space: nowrap;
   }
-  .btn-track:hover { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.08); }
-
-  .btn-track-stop {
-    font-size: 11px; font-family: var(--font-mono);
-    padding: 3px 8px; border: 1px solid rgba(224,85,85,.4); border-radius: 2px;
-    background: transparent; color: var(--red); cursor: pointer;
-  }
-  .btn-track-stop:hover { background: var(--bg-red); }
+  .btn-track:hover      { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
+  .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
+  .btn-track.on:hover   { background: rgba(77,171,144,.18); }
 
   .tracker-elapsed {
     font-size: 11px; font-family: var(--font-mono); color: var(--green);
@@ -702,20 +697,19 @@ function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
   const ccLog = day.log.filter(e => e.id === cc.id);
   const hasLog = ccLog.length > 0;
-  const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
+  const isActive = state.activeTimer && state.activeTimer.ccId === cc.id;
+  const isRunning = isActive && !!state.activeTimer.sessionStart && clockIsRunning();
   const isToday = viewDate === today();
   const trackControls = isToday
-    ? (isTracking
-        ? `<span class="tracker-elapsed" id="timer-elapsed-${cc.id}">${formatElapsed(Date.now() - state.activeTimer.startedAt)}</span>` +
-          `<button class="btn-track-stop" onclick="stopTracking()">&#9632;&nbsp;Stop</button>`
-        : `<button class="btn-track" onclick="startTracking('${cc.id}')">&#9654;&nbsp;Track</button>`)
+    ? `${isRunning ? `<span class="tracker-elapsed" id="timer-elapsed-${cc.id}">${formatElapsed(Date.now() - state.activeTimer.sessionStart)}</span>` : ''}` +
+      `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
     : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        <div class="cc-hours ${hrs===0?'zero':''}">${hrs.toFixed(1)}</div>
+        <div class="cc-hours${hrs===0?' zero':''}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
       </div>
       <div class="cc-bottom">
         ${INCS.map(d=>`<button class="btn-inc" onclick="addTime('${cc.id}',${d})">+${d.toFixed(1)}</button>`).join('')}
@@ -798,36 +792,32 @@ function toggleLog(id) {
 }
 
 // ── Live CC tracker ──────────────────────────────────────────────────────────
-function commitActiveTimer() {
-  if (!state.activeTimer) return;
-  const {ccId, startedAt, startedDate} = state.activeTimer;
-  if (startedDate !== today()) return;
-  const cc = state.codes.find(c => c.id === ccId);
-  if (!cc) return;
-  const delta = parseFloat(((Date.now() - startedAt) / 3600000).toFixed(1));
-  if (delta <= 0) return;
-  const day = dayData(today());
-  const prev = day.hours[ccId] || 0;
-  day.hours[ccId] = parseFloat((prev + delta).toFixed(1));
-  const noteEl = document.getElementById('note-' + ccId);
-  const note = noteEl ? noteEl.value.trim() : '';
-  if (noteEl) noteEl.value = '';
-  const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  day.log.push({id: ccId, delta, result: day.hours[ccId], note, ts, timer: true});
+// Writes a single log entry for a completed session then resets sessionStart.
+// Does NOT add hours (those were already auto-committed by the 1s tick).
+function finalizeActiveTimer() {
+  if (!state.activeTimer || !state.activeTimer.sessionStart) return;
+  const {ccId, committedTenths = 0} = state.activeTimer;
+  if (committedTenths > 0) {
+    const day = dayData(today());
+    const noteEl = document.getElementById('note-' + ccId);
+    const note = noteEl ? noteEl.value.trim() : '';
+    if (noteEl) noteEl.value = '';
+    const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    day.log.push({id: ccId, delta: committedTenths / 10, result: day.hours[ccId], note, ts, timer: true});
+  }
+  state.activeTimer.sessionStart = null;
+  state.activeTimer.committedTenths = 0;
 }
 
-function startTracking(ccId) {
-  if (state.activeTimer) commitActiveTimer();
-  state.activeTimer = {ccId, startedAt: Date.now(), startedDate: today()};
-  save(state);
-  render();
-  renderClock();
-}
-
-function stopTracking() {
-  if (!state.activeTimer) return;
-  commitActiveTimer();
-  state.activeTimer = null;
+function setActiveCC(ccId) {
+  if (state.activeTimer && state.activeTimer.ccId === ccId) {
+    finalizeActiveTimer();
+    state.activeTimer = null;
+  } else {
+    if (state.activeTimer) finalizeActiveTimer();
+    state.activeTimer = {ccId, startedDate: today(),
+      sessionStart: clockIsRunning() ? Date.now() : null, committedTenths: 0};
+  }
   save(state);
   render();
   renderClock();
@@ -914,6 +904,7 @@ function submitEditCC(id) {
 }
 
 function deleteCC(id) {
+  if (state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   state.codes = state.codes.filter(c => c.id !== id);
   Object.values(state.days||{}).forEach(day => {
     delete day.hours[id];
@@ -973,6 +964,7 @@ function doReset() {
   state.codes.forEach(c => { day.hours[c.id] = 0; });
   day.log = [];
   day.clock = {sessions: []};
+  if (viewDate === today()) state.activeTimer = null;
   save(state);
   closeModal();
   render();
@@ -1192,14 +1184,19 @@ function renderClock() {
 function openClockStart() {
   if (clockIsRunning()) return;
   clockSessions().push({start: currentHHMM(), end: null});
-  save(state); renderClock();
+  if (state.activeTimer && !state.activeTimer.sessionStart) {
+    state.activeTimer.sessionStart = Date.now();
+    state.activeTimer.committedTenths = 0;
+  }
+  save(state); renderClock(); render();
 }
 
 function openClockStop() {
   const running = clockSessions().find(s => s.end===null);
   if (!running) return;
+  finalizeActiveTimer();
   running.end = currentHHMM();
-  save(state); renderClock();
+  save(state); renderClock(); render();
 }
 
 function openClockSessions() { renderClockSessionsModal(); }
@@ -1251,23 +1248,37 @@ function addClockSession() {
   save(state); renderClockSessionsModal();
 }
 
-// Refresh every 30 s; auto-advance viewDate at midnight if user was on today
+// Refresh every 30 s; auto-advance viewDate at midnight
 let _tickDate = today();
 setInterval(() => {
   const t = today();
   if (t !== _tickDate) {
-    if (state.activeTimer) { state.activeTimer = null; save(state); }
+    if (state.activeTimer) { finalizeActiveTimer(); state.activeTimer = null; save(state); }
     if (viewDate===_tickDate) { viewDate=t; render(); }
     _tickDate=t;
   }
   renderClock();
 }, 30000);
 
-// Update live elapsed display every second without a full re-render
+// 1-second tick: auto-commit elapsed tenths and update displays
 setInterval(() => {
-  if (!state.activeTimer) return;
-  const el = document.getElementById('timer-elapsed-' + state.activeTimer.ccId);
-  if (el) el.textContent = formatElapsed(Date.now() - state.activeTimer.startedAt);
+  if (!state.activeTimer || !state.activeTimer.sessionStart || !clockIsRunning()) return;
+  const {ccId, sessionStart, committedTenths = 0} = state.activeTimer;
+  const elapsedTenths = Math.floor((Date.now() - sessionStart) / 360000);
+  if (elapsedTenths > committedTenths) {
+    const delta = (elapsedTenths - committedTenths) / 10;
+    state.activeTimer.committedTenths = elapsedTenths;
+    const day = dayData(today());
+    day.hours[ccId] = parseFloat(((day.hours[ccId] || 0) + delta).toFixed(1));
+    save(state);
+    const hoursEl = document.getElementById('cc-hours-' + ccId);
+    if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours${day.hours[ccId]===0?' zero':''}`; }
+    const totalEl = document.getElementById('grand-total');
+    if (totalEl) totalEl.textContent = state.codes.reduce((s,c) => s+(dayData(today()).hours[c.id]||0), 0).toFixed(1);
+    renderClock();
+  }
+  const el = document.getElementById('timer-elapsed-' + ccId);
+  if (el) el.textContent = formatElapsed(Date.now() - sessionStart);
 }, 1000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
