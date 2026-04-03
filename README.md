@@ -33,9 +33,10 @@ charge_code_tracker/
 
 **Throughout the day**
 - Scroll up/down on a charge code card to add or subtract time in 0.1 hr increments.
-- Hold **Shift** while scrolling for 0.5 hr increments.
+- Hold **Shift** while scrolling for 1.0 hr increments.
 - Click **Active** on a charge code to start auto-accruing time to it as the clock runs.
 - Set **Active** to a different CC when you switch tasks.
+- Optionally, enable click-to-adjust increment buttons via **Show increments** (click the "last saved" link to reveal it).
 
 **End of day**
 - Click **Stop** on the clock bar.
@@ -51,6 +52,12 @@ charge_code_tracker/
 - Assign a **Program** to group related CCs under a shared header with a combined subtotal.
 - Edit or remove codes anytime from **Manage CCs**.
 - Codes persist indefinitely — you only set them up once.
+
+### Increment buttons
+- Click the **"last saved"** link at the bottom to reveal the data panel, then click **Show increments**.
+- When enabled, each CC card shows clickable −1.0, −0.5, −0.1, +0.1, +0.5, +1.0 buttons below the hours display.
+- Hold **Shift** while clicking any increment button to apply ±1.0 hr regardless of the button's labeled step.
+- The setting persists across sessions.
 
 ### Clock
 - The clock bar tracks wall-clock time for the day via manual sessions (Start/Stop).
@@ -104,7 +111,8 @@ charge_code_tracker/
 | `Escape` | Close any open modal |
 | `Scroll up` on a CC card | +0.1 hr |
 | `Scroll down` on a CC card | −0.1 hr |
-| `Shift` + scroll | ±0.5 hr |
+| `Shift` + scroll | ±1.0 hr |
+| `Shift` + click increment button | ±1.0 hr (overrides button's own step) |
 
 ---
 

@@ -413,6 +413,31 @@
 
   .reset-warn { font-size: 12px; color: var(--red); margin-top: 8px; }
 
+  /* ── increment buttons ── */
+  .cc-increments {
+    display: flex;
+    gap: 3px;
+    margin-top: 6px;
+    align-items: center;
+  }
+
+  .btn-inc {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 2px 6px;
+    border: 1px solid var(--bd-2);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--fg-2);
+    cursor: pointer;
+    transition: color .1s, border-color .1s, background .1s;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .btn-inc.neg:hover { color: var(--red);   border-color: var(--bd-red); background: var(--bg-red); }
+  .btn-inc.pos:hover { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
+
   /* ── clock bar ── */
   .clock-bar {
     display: flex;
@@ -545,6 +570,7 @@
   <div class="data-footer">
     <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
     <div id="data-btns">
+      <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Show increments</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
     </div>
@@ -618,6 +644,8 @@ function revealDataButtons() {
   const btns = document.getElementById('data-btns');
   if (!btns) return;
   btns.style.display = 'flex';
+  const toggleBtn = document.getElementById('incr-toggle-btn');
+  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Hide increments' : 'Show increments';
   clearTimeout(_dataBtnTimer);
   _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
 }
@@ -704,6 +732,19 @@ function addTime(id, delta) {
 }
 
 
+function toggleIncrements() {
+  state.showIncrements = !state.showIncrements;
+  save(state);
+  const toggleBtn = document.getElementById('incr-toggle-btn');
+  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Hide increments' : 'Show increments';
+  render();
+}
+
+function handleIncrementClick(id, baseDelta, e) {
+  const delta = e.shiftKey ? (baseDelta > 0 ? 1.0 : -1.0) : baseDelta;
+  addTime(id, delta);
+}
+
 function renderCCControls(cc, day) {
   const hrs = day.hours[cc.id] || 0;
   const isActive = state.activeTimer && state.activeTimer.ccId === cc.id;
@@ -712,6 +753,13 @@ function renderCCControls(cc, day) {
   const trackControls = isToday
     ? `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
     : '';
+  const incRow = state.showIncrements
+    ? `<div class="cc-increments">
+        ${[-1.0,-0.5,-0.1].map(d=>`<button class="btn-inc neg" onclick="handleIncrementClick('${cc.id}',${d},event)" title="Shift+click for \u22121.0 hr">${d.toFixed(1)}</button>`).join('')}
+        <span style="flex:1"></span>
+        ${[0.1,0.5,1.0].map(d=>`<button class="btn-inc pos" onclick="handleIncrementClick('${cc.id}',${d},event)" title="Shift+click for +1.0 hr">+${d.toFixed(1)}</button>`).join('')}
+      </div>`
+    : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name">${esc(cc.name)}</div>
@@ -719,7 +767,7 @@ function renderCCControls(cc, day) {
         </div>
         ${trackControls}
         <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
-      </div>`;
+      </div>${incRow}`;
 }
 
 function handleCardWheel(id, e) {

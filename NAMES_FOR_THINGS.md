@@ -45,6 +45,16 @@ Use these names when describing changes to the interface.
 | **Spread hours** | `openSpread()` |
 | **Reset day** | `confirmReset()` |
 
+### Data footer panel
+
+Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds.
+
+| Name | `onclick` | Description |
+|------|-----------|-------------|
+| **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
+| **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
+| **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
+
 ### Clock bar sub-elements
 
 | Name | Description |
@@ -78,9 +88,10 @@ Card
 │   │   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
 │   │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
 │   └── Hours display     (.cc-hours)  — current total, e.g. "3.5"
-└── Card controls row     (.cc-bottom)
-    ├── Scroll wheel — up/down ±0.1 hr; Shift+scroll ±1.0 hr
-    └── Note field        (.note-input)        — optional free-text input
+└── Increment row         (.cc-increments)  — optional; shown when "Show increments" is active
+    ├── Negative buttons  (.btn-inc.neg)    — −1.0, −0.5, −0.1
+    └── Positive buttons  (.btn-inc.pos)    — +0.1, +0.5, +1.0
+        └── Shift+click on any increment button applies ±1.0 hr instead
 ```
 
 Below the two rows, when log entries exist:
