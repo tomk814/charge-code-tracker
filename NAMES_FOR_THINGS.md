@@ -45,6 +45,16 @@ Use these names when describing changes to the interface.
 | **Spread hours** | `openSpread()` |
 | **Reset day** | `confirmReset()` |
 
+### Data footer panel
+
+Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds.
+
+| Name | `onclick` | Description |
+|------|-----------|-------------|
+| **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
+| **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
+| **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
+
 ### Clock bar sub-elements
 
 | Name | Description |
@@ -72,16 +82,17 @@ When one or more charge codes share a **Program** label, they are rendered toget
 Each charge code gets one **card** (`.cc-card`). A card has two rows:
 
 ```
-Card
-├── Card top row          (.cc-top)
-│   ├── Code label        (.cc-label)
-│   │   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
-│   │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
-│   └── Hours display     (.cc-hours)  — current total, e.g. "3.5"
-└── Card controls row     (.cc-bottom)
-    ├── Scroll wheel — up/down ±0.1 hr; Shift+scroll ±1.0 hr
-    └── Note field        (.note-input)        — optional free-text input
+Card top row  (.cc-top)
+├── Code label        (.cc-label)
+│   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
+│   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
+├── Decrement button  (.btn-inc.neg)  — "−"; optional, shown when increments are enabled
+├── Active button     (.btn-track)    — today only; toggles live time accrual
+├── Increment button  (.btn-inc.pos)  — "+"; optional, shown when increments are enabled
+└── Hours display     (.cc-hours)     — current total, e.g. "3.5"
 ```
+
+Default click: ±0.1 hr. Shift+click: ±1.0 hr.
 
 Below the two rows, when log entries exist:
 
