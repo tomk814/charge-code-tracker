@@ -881,14 +881,9 @@ function render() {
 }
 
 // ── Live CC tracker ──────────────────────────────────────────────────────────
-// Writes a single log entry for a completed session then resets sessionStart.
-// Does NOT add hours (those were already auto-committed by the 1s tick).
+// Resets the active session pointer; hours were already committed by the 1s tick.
 function finalizeActiveTimer() {
   if (!state.activeTimer || !state.activeTimer.sessionStart) return;
-  const {ccId, committedTenths = 0} = state.activeTimer;
-  if (committedTenths > 0) {
-    const day = dayData(today());
-  }
   state.activeTimer.sessionStart = null;
   state.activeTimer.committedTenths = 0;
 }
@@ -1401,7 +1396,25 @@ setInterval(() => {
     day.hours[ccId] = parseFloat(((day.hours[ccId] || 0) + delta).toFixed(1));
     save(state);
     const hoursEl = document.getElementById('cc-hours-' + ccId);
-    if (hoursEl) { hoursEl.textContent = day.hours[ccId].toFixed(1); hoursEl.className = `cc-hours accumulating`; }
+    if (hoursEl) {
+      hoursEl.textContent = day.hours[ccId].toFixed(1);
+      hoursEl.className = `cc-hours accumulating`;
+      const pgCard = hoursEl.closest('.pg-card');
+      if (pgCard) {
+        const pgTotalEl = pgCard.querySelector('.pg-total');
+        if (pgTotalEl) {
+          const cc = state.codes.find(c => c.id === ccId);
+          if (cc) {
+            const programName = (cc.program || '').trim();
+            const programCodes = state.codes.filter(c => (c.program || '').trim() === programName);
+            const pgTotal = programCodes.reduce((s, c) => s + (day.hours[c.id] || 0), 0);
+            pgTotalEl.textContent = pgTotal.toFixed(1);
+            pgTotalEl.className = `pg-total${pgTotal === 0 ? ' zero' : ''}`;
+          }
+        }
+      }
+    }
+    renderPayPeriod();
     renderClock();
   }
 }, 1000);
