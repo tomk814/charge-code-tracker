@@ -26,7 +26,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 - Charge codes (code + label + optional program group) persist in localStorage; survive browser close and reboot
 - Charge codes can be grouped by program; grouped codes render under a shared program card (`.pg-card`) with a subtotal
 - Per-CC mouse wheel adjustment: scroll up/down ±0.1 hr; Shift+scroll ±1.0 hr (floor at 0)
-- Per-CC increment buttons (optional, toggled via data panel): +0.1, +0.5, +1.0 and matching negatives; Shift+click any button for ±1.0 hr
+- Per-CC increment buttons (optional, toggled via data panel): "−" and "+" inline with the Active button; default ±0.1 hr, Shift+click ±1.0 hr
 - Expandable per-CC history log with timestamps and notes
 - Running grand total displayed in header
 - Day navigation: browse any past day's log with `‹` / `›` buttons; past days show a banner and are read-only for increments

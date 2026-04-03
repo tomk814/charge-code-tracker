@@ -82,17 +82,17 @@ When one or more charge codes share a **Program** label, they are rendered toget
 Each charge code gets one **card** (`.cc-card`). A card has two rows:
 
 ```
-Card
-├── Card top row          (.cc-top)
-│   ├── Code label        (.cc-label)
-│   │   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
-│   │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
-│   └── Hours display     (.cc-hours)  — current total, e.g. "3.5"
-└── Increment row         (.cc-increments)  — optional; shown when "Show increments" is active
-    ├── Negative buttons  (.btn-inc.neg)    — −1.0, −0.5, −0.1
-    └── Positive buttons  (.btn-inc.pos)    — +0.1, +0.5, +1.0
-        └── Shift+click on any increment button applies ±1.0 hr instead
+Card top row  (.cc-top)
+├── Code label        (.cc-label)
+│   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
+│   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
+├── Decrement button  (.btn-inc.neg)  — "−"; optional, shown when increments are enabled
+├── Active button     (.btn-track)    — today only; toggles live time accrual
+├── Increment button  (.btn-inc.pos)  — "+"; optional, shown when increments are enabled
+└── Hours display     (.cc-hours)     — current total, e.g. "3.5"
 ```
+
+Default click: ±0.1 hr. Shift+click: ±1.0 hr.
 
 Below the two rows, when log entries exist:
 

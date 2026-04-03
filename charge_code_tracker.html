@@ -414,24 +414,17 @@
   .reset-warn { font-size: 12px; color: var(--red); margin-top: 8px; }
 
   /* ── increment buttons ── */
-  .cc-increments {
-    display: flex;
-    gap: 3px;
-    margin-top: 6px;
-    align-items: center;
-  }
-
   .btn-inc {
-    font-size: 10px;
+    font-size: 13px;
     font-family: var(--font-mono);
-    padding: 2px 6px;
+    line-height: 1;
+    padding: 2px 7px;
     border: 1px solid var(--bd-2);
     border-radius: 2px;
     background: transparent;
     color: var(--fg-2);
     cursor: pointer;
     transition: color .1s, border-color .1s, background .1s;
-    white-space: nowrap;
     user-select: none;
   }
 
@@ -740,9 +733,8 @@ function toggleIncrements() {
   render();
 }
 
-function handleIncrementClick(id, baseDelta, e) {
-  const delta = e.shiftKey ? (baseDelta > 0 ? 1.0 : -1.0) : baseDelta;
-  addTime(id, delta);
+function handleIncrementClick(id, sign, e) {
+  addTime(id, sign * (e.shiftKey ? 1.0 : 0.1));
 }
 
 function renderCCControls(cc, day) {
@@ -753,21 +745,20 @@ function renderCCControls(cc, day) {
   const trackControls = isToday
     ? `<button class="btn-track${isActive?' on':''}" onclick="setActiveCC('${cc.id}')">Active</button>`
     : '';
-  const incRow = state.showIncrements
-    ? `<div class="cc-increments">
-        ${[-1.0,-0.5,-0.1].map(d=>`<button class="btn-inc neg" onclick="handleIncrementClick('${cc.id}',${d},event)" title="Shift+click for \u22121.0 hr">${d.toFixed(1)}</button>`).join('')}
-        <span style="flex:1"></span>
-        ${[0.1,0.5,1.0].map(d=>`<button class="btn-inc pos" onclick="handleIncrementClick('${cc.id}',${d},event)" title="Shift+click for +1.0 hr">+${d.toFixed(1)}</button>`).join('')}
-      </div>`
+  const btnNeg = state.showIncrements
+    ? `<button class="btn-inc neg" onclick="handleIncrementClick('${cc.id}',-1,event)" title="−0.1 hr (Shift: −1.0 hr)">&minus;</button>`
+    : '';
+  const btnPos = state.showIncrements
+    ? `<button class="btn-inc pos" onclick="handleIncrementClick('${cc.id}',1,event)" title="+0.1 hr (Shift: +1.0 hr)">+</button>`
     : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
-        ${trackControls}
+        ${btnNeg}${trackControls}${btnPos}
         <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
-      </div>${incRow}`;
+      </div>`;
 }
 
 function handleCardWheel(id, e) {

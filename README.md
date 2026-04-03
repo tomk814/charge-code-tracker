@@ -55,8 +55,8 @@ charge_code_tracker/
 
 ### Increment buttons
 - Click the **"last saved"** link at the bottom to reveal the data panel, then click **Show increments**.
-- When enabled, each CC card shows clickable −1.0, −0.5, −0.1, +0.1, +0.5, +1.0 buttons below the hours display.
-- Hold **Shift** while clicking any increment button to apply ±1.0 hr regardless of the button's labeled step.
+- When enabled, **−** and **+** buttons appear to the left and right of the **Active** button on each CC card.
+- Default click: ±0.1 hr. Hold **Shift** while clicking for ±1.0 hr.
 - The setting persists across sessions.
 
 ### Clock
