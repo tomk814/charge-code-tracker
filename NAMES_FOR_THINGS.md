@@ -1,4 +1,4 @@
-# charge-code-tracker
+# time-tracker
 
 ## Features
 
