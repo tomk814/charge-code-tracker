@@ -1064,7 +1064,7 @@ function openEndOfDay() {
         </span>
         <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0">${(day.hours[cc.id]||0).toFixed(1)}</span>
       </div>
-      <input class="eod-note" id="eod-note-${cc.id}" value="${esc(savedNote)}" placeholder="note (optional)">
+      <input class="eod-note" id="eod-note-${cc.id}" value="${esc(savedNote)}" placeholder="note (optional)" oninput="this.value=this.value.replace(/,/g,'')">
     </div>`;
   }).join('');
 
