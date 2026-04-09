@@ -1080,13 +1080,35 @@ function openEndOfDay() {
       <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
     </div>
     <div class="modal-actions">
-      <button class="tool-btn" onclick="closeModal()">Close</button>
-      <button class="tool-btn" id="eod-save-btn" onclick="saveEodNote()">Save</button>
+      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="clearEodNotes()">Clear</button>
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn primary" onclick="copyEndOfDay()">Copy to clipboard</button>
     </div>`);
 }
 
+function collectEodNotes() {
+  const day = dayData(viewDate);
+  if (!day.notes) day.notes = {};
+  state.codes.forEach(cc => {
+    const el = document.getElementById('eod-note-' + cc.id);
+    if (!el) return;
+    const note = el.value.trim();
+    if (note) day.notes[cc.id] = note;
+    else delete day.notes[cc.id];
+  });
+  save(state);
+  render();
+  renderClock();
+}
+
+function saveEodNote() {
+  collectEodNotes();
+  closeModal();
+}
+
 function copyEndOfDay() {
+  collectEodNotes();
   const viewDt = new Date(viewDate + 'T12:00:00');
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const day = dayData(viewDate);
@@ -1096,7 +1118,7 @@ function copyEndOfDay() {
   state.codes.forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
-    const note = (document.getElementById('eod-note-' + cc.id)?.value || notes[cc.id] || '').trim();
+    const note = (notes[cc.id] || '').trim();
     lines.push(`${cc.code}  ${cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
     if (note) lines.push(`  ${note}`);
@@ -1110,21 +1132,13 @@ function copyEndOfDay() {
   });
 }
 
-function saveEodNote() {
+function clearEodNotes() {
   const day = dayData(viewDate);
-  if (!day.notes) day.notes = {};
-  state.codes.forEach(cc => {
-    const el = document.getElementById('eod-note-' + cc.id);
-    if (!el) return;
-    const note = el.value.trim();
-    if (note) day.notes[cc.id] = note;
-    else delete day.notes[cc.id];
-  });
+  day.notes = {};
   save(state);
   render();
   renderClock();
-  const btn = document.getElementById('eod-save-btn');
-  if (btn) { btn.textContent = 'Saved!'; btn.style.color = 'var(--green)'; setTimeout(() => { btn.textContent = 'Save'; btn.style.color = ''; }, 1500); }
+  closeModal();
 }
 
 function confirmReset() {
