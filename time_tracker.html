@@ -563,7 +563,7 @@
   <div class="data-footer">
     <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
     <div id="data-btns">
-      <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Show increments</button>
+      <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
     </div>
@@ -638,7 +638,7 @@ function revealDataButtons() {
   if (!btns) return;
   btns.style.display = 'flex';
   const toggleBtn = document.getElementById('incr-toggle-btn');
-  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Hide increments' : 'Show increments';
+  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Scroll to Increment' : 'Click to Increment';
   clearTimeout(_dataBtnTimer);
   _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
 }
@@ -729,7 +729,7 @@ function toggleIncrements() {
   state.showIncrements = !state.showIncrements;
   save(state);
   const toggleBtn = document.getElementById('incr-toggle-btn');
-  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Hide increments' : 'Show increments';
+  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Scroll to Increment' : 'Click to Increment';
   render();
 }
 
@@ -762,6 +762,7 @@ function renderCCControls(cc, day) {
 }
 
 function handleCardWheel(id, e) {
+  if (state.showIncrements) return;
   e.preventDefault();
   e.stopPropagation();
   const step = e.shiftKey ? 1.0 : 0.1;
