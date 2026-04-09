@@ -1080,10 +1080,10 @@ function openEndOfDay() {
       <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
     </div>
     <div class="modal-actions">
-      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="clearEodNotes()">Clear</button>
-      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
+      <button class="tool-btn" onclick="clearEodNotes()">Clear</button>
       <button class="tool-btn" onclick="saveEodNote()">Save</button>
-      <button class="tool-btn primary" onclick="copyEndOfDay()">Copy to clipboard</button>
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
     </div>`);
 }
 
