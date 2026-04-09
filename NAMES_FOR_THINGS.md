@@ -2,7 +2,7 @@
 
 ## Features
 
-- Charge codes (code + label + optional program group) stored in `localStorage` — survive browser close and reboot
+- Charge codes (code + activity + optional program group, work package, and nickname) stored in `localStorage` — survive browser close and reboot
 - Charge codes can be grouped by program; each group renders as a collapsible card with a subtotal
 - Per-CC mouse wheel adjustment: scroll up/down for ±0.1 hr; hold Shift for ±1.0 hr (floor at 0)
 - Optional per-entry note attached to history log
@@ -10,7 +10,7 @@
 - Day navigation: browse past days with `‹` / `›`; past days are read-only
 - Wall-clock tracker with Start/Stop, animated running indicator, and session log
 - Spread hours: distribute unallocated clock time across selected charge codes
-- Export / copy: plain-text EOD summary for pasting into Deltek Costpoint
+- Export / copy: plain-text EOD summary for pasting into Deltek Costpoint; CSV copy for spreadsheet import
 - Auto-reset at midnight (hours + log cleared; charge codes kept)
 - Manual "Reset day" and add/edit/remove charge codes via modal UI
 
@@ -84,7 +84,7 @@ Each charge code gets one **card** (`.cc-card`). A card has two rows:
 ```
 Card top row  (.cc-top)
 ├── Code label        (.cc-label)
-│   ├── CC name       (.cc-name)   — human-readable description, e.g. "Program A — design"
+│   ├── CC name       (.cc-name)   — displays nickname if set, otherwise activity name
 │   └── CC code       (.cc-code)   — the number/identifier, e.g. "1234-001"
 ├── Decrement button  (.btn-inc.neg)  — "−"; optional, shown when increments are enabled
 ├── Active button     (.btn-track)    — today only; toggles live time accrual
@@ -118,6 +118,8 @@ Named modals:
 |------------|-----------|
 | **Add CC modal** | "Add charge code" toolbar button |
 | **Manage CCs modal** | "Manage CCs" toolbar button |
+| **Edit CC modal** | "Edit" button inside Manage CCs modal |
+| **End of Day modal** | "End of day" toolbar button |
 | **Export modal** | "Export / copy" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
 | **Reset Day modal** | "Reset day" toolbar button |

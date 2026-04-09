@@ -41,14 +41,15 @@ time_tracker/
 **End of day**
 - Click **Stop** on the clock bar.
 - If you have unallocated clock time, use **Spread hours** to distribute it proportionally across your logged CCs.
-- Click **Export / copy** to get a plain-text summary.
+- Click **End of day** → **Copy to clipboard** for a plain-text summary, or **Copy CSV** for a spreadsheet-ready row per charge code.
 
 ---
 
 ## Features
 
 ### Charge codes
-- Add codes via **+ Add charge code**. You can paste a Dayforce-formatted string directly into the import field and it will auto-parse the code, program, and label.
+- Add codes via **+ Add charge code**. You can paste a Dayforce-formatted string (`Proj:... | Program | Work Package | Activity`) directly into the import field and it will auto-parse all fields.
+- Each CC has an **Activity** (the formal Dayforce name), an optional **Nickname** (a shorter display name shown everywhere in place of Activity), an optional **Work Package**, and an optional **Program**.
 - Assign a **Program** to group related CCs under a shared header with a combined subtotal.
 - Edit or remove codes anytime from **Manage CCs**.
 - Codes persist indefinitely — you only set them up once.
@@ -93,7 +94,7 @@ time_tracker/
 
 **To protect yourself, export a JSON backup regularly** — at minimum at the end of each pay period.
 
-*Export JSON / Import JSON buttons are planned for an upcoming version.* Until then, be cautious about clearing browser data.
+Use **Export JSON** (click the "last saved" link to reveal the data panel) to download a backup, and **Import JSON** to restore.
 
 ### Rules to avoid data loss
 

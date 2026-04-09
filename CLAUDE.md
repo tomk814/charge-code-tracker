@@ -23,7 +23,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 
 ## Current features
 
-- Charge codes (code + label + optional program group) persist in localStorage; survive browser close and reboot
+- Charge codes (code + activity + optional program group, work package, and nickname) persist in localStorage; survive browser close and reboot
 - Charge codes can be grouped by program; grouped codes render under a shared program card (`.pg-card`) with a subtotal
 - Per-CC mouse wheel adjustment: scroll up/down ±0.1 hr; Shift+scroll ±1.0 hr (floor at 0)
 - Per-CC increment buttons (optional, toggled via data panel): "−" and "+" inline with the Active button; default ±0.1 hr, Shift+click ±1.0 hr
@@ -32,8 +32,8 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 - Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
 - Spread hours: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
-- End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day
-- Export / copy: generates a plain-text summary of totals for EOD transcription into Costpoint; includes saved note if present
+- End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; two copy buttons: plain-text summary and CSV
+- Export / copy: plain-text summary for EOD transcription into Costpoint (includes saved note); CSV copy outputs one row per logged CC with columns Date, Program, Work Package, Activity, Code, Nickname, Hours, Note (no header row)
 - Manual "Reset day" button (clears hours and log, keeps charge codes)
 - Add / edit / remove charge codes via modal UI
 - Escape key closes modals
@@ -53,7 +53,7 @@ Key: `cc_tracker_v3`
 ```json
 {
   "codes": [
-    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A" }
+    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A", "wp": "WP-001", "nickname": "Design" }
   ],
   "days": {
     "2026-03-31": {
