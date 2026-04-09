@@ -351,12 +351,20 @@
   .eod-note {
     width: 100%; box-sizing: border-box;
     font-size: 11px; font-family: var(--font-sans);
-    padding: 3px 7px; margin: 3px 0 6px;
-    border: 1px solid var(--bd-2); border-radius: 2px;
+    padding: 6px 8px;
+    border: 1px solid var(--bd-1); border-radius: 2px;
     background: var(--bg); color: var(--fg-0);
+    min-height: 60px; resize: vertical;
   }
   .eod-note::placeholder { color: var(--fg-2); }
   .eod-note:focus { outline: none; border-color: var(--bd-0); }
+
+  .cc-name.eod-done { font-weight: 700; color: var(--blue); }
+
+  .clock-bar.eod-done {
+    box-shadow: 0 0 0 2px rgba(90,175,237,.25), 0 0 8px rgba(90,175,237,.12);
+    border-color: var(--bd-blue);
+  }
 
   .modal-actions {
     display: flex;
@@ -766,9 +774,10 @@ function renderCCControls(cc, day) {
   const btnPos = state.showIncrements
     ? `<button class="btn-inc pos" onclick="handleIncrementClick('${cc.id}',1,event)" title="+0.1 hr (Shift: +1.0 hr)">+</button>`
     : '';
+  const eodDone = !!(day.note && day.note.trim());
   return `<div class="cc-top">
         <div class="cc-label">
-          <div class="cc-name">${esc(cc.name)}</div>
+          <div class="cc-name${eodDone?' eod-done':''}">${esc(cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
         ${btnNeg}${trackControls}${btnPos}
@@ -1052,10 +1061,10 @@ function openEndOfDay() {
         <div style="font-size:10px;color:var(--fg-2);font-family:var(--font-mono)">${esc(cc.code)}</div>
       </span>
       <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0">${(day.hours[cc.id]||0).toFixed(1)}</span>
-    </div>
-    <input class="eod-note" id="eod-note-${cc.id}" placeholder="note (optional)">`;
+    </div>`;
   }).join('');
 
+  const savedNote = day.note || '';
   showModal(`<h2>End of day</h2>
     <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${dateStr}</p>
     <div style="display:flex;gap:10px;padding:2px 0 5px;font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd-1)">
@@ -1067,8 +1076,13 @@ function openEndOfDay() {
       <span style="flex:1;color:var(--fg-2)">Total</span>
       <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
     </div>
+    <div style="margin-top:12px">
+      <label style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-1);display:block;margin-bottom:4px">End of day note</label>
+      <textarea class="eod-note" id="eod-note-main" placeholder="Notes for today (saved with this day's record)">${esc(savedNote)}</textarea>
+    </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Close</button>
+      <button class="tool-btn" id="eod-save-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn primary" onclick="copyEndOfDay()">Copy to clipboard</button>
     </div>`);
 }
@@ -1082,18 +1096,29 @@ function copyEndOfDay() {
   state.codes.forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
-    const note = (document.getElementById('eod-note-' + cc.id)?.value || '').trim();
     lines.push(`${cc.code}  ${cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
-    if (note) lines.push(`  ${note}`);
     lines.push('');
   });
   lines.push(`Total: ${total.toFixed(1)} hr`);
+  const note = (document.getElementById('eod-note-main')?.value || day.note || '').trim();
+  if (note) { lines.push(''); lines.push(`Note: ${note}`); }
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('#modal-root .primary');
     if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 1500); }
   });
+}
+
+function saveEodNote() {
+  const note = (document.getElementById('eod-note-main')?.value || '').trim();
+  const day = dayData(viewDate);
+  day.note = note || null;
+  save(state);
+  render();
+  renderClock();
+  const btn = document.getElementById('eod-save-btn');
+  if (btn) { btn.textContent = 'Saved!'; btn.style.color = 'var(--green)'; setTimeout(() => { btn.textContent = 'Save'; btn.style.color = ''; }, 1500); }
 }
 
 function confirmReset() {
@@ -1113,6 +1138,7 @@ function doReset() {
   const day = dayData(viewDate);
   state.codes.forEach(c => { day.hours[c.id] = 0; });
   day.clock = {sessions: []};
+  day.note = null;
   if (viewDate === today()) state.activeTimer = null;
   save(state);
   closeModal();
@@ -1313,7 +1339,8 @@ function renderClock() {
   const statusText = (running ? `on clock &mdash; since ${to12h(active.start)}` : 'off clock') + activeCCText;
   const bar = document.getElementById('clock-bar');
   if (!bar) return;
-  bar.className = `clock-bar ${running?'running':'stopped'}`;
+  const eodDone = !!(dayData(viewDate).note);
+  bar.className = `clock-bar ${running?'running':'stopped'}${eodDone?' eod-done':''}`;
   bar.innerHTML =
     `<span class="clock-indicator${running?' running':''}">&#9679;</span>` +
     `<span class="clock-status-text${running?'':' stopped'}">${statusText}</span>` +
