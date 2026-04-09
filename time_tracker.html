@@ -776,7 +776,7 @@ function renderCCControls(cc, day) {
   const eodDone = !!(day.notes && day.notes[cc.id]);
   return `<div class="cc-top">
         <div class="cc-label">
-          <div class="cc-name${eodDone?' eod-done':''}">${esc(cc.name)}</div>
+          <div class="cc-name${eodDone?' eod-done':''}">${esc(cc.nickname || cc.name)}</div>
           <div class="cc-code">${esc(cc.code)}</div>
         </div>
         ${btnNeg}${trackControls}${btnPos}
@@ -938,9 +938,11 @@ function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
     <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
-    <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
-    <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
     <div class="field"><label>Program</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Activity</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
+    <div class="field"><label>Nickname (Optional)</label><input id="m-nickname" placeholder="short display name" autocomplete="off"></div>
+    <div class="field"><label>Work Package (Optional)</label><input id="m-wp" placeholder="e.g. WP-001" autocomplete="off"></div>
+    <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
@@ -954,9 +956,11 @@ function parseDayforce() {
   if (parts.length < 2) return;
   const codeRaw = parts[0].replace(/^Proj:/i, '').trim();
   const program = parts[1] || '';
+  const wp = parts.length >= 4 ? (parts[2] || '') : '';
   const label = parts[parts.length - 1] || '';
   if (codeRaw) document.getElementById('m-code').value = codeRaw;
   if (program) document.getElementById('m-program').value = program;
+  if (wp) document.getElementById('m-wp').value = wp;
   if (label) document.getElementById('m-name').value = label;
   document.getElementById('m-import').value = '';
   document.getElementById('m-code').focus();
@@ -966,8 +970,10 @@ function submitAddCC() {
   const code = document.getElementById('m-code').value.trim();
   const name = document.getElementById('m-name').value.trim();
   const program = document.getElementById('m-program').value.trim();
+  const wp = document.getElementById('m-wp').value.trim();
+  const nickname = document.getElementById('m-nickname').value.trim();
   if (!code) return;
-  state.codes.push({id:uid(), code, name: name||code, program});
+  state.codes.push({id:uid(), code, name: name||code, program, wp, nickname});
   save(state);
   closeModal();
   render();
@@ -984,7 +990,7 @@ function openManage() {
           <div class="cc-manage-info">
             <div class="cc-manage-top">
               ${progTag}
-              <span class="cc-manage-name">${esc(cc.name)}</span>
+              <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
             </div>
             <span class="cc-manage-code">${esc(cc.code)}</span>
           </div>
@@ -1001,9 +1007,11 @@ function openEditCC(id) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   showModal(`<h2>Edit charge code</h2>
-    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
-    <div class="field"><label>Label / description</label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
     <div class="field"><label>Program</label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Activity</label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
+    <div class="field"><label>Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" placeholder="short display name" autocomplete="off"></div>
+    <div class="field"><label>Work Package (Optional)</label><input id="e-wp" value="${esc(cc.wp||'')}" placeholder="e.g. WP-001" autocomplete="off"></div>
+    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
@@ -1017,10 +1025,14 @@ function submitEditCC(id) {
   const code = document.getElementById('e-code').value.trim();
   const name = document.getElementById('e-name').value.trim();
   const program = document.getElementById('e-program').value.trim();
+  const wp = document.getElementById('e-wp').value.trim();
+  const nickname = document.getElementById('e-nickname').value.trim();
   if (!code) return;
   cc.code = code;
   cc.name = name || code;
   cc.program = program;
+  cc.wp = wp;
+  cc.nickname = nickname;
   save(state);
   render();
   openManage();
@@ -1054,7 +1066,7 @@ function openEndOfDay() {
   const notes = day.notes || {};
   const rows = activeCCs.map(cc => {
     const prog = (cc.program || '').trim();
-    const label = prog ? `${prog}: ${cc.name}` : cc.name;
+    const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const savedNote = notes[cc.id] || '';
     return `<div style="padding:5px 0;border-bottom:1px solid var(--bd-2)">
       <div style="display:flex;align-items:baseline;gap:10px">
@@ -1081,6 +1093,7 @@ function openEndOfDay() {
     </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
+      <button class="tool-btn" id="eod-csv-btn" onclick="copyEodCSV()">Copy CSV</button>
       <button class="tool-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
     </div>`);
@@ -1118,7 +1131,7 @@ function copyEndOfDay() {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
     const note = (notes[cc.id] || '').trim();
-    lines.push(`${cc.code}  ${cc.name}`);
+    lines.push(`${cc.code}  ${cc.nickname || cc.name}`);
     lines.push(`  ${hrs.toFixed(1)} hr`);
     if (note) lines.push(`  ${note}`);
     lines.push('');
@@ -1128,6 +1141,26 @@ function copyEndOfDay() {
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('#modal-root .primary');
     if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 1500); }
+  });
+}
+
+function copyEodCSV() {
+  const day = dayData(viewDate);
+  const notes = Object.assign({}, day.notes || {});
+  state.codes.forEach(cc => {
+    const el = document.getElementById('eod-note-' + cc.id);
+    if (el) { const v = el.value.trim(); if (v) notes[cc.id] = v; else delete notes[cc.id]; }
+  });
+  const csvField = v => /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
+  const rows = [];
+  state.codes.forEach(cc => {
+    const hrs = day.hours[cc.id] || 0;
+    if (!hrs) return;
+    rows.push([viewDate, cc.program||'', cc.wp||'', cc.name, cc.code, cc.nickname||'', hrs.toFixed(1), notes[cc.id]||''].map(csvField).join(','));
+  });
+  navigator.clipboard.writeText(rows.join('\n')).then(() => {
+    const btn = document.getElementById('eod-csv-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy CSV', 1500); }
   });
 }
 
@@ -1212,7 +1245,7 @@ function openSpread() {
 
   const rows = candidateCCs.map(cc => {
     const prog = (cc.program || '').trim();
-    const label = prog ? `${prog}: ${cc.name}` : cc.name;
+    const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const checked = !cc.spreadExcluded;
     return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
       <input type="checkbox" id="sc-${cc.id}" ${checked?'checked':''} onchange="refreshSpreadPreview()" style="cursor:pointer;accent-color:var(--blue);flex-shrink:0;margin:0">
