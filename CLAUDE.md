@@ -83,3 +83,40 @@ Key: `cc_tracker_v3`
 - Adding time to a CC is 1–2 clicks with no typing required.
 - The export output is plain text, pasteable directly into an email or the formal system.
 - The whole app feels like a native browser UI, not a web app.
+
+## `time_tracker.html` section map (agent navigation)
+
+The file is annotated with greppable landmark comments so agents can navigate without loading the whole file.
+
+### Workflow
+
+1. **Read the TOC** at the very top of `time_tracker.html` for the full section list with approximate original line numbers.
+2. **Grep for the section name** to get the exact current line: `grep -n "SECTION: JS-WALL-CLOCK" time_tracker.html`
+3. **Read only the slice you need** using `offset` + `limit` on the Read tool.
+
+### Section index
+
+| Section name | Description |
+|---|---|
+| `CSS-DESIGN-TOKENS` | CSS custom properties — color palette, font vars, border/fill aliases |
+| `CSS-BASE` | Global reset, html/body, `#app` layout, scrollbar |
+| `CSS-HEADER` | Header bar, pay-period bar, title, date badge |
+| `CSS-TOOLBAR-AND-CARDS` | Toolbar, tool-btn, data footer, CC card base |
+| `CSS-PROGRAM-CARDS` | Program group cards, CC row internals, active-tracking highlight, btn-track |
+| `CSS-MODALS` | Modal overlay/box, form fields, EOD note, manage items, increment buttons |
+| `CSS-CLOCK-BAR` | Clock bar states, sessions modal rows, day-nav buttons, past-day banner |
+| `HTML-APP-SHELL` | Static HTML skeleton (header, toolbar, clock bar, cc-list, modal root) |
+| `JS-PERSISTENCE` | `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import |
+| `JS-STATE-INIT` | Global `state` and `viewDate` init; stale active-timer cleanup |
+| `JS-DAY-NAVIGATION` | `navigate(delta)`, `goToToday()` |
+| `JS-CC-RENDERING` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler |
+| `JS-PAY-PERIOD-AND-RENDER` | Pay period bar calculation and main `render()` |
+| `JS-LIVE-CC-TRACKER` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
+| `JS-UTILITIES` | `esc()` HTML-escape helper, `uid()` random-ID generator |
+| `JS-CC-MODALS` | Add (with Dayforce paste), Edit, Manage list, Delete modals |
+| `JS-END-OF-DAY` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset |
+| `JS-SPREAD-HOURS` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
+| `JS-MODAL-INFRA` | `showModal(html)` and `closeModal()` |
+| `JS-WALL-CLOCK` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
+| `JS-TICK-INTERVALS` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
+| `JS-INIT` | Bootstrap `render()` + `renderClock()` calls; global Escape key listener |

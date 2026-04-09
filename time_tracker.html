@@ -1,3 +1,45 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════════╗
+║  FILE TABLE OF CONTENTS  (for agent navigation)                          ║
+║  Total lines: ~1600  (after annotation pass)                             ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  SECTION NAME                  │ Orig. lines │ Description               ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  CSS-DESIGN-TOKENS             │    7–57     │ CSS custom properties     ║
+║  CSS-BASE                      │   58–83     │ Reset, html/body, app     ║
+║  CSS-HEADER                    │   84–119    │ Header, pay-period bar    ║
+║  CSS-TOOLBAR-AND-CARDS         │  120–196    │ Toolbar, data footer, CC  ║
+║  CSS-PROGRAM-CARDS             │  197–293    │ Program cards, CC rows    ║
+║  CSS-MODALS                    │  294–455    │ Modals, fields, inc btns  ║
+║  CSS-CLOCK-BAR                 │  456–554    │ Clock bar, sessions, nav  ║
+║  HTML-APP-SHELL                │  556–597    │ Static HTML skeleton      ║
+║  JS-PERSISTENCE                │  598–711    │ load/save, migrate, I/O   ║
+║  JS-STATE-INIT                 │  712–720    │ State vars, stale timer   ║
+║  JS-DAY-NAVIGATION             │  721–737    │ navigate(), goToToday()   ║
+║  JS-CC-RENDERING               │  738–813    │ Card render functions     ║
+║  JS-PAY-PERIOD-AND-RENDER      │  815–905    │ Pay period + render()     ║
+║  JS-LIVE-CC-TRACKER            │  907–928    │ setActiveCC, finalize     ║
+║  JS-UTILITIES                  │  930–934    │ esc(), uid() helpers      ║
+║  JS-CC-MODALS                  │  936–1050   │ Add/Edit/Manage/Delete    ║
+║  JS-END-OF-DAY                 │ 1052–1200   │ EOD modal, copy, reset    ║
+║  JS-SPREAD-HOURS               │ 1201–1341   │ Spread unalloc'd hours    ║
+║  JS-MODAL-INFRA                │ 1343–1347   │ showModal / closeModal    ║
+║  JS-WALL-CLOCK                 │ 1349–1473   │ Clock sessions & render   ║
+║  JS-TICK-INTERVALS             │ 1474–1520   │ 30 s + 1 s tick loops     ║
+║  JS-INIT                       │ 1522–1525   │ Bootstrap + Escape key    ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+  AGENT NAVIGATION GUIDE
+  ──────────────────────
+  This file is too large to read in full. Workflow:
+
+  1. Read the TOC (top of file) to locate your target section.
+  2. Use view_range / Read with offset+limit to fetch only the relevant lines.
+  3. grep for "SECTION:" or a symbol name to get a precise line number fast.
+
+  Line numbers above are pre-annotation originals; actual lines are ~50–80 higher
+  due to inserted comments.  Grep for the SECTION name to find the exact current line.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +47,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Time Tracker</title>
 <style>
+  /* ============================================================
+     SECTION: CSS-DESIGN-TOKENS  (~line 7)
+     CSS custom properties: color palette, typography vars, border/fill aliases.
+     ============================================================ */
   :root {
     --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
     --font-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'Courier New', monospace;
@@ -56,6 +102,10 @@
     --border-radius-lg:           3px;
   }
 
+  /* ============================================================
+     SECTION: CSS-BASE  (~line 58)
+     Global reset, html/body base styles, #app layout, and scrollbar theming.
+     ============================================================ */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html {
@@ -81,6 +131,10 @@
   ::-webkit-scrollbar-thumb       { background: var(--bd-1); }
   ::-webkit-scrollbar-thumb:hover { background: #444; }
 
+  /* ============================================================
+     SECTION: CSS-HEADER  (~line 84)
+     Header bar, pay-period bar, title, and date badge styles.
+     ============================================================ */
   /* ── header ── */
   .header {
     display: flex;
@@ -117,6 +171,10 @@
     font-family: var(--font-mono);
   }
 
+  /* ============================================================
+     SECTION: CSS-TOOLBAR-AND-CARDS  (~line 120)
+     Toolbar, tool-btn, CC list container, data footer, last-saved label, CC card base styles.
+     ============================================================ */
   /* ── toolbar ── */
   .toolbar {
     display: flex;
@@ -194,6 +252,10 @@
     font-size: 12px;
   }
 
+  /* ============================================================
+     SECTION: CSS-PROGRAM-CARDS  (~line 197)
+     Program group card, pg-header/name/total, pg-row, CC row internals, active tracking, btn-track.
+     ============================================================ */
   /* ── program group cards ── */
   .pg-card {
     background: var(--bg-0);
@@ -291,6 +353,10 @@
   .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
   .btn-track.on:hover   { background: rgba(77,171,144,.18); }
 
+  /* ============================================================
+     SECTION: CSS-MODALS  (~line 294)
+     Modal overlay/box, form fields, EOD note input, manage-list items, export box, increment buttons.
+     ============================================================ */
   /* ── modals ── */
   .modal-bg {
     position: fixed;
@@ -453,6 +519,10 @@
   .btn-inc.neg:hover { color: var(--red);   border-color: var(--bd-red); background: var(--bg-red); }
   .btn-inc.pos:hover { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
 
+  /* ============================================================
+     SECTION: CSS-CLOCK-BAR  (~line 456)
+     Clock bar, running/stopped states, sessions modal rows, day-navigation buttons, past-day banner.
+     ============================================================ */
   /* ── clock bar ── */
   .clock-bar {
     display: flex;
@@ -554,6 +624,10 @@
 </style>
 </head>
 <body>
+<!-- ============================================================
+     SECTION: HTML-APP-SHELL  (~line 556)
+     Static HTML skeleton: header, pay-period bar, toolbar, clock bar, CC list, data footer, modal root.
+     ============================================================ -->
 <div id="app">
   <div class="header">
     <div class="title">Time tracker</div>
@@ -596,6 +670,10 @@
 <div id="modal-root"></div>
 
 <script>
+// ================================================================
+// SECTION: JS-PERSISTENCE  (~line 598)
+// localStorage load/save, v2→v3 migration, dayData accessor, JSON export/import.
+// ================================================================
 const STORAGE_KEY = 'cc_tracker_v3';
 let lastSavedAt = null;
 let _dataBtnTimer = null;
@@ -709,6 +787,10 @@ function dayData(date) {
   return d;
 }
 
+// ================================================================
+// SECTION: JS-STATE-INIT  (~line 712)
+// Global state and viewDate initialisation; clears stale active timer from prior day.
+// ================================================================
 let state = load();
 let viewDate = today();
 
@@ -718,6 +800,10 @@ if (state.activeTimer && state.activeTimer.startedDate !== today()) {
   save(state);
 }
 
+// ================================================================
+// SECTION: JS-DAY-NAVIGATION  (~line 721)
+// Day navigation: navigate(delta) and goToToday() for browsing past days.
+// ================================================================
 // ── Day navigation ───────────────────────────────────────────────────────────
 function navigate(delta) {
   const d = new Date(viewDate + 'T12:00:00');
@@ -735,6 +821,10 @@ function goToToday() {
   renderClock();
 }
 
+// ================================================================
+// SECTION: JS-CC-RENDERING  (~line 738)
+// CC card rendering: renderCCControls, renderIndividualCard, renderProgramCard, wheel handler.
+// ================================================================
 // ── CC logic ─────────────────────────────────────────────────────────────────
 function addTime(id, delta) {
   const cc = state.codes.find(c => c.id === id);
@@ -812,6 +902,10 @@ function renderProgramCard(programName, codes, day) {
   </div>`;
 }
 
+// ================================================================
+// SECTION: JS-PAY-PERIOD-AND-RENDER  (~line 815)
+// Pay period bar calculation and the main render() function that rebuilds the CC list.
+// ================================================================
 // ── Pay period ───────────────────────────────────────────────────────────────
 const PP_ANCHOR = new Date('2026-04-04T12:00:00'); // known period-end Saturday
 
@@ -904,6 +998,10 @@ function render() {
   ].join('');
 }
 
+// ================================================================
+// SECTION: JS-LIVE-CC-TRACKER  (~line 907)
+// Active CC tracking: setActiveCC, finalizeActiveTimer — links clock sessions to a CC.
+// ================================================================
 // ── Live CC tracker ──────────────────────────────────────────────────────────
 // Resets the active session pointer; hours were already committed by the 1s tick.
 function finalizeActiveTimer() {
@@ -927,12 +1025,20 @@ function setActiveCC(ccId) {
 }
 // ── end live CC tracker ───────────────────────────────────────────────────────
 
+// ================================================================
+// SECTION: JS-UTILITIES  (~line 930)
+// Global helper functions: esc() for HTML escaping, uid() for random IDs.
+// ================================================================
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function uid() { return Math.random().toString(36).slice(2,8); }
 
+// ================================================================
+// SECTION: JS-CC-MODALS  (~line 936)
+// Charge code modals: Add (with Dayforce paste), Edit, Manage list, and Delete.
+// ================================================================
 // ── Modals ───────────────────────────────────────────────────────────────────
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
@@ -1049,6 +1155,10 @@ function deleteCC(id) {
   render();
 }
 
+// ================================================================
+// SECTION: JS-END-OF-DAY  (~line 1052)
+// End-of-day modal: hours summary, per-CC note inputs, copy/CSV export, and day reset.
+// ================================================================
 function openEndOfDay() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -1199,6 +1309,10 @@ function doReset() {
 }
 
 
+// ================================================================
+// SECTION: JS-SPREAD-HOURS  (~line 1201)
+// Spread-hours modal: proportionally distributes unallocated clock time across selected CCs.
+// ================================================================
 // ── Spread hours ─────────────────────────────────────────────────────────────
 // Distributes unallocated clock time proportionally across CCs that already
 // have logged hours.  Uses integer tenths throughout to avoid float drift.
@@ -1340,12 +1454,20 @@ function applySpread() {
   render();
 }
 
+// ================================================================
+// SECTION: JS-MODAL-INFRA  (~line 1343)
+// showModal / closeModal: inject and remove modal DOM from #modal-root.
+// ================================================================
 function showModal(html) {
   const root = document.getElementById('modal-root');
   root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
 }
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
+// ================================================================
+// SECTION: JS-WALL-CLOCK  (~line 1349)
+// Wall-clock bar: session storage helpers, renderClock, Start/Stop, and sessions modal.
+// ================================================================
 // ── Wall clock ───────────────────────────────────────────────────────────────
 function clockSessions() { return dayData(viewDate).clock.sessions; }
 function clockIsRunning() { return clockSessions().some(s => s.end === null); }
@@ -1471,6 +1593,10 @@ function addClockSession() {
   save(state); renderClockSessionsModal();
 }
 
+// ================================================================
+// SECTION: JS-TICK-INTERVALS  (~line 1474)
+// 30-second tick for midnight auto-advance; 1-second tick for live CC auto-commit.
+// ================================================================
 // Refresh every 30 s; auto-advance viewDate at midnight
 let _tickDate = today();
 setInterval(() => {
@@ -1519,6 +1645,10 @@ setInterval(() => {
 }, 1000);
 // ── end wall clock ───────────────────────────────────────────────────────────
 
+// ================================================================
+// SECTION: JS-INIT  (~line 1522)
+// Bootstrap: first render pass, clock render, and global Escape-key handler.
+// ================================================================
 render();
 renderClock();
 
