@@ -376,13 +376,28 @@
   }
 
   .cc-manage-item:last-child { border-bottom: none; }
-  .cc-manage-name  { flex: 1; font-size: 12px; color: var(--fg-0); }
+
+  .cc-manage-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .cc-manage-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .cc-manage-name  { font-size: 12px; color: var(--fg-0); }
 
   .cc-manage-code {
     font-size: 10px;
     color: var(--fg-2);
     font-family: var(--font-mono);
-    min-width: 72px;
   }
 
   .del-btn {
@@ -917,7 +932,7 @@ function openAddCC() {
     <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
     <div class="field"><label>Label / description</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
-    <div class="field"><label>Program (optional)</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Program</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
@@ -956,12 +971,16 @@ function openManage() {
         const prog = (cc.program || '').trim();
         const progTag = prog
           ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
-          : `<span style="min-width:0;flex-shrink:0"></span>`;
+          : ``;
         return `<div class="cc-manage-item">
-          <span class="cc-manage-code">${esc(cc.code)}</span>
-          ${progTag}
-          <span class="cc-manage-name">${esc(cc.name)}</span>
-          <button class="tool-btn" style="margin-left:auto" onclick="openEditCC('${cc.id}')">Edit</button>
+          <div class="cc-manage-info">
+            <div class="cc-manage-top">
+              ${progTag}
+              <span class="cc-manage-name">${esc(cc.name)}</span>
+            </div>
+            <span class="cc-manage-code">${esc(cc.code)}</span>
+          </div>
+          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
           <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
         </div>`;
       }).join('')
@@ -976,7 +995,7 @@ function openEditCC(id) {
   showModal(`<h2>Edit charge code</h2>
     <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
     <div class="field"><label>Label / description</label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
-    <div class="field"><label>Program (optional)</label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Program</label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
