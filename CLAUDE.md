@@ -32,7 +32,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 - Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
 - Spread hours: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
-- End of day modal: shows hours summary, single saved note field (persisted to `day.note`); CC labels turn bold+blue and the clock bar gets a blue halo when a note is saved for that day
+- End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day
 - Export / copy: generates a plain-text summary of totals for EOD transcription into Costpoint; includes saved note if present
 - Manual "Reset day" button (clears hours and log, keeps charge codes)
 - Add / edit / remove charge codes via modal UI
@@ -59,7 +59,7 @@ Key: `cc_tracker_v3`
     "2026-03-31": {
       "hours": { "abc123": 2.5 },
       "clock": { "sessions": [] },
-      "note": "optional end-of-day note string, null when cleared"
+      "notes": { "abc123": "optional per-CC EOD note" }
     }
   },
   "showIncrements": false
@@ -68,7 +68,7 @@ Key: `cc_tracker_v3`
 
 - `codes` order determines display order. Hours are not stored on the code object.
 - On load, if a day entry is missing it is created with empty hours and clock. `note` is optional and may be absent or null.
-- `note` is set via the End of Day modal Save button and cleared by Reset day.
+- `notes` is a sparse object — only CCs with a note have an entry. Set via End of Day modal Save button; cleared by Reset day.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 
 ## Conventions
