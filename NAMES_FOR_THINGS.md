@@ -45,7 +45,6 @@ Use these names when describing changes to the interface.
 | **Spread hours** | `openSpread()` |
 | **End of day** | `openEndOfDay()` |
 | **Pay period** | `openPayPeriodModal()` |
-| **Reset day** | `confirmReset()` |
 
 ### Data footer panel
 
@@ -56,6 +55,7 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
+| **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
 
 ### Clock bar sub-elements
 
