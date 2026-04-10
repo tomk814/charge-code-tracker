@@ -13,6 +13,7 @@
 - Export / copy: plain-text EOD summary for pasting into Deltek Costpoint; CSV copy for spreadsheet import
 - Auto-reset at midnight (hours + log cleared; charge codes kept)
 - Manual "Reset day" and add/edit/remove charge codes via modal UI
+- Archive charge codes: mark a CC as archived so it is hidden from the CC list and EOD summary while preserving its historical hours
 
 ## UI component terminology
 
@@ -120,7 +121,7 @@ Named modals:
 |------------|-----------|
 | **Add CC modal** | "Add charge code" toolbar button |
 | **Manage CCs modal** | "Manage CCs" toolbar button |
-| **Edit CC modal** | "Edit" button inside Manage CCs modal |
+| **Edit CC modal** | "Edit" button inside Manage CCs modal; includes "Archive this charge code" checkbox |
 | **End of Day modal** | "End of day" toolbar button |
 | **Export modal** | "Export / copy" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
