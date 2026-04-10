@@ -37,11 +37,13 @@ time_tracker/
 - Click **Active** on a charge code to start auto-accruing time to it as the clock runs.
 - Set **Active** to a different CC when you switch tasks.
 - Optionally, enable click-to-adjust increment buttons via **Show increments** (click the "last saved" link to reveal it).
+- **Reset day** is also in the data panel (click the "last saved" link) — this clears all hours, sessions, and notes for the current day.
 
 **End of day**
 - Click **Stop** on the clock bar.
 - If you have unallocated clock time, use **Spread hours** to distribute it proportionally across your logged CCs.
 - Click **End of day** → **Copy to clipboard** for a plain-text summary, or **Copy CSV** for a spreadsheet-ready row per charge code.
+- Use **Pay period** to see a compact table of all your CCs × working days for a quick sanity check before submitting.
 
 ---
 
@@ -94,7 +96,7 @@ time_tracker/
 
 **To protect yourself, export a JSON backup regularly** — at minimum at the end of each pay period.
 
-Use **Export JSON** (click the "last saved" link to reveal the data panel) to download a backup, and **Import JSON** to restore.
+Use **Export JSON** (click the "last saved" link to reveal the data panel) to download a backup, and **Import JSON** to restore. **Reset day** is also in this panel.
 
 ### Rules to avoid data loss
 

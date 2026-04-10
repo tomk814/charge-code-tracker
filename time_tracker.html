@@ -519,6 +519,79 @@
   .btn-inc.neg:hover { color: var(--red);   border-color: var(--bd-red); background: var(--bg-red); }
   .btn-inc.pos:hover { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
 
+  /* ── pay-period modal ── */
+  .modal-wide { width: min(660px, 96vw); }
+
+  .pp-table { width: 100%; border-collapse: collapse; }
+
+  .pp-th {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    padding: 4px 4px 3px;
+    text-align: center;
+    border-bottom: 1px solid var(--bd-1);
+  }
+
+  .pp-th-label { text-align: left; }
+  .pp-th-day.pp-today { color: var(--blue); }
+  .pp-th-total { color: var(--fg-1); border-left: 1px solid var(--bd-2); }
+
+  .pp-date {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .pp-row:nth-child(even) { background: rgba(255,255,255,.02); }
+
+  .pp-cell-label {
+    font-size: 11px;
+    color: var(--fg-1);
+    padding: 4px 10px 4px 2px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-right: 1px solid var(--bd-2);
+  }
+
+  .pp-cell {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-0);
+    text-align: center;
+    padding: 4px 3px;
+    min-width: 30px;
+  }
+
+  .pp-cell.pp-today { background: var(--bg-blue); }
+  .pp-zero { color: var(--fg-2); }
+
+  .pp-total-cell {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fg-0);
+    text-align: right;
+    padding: 4px 6px 4px 4px;
+    border-left: 1px solid var(--bd-2);
+  }
+
+  .pp-foot-row { border-top: 1px solid var(--bd-1); }
+  .pp-foot-label { font-weight: 600; color: var(--fg-0); }
+  .pp-foot-total { color: var(--blue); }
+
+  .pp-empty {
+    text-align: center;
+    padding: 16px;
+    color: var(--fg-2);
+    font-size: 12px;
+  }
+
   /* ============================================================
      SECTION: CSS-CLOCK-BAR  (~line 456)
      Clock bar, running/stopped states, sessions modal rows, day-navigation buttons, past-day banner.
@@ -645,7 +718,7 @@
     <button class="tool-btn" onclick="openManage()">Manage CCs</button>
     <button class="tool-btn" onclick="openSpread()">Spread hours</button>
     <button class="tool-btn" onclick="openEndOfDay()">End of day</button>
-    <button class="tool-btn" onclick="confirmReset()">Reset day</button>
+    <button class="tool-btn" onclick="openPayPeriodModal()">Pay period</button>
   </div>
 
   <div id="past-day-banner" style="display:none" class="past-day-banner">
@@ -662,6 +735,7 @@
       <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
     </div>
   </div>
 </div>
@@ -954,6 +1028,89 @@ function renderPayPeriod() {
   const hrs = payPeriodHours(end);
   const hrsStr = `<span${hrs >= 80 ? ' style="color:var(--green)"' : ''}>${hrs.toFixed(1)}</span>`;
   el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrsStr}`;
+}
+
+function openPayPeriodModal() {
+  const ppEnd = payPeriodEnd(today());
+  const ppStart = new Date(ppEnd);
+  ppStart.setDate(ppStart.getDate() - 13);
+
+  // Collect working days (Mon–Fri) within the pay period
+  const days = [];
+  const cur = new Date(ppStart);
+  while (cur <= ppEnd) {
+    const dow = cur.getDay();
+    if (dow >= 1 && dow <= 5) {
+      days.push({
+        iso: ymdLocal(cur),
+        dow: cur.toLocaleDateString([], {weekday: 'narrow'}),
+        md: `${cur.getMonth()+1}/${cur.getDate()}`
+      });
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  // Build hours lookup: hours[ccId][iso]
+  const hours = {};
+  state.codes.forEach(cc => {
+    hours[cc.id] = {};
+    days.forEach(d => {
+      hours[cc.id][d.iso] = ((state.days[d.iso] || {}).hours || {})[cc.id] || 0;
+    });
+  });
+
+  const ccTotal  = cc  => parseFloat(days.reduce((s, d) => s + (hours[cc.id][d.iso] || 0), 0).toFixed(1));
+  const dayTotal = iso => parseFloat(state.codes.reduce((s, cc) => s + (hours[cc.id][iso] || 0), 0).toFixed(1));
+  const grandTotal = parseFloat(state.codes.reduce((s, cc) => s + ccTotal(cc), 0).toFixed(1));
+
+  const activeCCs = state.codes.filter(cc => ccTotal(cc) > 0);
+  const todayIso = today();
+
+  const startStr = ppStart.toLocaleDateString([], {month: 'short', day: 'numeric'});
+  const endStr   = ppEnd.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+
+  const isCurDay = iso => iso === todayIso;
+  const hrsCell = (h, iso, extra) =>
+    `<td class="pp-cell${isCurDay(iso) ? ' pp-today' : ''}${extra ? ' '+extra : ''}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+
+  const thead = `<tr>
+    <th class="pp-th pp-th-label">Charge code</th>
+    ${days.map(d => `<th class="pp-th pp-th-day${isCurDay(d.iso) ? ' pp-today' : ''}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`).join('')}
+    <th class="pp-th pp-th-total">Total</th>
+  </tr>`;
+
+  const tbody = activeCCs.length
+    ? activeCCs.map(cc => {
+        const prog  = (cc.program || '').trim();
+        const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
+        return `<tr class="pp-row">
+          <td class="pp-cell-label" title="${esc(cc.code)}: ${esc(cc.name)}">${esc(label)}</td>
+          ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '')).join('')}
+          <td class="pp-total-cell">${ccTotal(cc).toFixed(1)}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="${days.length + 2}" class="pp-empty">No hours logged this pay period.</td></tr>`;
+
+  const tfoot = activeCCs.length
+    ? `<tr class="pp-foot-row">
+        <td class="pp-cell-label pp-foot-label">Total</td>
+        ${days.map(d => hrsCell(dayTotal(d.iso), d.iso, 'pp-foot-cell')).join('')}
+        <td class="pp-total-cell pp-foot-total">${grandTotal.toFixed(1)}</td>
+       </tr>`
+    : '';
+
+  showModal(`<h2>Pay period</h2>
+    <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${startStr} – ${endStr}</p>
+    <div style="overflow-x:auto">
+      <table class="pp-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+        ${tfoot ? `<tfoot>${tfoot}</tfoot>` : ''}
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn primary" onclick="closeModal()">Close</button>
+    </div>`, 'wide');
 }
 
 function render() {
@@ -1458,9 +1615,10 @@ function applySpread() {
 // SECTION: JS-MODAL-INFRA  (~line 1343)
 // showModal / closeModal: inject and remove modal DOM from #modal-root.
 // ================================================================
-function showModal(html) {
+function showModal(html, extraClass) {
   const root = document.getElementById('modal-root');
-  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+  const cls = extraClass ? `modal modal-${extraClass}` : 'modal';
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="${cls}">${html}</div></div>`;
 }
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 

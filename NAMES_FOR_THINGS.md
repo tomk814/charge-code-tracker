@@ -43,7 +43,8 @@ Use these names when describing changes to the interface.
 | **Manage CCs** | `openManage()` |
 | **Export / copy** | `openExport()` |
 | **Spread hours** | `openSpread()` |
-| **Reset day** | `confirmReset()` |
+| **End of day** | `openEndOfDay()` |
+| **Pay period** | `openPayPeriodModal()` |
 
 ### Data footer panel
 
@@ -54,6 +55,7 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
+| **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
 
 ### Clock bar sub-elements
 
@@ -122,6 +124,7 @@ Named modals:
 | **End of Day modal** | "End of day" toolbar button |
 | **Export modal** | "Export / copy" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
+| **Pay Period modal** | "Pay period" toolbar button |
 | **Reset Day modal** | "Reset day" toolbar button |
 | **Clock Sessions modal** | "Sessions" button in the clock bar |
 | **Clock Start modal** | "Start" button in the clock bar |
