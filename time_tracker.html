@@ -1086,6 +1086,16 @@ function submitAddCC() {
   render();
 }
 
+function toggleArchiveCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  cc.archived = cc.archived ? undefined : true;
+  if (cc.archived && state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
+  save(state);
+  render();
+  openManage();
+}
+
 function openManage() {
   const active = state.codes.filter(cc => !cc.archived);
   const archived = state.codes.filter(cc => cc.archived);
@@ -1096,6 +1106,7 @@ function openManage() {
       ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
       : ``;
     const nameStyle = isArchived ? ' style="color:var(--fg-2)"' : '';
+    const archiveLabel = isArchived ? 'Unarchive' : 'Archive';
     return `<div class="cc-manage-item">
       <div class="cc-manage-info">
         <div class="cc-manage-top">
@@ -1104,6 +1115,7 @@ function openManage() {
         </div>
         <span class="cc-manage-code">${esc(cc.code)}</span>
       </div>
+      <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">${archiveLabel}</button>
       <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
       <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
     </div>`;
@@ -1137,10 +1149,6 @@ function openEditCC(id) {
     <div class="field"><label>Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" placeholder="short display name" autocomplete="off"></div>
     <div class="field"><label>Work Package (Optional)</label><input id="e-wp" value="${esc(cc.wp||'')}" placeholder="e.g. WP-001" autocomplete="off"></div>
     <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
-    <div class="field" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
-      <input type="checkbox" id="e-archived"${cc.archived ? ' checked' : ''} style="width:auto;margin:0">
-      <label for="e-archived" style="margin:0;font-size:12px;color:var(--fg-1);cursor:pointer">Archive this charge code (hides it from the list)</label>
-    </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
@@ -1156,15 +1164,12 @@ function submitEditCC(id) {
   const program = document.getElementById('e-program').value.trim();
   const wp = document.getElementById('e-wp').value.trim();
   const nickname = document.getElementById('e-nickname').value.trim();
-  const archived = document.getElementById('e-archived').checked;
   if (!code) return;
   cc.code = code;
   cc.name = name || code;
   cc.program = program;
   cc.wp = wp;
   cc.nickname = nickname;
-  cc.archived = archived || undefined;
-  if (archived && state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   save(state);
   render();
   openManage();
