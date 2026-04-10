@@ -475,15 +475,73 @@
 
   .del-btn {
     font-size: 11px;
-    padding: 4px 10px;
+    padding: 4px 7px;
     border: 1px solid var(--bd-red);
     border-radius: 2px;
     background: transparent;
     color: var(--red);
     cursor: pointer;
+    margin-right: 4px;
   }
 
   .del-btn:hover { background: var(--bg-red); }
+
+  .reorder-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .reorder-btn {
+    font-size: 9px;
+    padding: 1px 5px;
+    border: 1px solid var(--bd-2);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--fg-1);
+    cursor: pointer;
+    line-height: 1.4;
+  }
+
+  .reorder-btn:hover:not(:disabled) { background: var(--bg-2); }
+
+  .reorder-btn:disabled { opacity: 0.25; cursor: default; }
+
+  .pg-manage-block {
+    border: 1px solid var(--bd-1);
+    border-radius: 3px;
+    margin: 4px 0;
+    overflow: hidden;
+  }
+
+  .pg-manage-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--bd-1);
+  }
+
+  .pg-manage-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    font-family: var(--font-mono);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cc-manage-item--nested {
+    padding-left: 16px;
+    border-bottom: 1px solid var(--bd-2);
+  }
+
+  .cc-manage-item--nested:last-child { border-bottom: none; }
 
   .export-box {
     font-family: var(--font-mono);
@@ -1136,24 +1194,11 @@ function render() {
     return;
   }
 
-  const grouped = {};
-  const ungrouped = [];
-  activeCodes.forEach(cc => {
-    const prog = (cc.program || '').trim();
-    if (prog) {
-      if (!grouped[prog]) grouped[prog] = [];
-      grouped[prog].push(cc);
-    } else {
-      ungrouped.push(cc);
-    }
-  });
-  const programNames = Object.keys(grouped)
-    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-  list.innerHTML = [
-    ...programNames.map(n => renderProgramCard(n, grouped[n], day)),
-    ...ungrouped.map(cc => renderIndividualCard(cc, day))
-  ].join('');
+  list.innerHTML = getBlocks().map(block =>
+    block.type === 'program'
+      ? renderProgramCard(block.name, block.codes, day)
+      : renderIndividualCard(block.codes[0], day)
+  ).join('');
 }
 
 // ================================================================
@@ -1253,47 +1298,125 @@ function toggleArchiveCC(id) {
   openManage();
 }
 
+// Returns active (non-archived) codes as ordered blocks:
+//   { type:'program', name, codes[] }  or  { type:'single', codes:[cc] }
+function getBlocks() {
+  const blocks = [];
+  const seen = {};
+  state.codes.filter(cc => !cc.archived).forEach(cc => {
+    const prog = (cc.program || '').trim();
+    if (prog) {
+      if (!seen[prog]) { seen[prog] = { type:'program', name:prog, codes:[] }; blocks.push(seen[prog]); }
+      seen[prog].codes.push(cc);
+    } else {
+      blocks.push({ type:'single', codes:[cc] });
+    }
+  });
+  return blocks;
+}
+
+function blocksToFlat(blocks) { return blocks.flatMap(b => b.codes); }
+
+// Move a whole block (program group or ungrouped CC) up/down among blocks.
+function moveBlock(blockIdx, dir) {
+  const blocks = getBlocks();
+  const j = blockIdx + dir;
+  if (j < 0 || j >= blocks.length) return;
+  [blocks[blockIdx], blocks[j]] = [blocks[j], blocks[blockIdx]];
+  // Preserve archived codes at their original positions after active codes.
+  const archived = state.codes.filter(cc => cc.archived);
+  state.codes = [...blocksToFlat(blocks), ...archived];
+  save(state); render(); openManage();
+}
+
+// Move a CC up/down within its program block.
+function moveCCInBlock(ccId, dir) {
+  const blocks = getBlocks();
+  for (const block of blocks) {
+    const i = block.codes.findIndex(c => c.id === ccId);
+    if (i < 0) continue;
+    const j = i + dir;
+    if (j < 0 || j >= block.codes.length) return;
+    [block.codes[i], block.codes[j]] = [block.codes[j], block.codes[i]];
+    const archived = state.codes.filter(cc => cc.archived);
+    state.codes = [...blocksToFlat(blocks), ...archived];
+    save(state); render(); openManage();
+    return;
+  }
+}
+
 function openManage() {
-  const active = state.codes.filter(cc => !cc.archived);
+  const blocks = getBlocks();
+  const nb = blocks.length;
   const archived = state.codes.filter(cc => cc.archived);
 
-  function ccRow(cc, isArchived) {
-    const prog = (cc.program || '').trim();
-    const progTag = prog
-      ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
-      : ``;
-    const nameStyle = isArchived ? ' style="color:var(--fg-2)"' : '';
-    const archiveLabel = isArchived ? 'Unarchive' : 'Archive';
-    return `<div class="cc-manage-item">
-      <div class="cc-manage-info">
-        <div class="cc-manage-top">
-          ${progTag}
-          <span class="cc-manage-name"${nameStyle}>${esc(cc.nickname || cc.name)}</span>
-        </div>
-        <span class="cc-manage-code">${esc(cc.code)}</span>
-      </div>
-      <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">${archiveLabel}</button>
-      <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-      <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
-    </div>`;
-  }
-
-  const activeRows = active.length
-    ? active.map(cc => ccRow(cc, false)).join('')
-    : '<p style="font-size:13px;color:var(--fg-2)">No active charge codes.</p>';
+  const activeSection = nb === 0
+    ? '<p style="font-size:13px;color:var(--fg-2)">No active charge codes.</p>'
+    : blocks.map((block, bi) => {
+        const bUp = bi === 0 ? 'disabled' : '';
+        const bDn = bi === nb-1 ? 'disabled' : '';
+        if (block.type === 'program') {
+          const ccRows = block.codes.map((cc, ci) => `
+            <div class="cc-manage-item cc-manage-item--nested">
+              <div class="reorder-btns">
+                <button class="reorder-btn" onclick="moveCCInBlock('${cc.id}',-1)" ${ci===0?'disabled':''} title="Move up">&#9650;</button>
+                <button class="reorder-btn" onclick="moveCCInBlock('${cc.id}',1)" ${ci===block.codes.length-1?'disabled':''} title="Move down">&#9660;</button>
+              </div>
+              <div class="cc-manage-info">
+                <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
+                <span class="cc-manage-code">${esc(cc.code)}</span>
+              </div>
+              <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+              <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
+              <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+            </div>`).join('');
+          return `<div class="pg-manage-block">
+            <div class="pg-manage-header">
+              <div class="reorder-btns">
+                <button class="reorder-btn" onclick="moveBlock(${bi},-1)" ${bUp} title="Move program up">&#9650;</button>
+                <button class="reorder-btn" onclick="moveBlock(${bi},1)" ${bDn} title="Move program down">&#9660;</button>
+              </div>
+              <span class="pg-manage-name">${esc(block.name)}</span>
+            </div>${ccRows}
+          </div>`;
+        } else {
+          const cc = block.codes[0];
+          return `<div class="cc-manage-item">
+            <div class="reorder-btns">
+              <button class="reorder-btn" onclick="moveBlock(${bi},-1)" ${bUp} title="Move up">&#9650;</button>
+              <button class="reorder-btn" onclick="moveBlock(${bi},1)" ${bDn} title="Move down">&#9660;</button>
+            </div>
+            <div class="cc-manage-info">
+              <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
+              <span class="cc-manage-code">${esc(cc.code)}</span>
+            </div>
+            <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+            <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
+            <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+          </div>`;
+        }
+      }).join('');
 
   const archivedSection = archived.length
     ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
         <div style="font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Archived</div>
-        ${archived.map(cc => ccRow(cc, true)).join('')}
+        ${archived.map(cc => `<div class="cc-manage-item">
+          <div class="cc-manage-info">
+            <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
+            <span class="cc-manage-code">${esc(cc.code)}</span>
+          </div>
+          <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Unarchive</button>
+          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
+          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+        </div>`).join('')}
       </div>`
     : '';
 
-  const emptyState = !active.length && !archived.length
+  const emptyState = nb === 0 && !archived.length
     ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
     : '';
 
-  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeRows}${archivedSection}
+  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeSection}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
 }
 
