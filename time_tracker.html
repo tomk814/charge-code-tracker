@@ -475,12 +475,13 @@
 
   .del-btn {
     font-size: 11px;
-    padding: 4px 10px;
+    padding: 4px 7px;
     border: 1px solid var(--bd-red);
     border-radius: 2px;
     background: transparent;
     color: var(--red);
     cursor: pointer;
+    margin-right: 4px;
   }
 
   .del-btn:hover { background: var(--bg-red); }
@@ -1367,7 +1368,7 @@ function openManage() {
               </div>
               <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
               <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-              <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+              <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
             </div>`).join('');
           return `<div class="pg-manage-block">
             <div class="pg-manage-header">
@@ -1391,7 +1392,7 @@ function openManage() {
             </div>
             <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
             <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-            <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+            <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
           </div>`;
         }
       }).join('');
@@ -1406,7 +1407,7 @@ function openManage() {
           </div>
           <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Unarchive</button>
           <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
         </div>`).join('')}
       </div>`
     : '';
