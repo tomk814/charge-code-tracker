@@ -43,6 +43,8 @@ Use these names when describing changes to the interface.
 | **Manage CCs** | `openManage()` |
 | **Export / copy** | `openExport()` |
 | **Spread hours** | `openSpread()` |
+| **End of day** | `openEndOfDay()` |
+| **Pay period** | `openPayPeriodModal()` |
 | **Reset day** | `confirmReset()` |
 
 ### Data footer panel
@@ -122,6 +124,7 @@ Named modals:
 | **End of Day modal** | "End of day" toolbar button |
 | **Export modal** | "Export / copy" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
+| **Pay Period modal** | "Pay period" toolbar button |
 | **Reset Day modal** | "Reset day" toolbar button |
 | **Clock Sessions modal** | "Sessions" button in the clock bar |
 | **Clock Start modal** | "Start" button in the clock bar |
