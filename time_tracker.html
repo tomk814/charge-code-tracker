@@ -973,14 +973,15 @@ function render() {
   const day = dayData(viewDate);
 
   const list = document.getElementById('cc-list');
-  if (!state.codes.length) {
+  const activeCodes = state.codes.filter(cc => !cc.archived);
+  if (!activeCodes.length) {
     list.innerHTML = '<div class="cc-card empty-state">No charge codes yet — add one above</div>';
     return;
   }
 
   const grouped = {};
   const ungrouped = [];
-  state.codes.forEach(cc => {
+  activeCodes.forEach(cc => {
     const prog = (cc.program || '').trim();
     if (prog) {
       if (!grouped[prog]) grouped[prog] = [];
@@ -1086,26 +1087,44 @@ function submitAddCC() {
 }
 
 function openManage() {
-  const rows = state.codes.length
-    ? state.codes.map(cc => {
-        const prog = (cc.program || '').trim();
-        const progTag = prog
-          ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
-          : ``;
-        return `<div class="cc-manage-item">
-          <div class="cc-manage-info">
-            <div class="cc-manage-top">
-              ${progTag}
-              <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
-            </div>
-            <span class="cc-manage-code">${esc(cc.code)}</span>
-          </div>
-          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
-        </div>`;
-      }).join('')
-    : '<p style="font-size:13px;color:var(--color-text-tertiary)">No charge codes yet.</p>';
-  showModal(`<h2>Manage charge codes</h2>${rows}
+  const active = state.codes.filter(cc => !cc.archived);
+  const archived = state.codes.filter(cc => cc.archived);
+
+  function ccRow(cc, isArchived) {
+    const prog = (cc.program || '').trim();
+    const progTag = prog
+      ? `<span style="font-size:10px;color:var(--blue);font-family:var(--font-mono);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${esc(prog)}">${esc(prog)}</span>`
+      : ``;
+    const nameStyle = isArchived ? ' style="color:var(--fg-2)"' : '';
+    return `<div class="cc-manage-item">
+      <div class="cc-manage-info">
+        <div class="cc-manage-top">
+          ${progTag}
+          <span class="cc-manage-name"${nameStyle}>${esc(cc.nickname || cc.name)}</span>
+        </div>
+        <span class="cc-manage-code">${esc(cc.code)}</span>
+      </div>
+      <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
+      <button class="del-btn" onclick="deleteCC('${cc.id}')">Remove</button>
+    </div>`;
+  }
+
+  const activeRows = active.length
+    ? active.map(cc => ccRow(cc, false)).join('')
+    : '<p style="font-size:13px;color:var(--fg-2)">No active charge codes.</p>';
+
+  const archivedSection = archived.length
+    ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
+        <div style="font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Archived</div>
+        ${archived.map(cc => ccRow(cc, true)).join('')}
+      </div>`
+    : '';
+
+  const emptyState = !active.length && !archived.length
+    ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
+    : '';
+
+  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeRows}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
 }
 
@@ -1118,6 +1137,10 @@ function openEditCC(id) {
     <div class="field"><label>Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" placeholder="short display name" autocomplete="off"></div>
     <div class="field"><label>Work Package (Optional)</label><input id="e-wp" value="${esc(cc.wp||'')}" placeholder="e.g. WP-001" autocomplete="off"></div>
     <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
+    <div class="field" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
+      <input type="checkbox" id="e-archived"${cc.archived ? ' checked' : ''} style="width:auto;margin:0">
+      <label for="e-archived" style="margin:0;font-size:12px;color:var(--fg-1);cursor:pointer">Archive this charge code (hides it from the list)</label>
+    </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
@@ -1133,12 +1156,15 @@ function submitEditCC(id) {
   const program = document.getElementById('e-program').value.trim();
   const wp = document.getElementById('e-wp').value.trim();
   const nickname = document.getElementById('e-nickname').value.trim();
+  const archived = document.getElementById('e-archived').checked;
   if (!code) return;
   cc.code = code;
   cc.name = name || code;
   cc.program = program;
   cc.wp = wp;
   cc.nickname = nickname;
+  cc.archived = archived || undefined;
+  if (archived && state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   save(state);
   render();
   openManage();
@@ -1163,8 +1189,8 @@ function openEndOfDay() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const day = dayData(viewDate);
-  const activeCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0);
-  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
+  const activeCCs = state.codes.filter(c => !c.archived && (day.hours[c.id]||0) > 0);
+  const total = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
 
   if (!activeCCs.length) {
     showModal(`<h2>End of day</h2>
@@ -1235,9 +1261,9 @@ function copyEndOfDay() {
   const dateStr = viewDt.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const day = dayData(viewDate);
   const notes = day.notes || {};
-  const total = parseFloat(state.codes.reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
+  const total = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
   const lines = [`Time summary — ${dateStr}`, ''];
-  state.codes.forEach(cc => {
+  state.codes.filter(c => !c.archived).forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
     const note = (notes[cc.id] || '').trim();
@@ -1263,7 +1289,7 @@ function copyEodCSV() {
   });
   const csvField = v => /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
   const rows = [];
-  state.codes.forEach(cc => {
+  state.codes.filter(c => !c.archived).forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
     rows.push([viewDate, cc.program||'', cc.wp||'', cc.name, cc.code, cc.nickname||'', hrs.toFixed(1), notes[cc.id]||''].map(csvField).join(','));
@@ -1343,9 +1369,9 @@ let _spreadState = null; // {candidateCCs, day, unallocTenths}
 function openSpread() {
   const day = dayData(viewDate);
   const clockHrs = parseFloat((Math.floor(clockTotalHours()*10)/10).toFixed(1));
-  const loggedHrs = parseFloat(state.codes.reduce((s,c) => s+(day.hours[c.id]||0), 0).toFixed(1));
+  const loggedHrs = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s+(day.hours[c.id]||0), 0).toFixed(1));
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
-  const candidateCCs = state.codes.filter(c => (day.hours[c.id]||0) > 0);
+  const candidateCCs = state.codes.filter(c => !c.archived && (day.hours[c.id]||0) > 0);
 
   const bail = (msg) => showModal(`<h2>Spread hours</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
