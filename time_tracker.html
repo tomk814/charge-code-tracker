@@ -485,6 +485,28 @@
 
   .del-btn:hover { background: var(--bg-red); }
 
+  .reorder-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .reorder-btn {
+    font-size: 9px;
+    padding: 1px 5px;
+    border: 1px solid var(--bd-2);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--fg-1);
+    cursor: pointer;
+    line-height: 1.4;
+  }
+
+  .reorder-btn:hover:not(:disabled) { background: var(--bg-2); }
+
+  .reorder-btn:disabled { opacity: 0.25; cursor: default; }
+
   .export-box {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -1295,6 +1317,17 @@ function openManage() {
 
   showModal(`<h2>Manage charge codes</h2>${emptyState}${activeRows}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
+}
+
+function moveCC(id, dir) {
+  const i = state.codes.findIndex(c => c.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= state.codes.length) return;
+  [state.codes[i], state.codes[j]] = [state.codes[j], state.codes[i]];
+  save(state);
+  render();
+  openManage();
 }
 
 function openEditCC(id) {
