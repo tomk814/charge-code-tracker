@@ -88,7 +88,7 @@ Modal actions bar buttons:
 
 | Name | Description |
 |------|-------------|
-| **Undo** | Reverts the most recent change made in this modal session; disabled when there is nothing to undo |
+| **Reset** | Restores all sessions to the state they were in when the modal was opened; keeps the modal open |
 | **Cancel** | Restores all sessions to the state they were in when the modal was opened and closes |
 | **Done** | Commits all changes and closes the modal |
 
