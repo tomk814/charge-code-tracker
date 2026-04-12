@@ -595,6 +595,8 @@
 
   .pp-th-label { text-align: left; }
   .pp-th-day.pp-today { color: var(--blue); }
+  .pp-th-day.pp-weekend { color: var(--fg-2); font-style: italic; }
+  .pp-cell.pp-weekend { background: rgba(255,255,255,.015); }
   .pp-th-total { color: var(--fg-1); border-left: 1px solid var(--bd-2); }
 
   .pp-date {
@@ -1093,20 +1095,25 @@ function openPayPeriodModal() {
   const ppStart = new Date(ppEnd);
   ppStart.setDate(ppStart.getDate() - 13);
 
-  // Collect working days (Mon–Fri) within the pay period
-  const days = [];
+  // Collect all days in the pay period; weekends are included only if any CC has hours on that day
+  const allDays = [];
   const cur = new Date(ppStart);
   while (cur <= ppEnd) {
     const dow = cur.getDay();
-    if (dow >= 1 && dow <= 5) {
-      days.push({
-        iso: ymdLocal(cur),
-        dow: cur.toLocaleDateString([], {weekday: 'narrow'}),
-        md: `${cur.getMonth()+1}/${cur.getDate()}`
-      });
-    }
+    allDays.push({
+      iso: ymdLocal(cur),
+      dow: cur.toLocaleDateString([], {weekday: 'narrow'}),
+      md: `${cur.getMonth()+1}/${cur.getDate()}`,
+      isWeekend: dow === 0 || dow === 6
+    });
     cur.setDate(cur.getDate() + 1);
   }
+  const anyWeekendHours = allDays.some(d => {
+    if (!d.isWeekend) return false;
+    const dayHours = (state.days[d.iso] || {}).hours || {};
+    return Object.values(dayHours).some(h => h > 0);
+  });
+  const days = allDays.filter(d => !d.isWeekend || anyWeekendHours);
 
   // Build hours lookup: hours[ccId][iso]
   const hours = {};
@@ -1128,12 +1135,13 @@ function openPayPeriodModal() {
   const endStr   = ppEnd.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
 
   const isCurDay = iso => iso === todayIso;
+  const isWeekend = iso => { const dow = new Date(iso + 'T12:00:00').getDay(); return dow === 0 || dow === 6; };
   const hrsCell = (h, iso, extra) =>
-    `<td class="pp-cell${isCurDay(iso) ? ' pp-today' : ''}${extra ? ' '+extra : ''}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+    `<td class="pp-cell${isCurDay(iso) ? ' pp-today' : ''}${isWeekend(iso) ? ' pp-weekend' : ''}${extra ? ' '+extra : ''}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
 
   const thead = `<tr>
     <th class="pp-th pp-th-label">Charge code</th>
-    ${days.map(d => `<th class="pp-th pp-th-day${isCurDay(d.iso) ? ' pp-today' : ''}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`).join('')}
+    ${days.map(d => `<th class="pp-th pp-th-day${isCurDay(d.iso) ? ' pp-today' : ''}${d.isWeekend ? ' pp-weekend' : ''}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`).join('')}
     <th class="pp-th pp-th-total">Total</th>
   </tr>`;
 

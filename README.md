@@ -89,7 +89,8 @@ time_tracker/
 
 ## Data safety
 
-> **Important:** your data lives in your browser's `localStorage`. This is a small local database managed by your browser. It is **not** a file on your hard drive, and it can be wiped by:
+> [!WARNING]
+> Your data lives in your browser's `localStorage`. This is a small local database managed by your browser. It is **not** a file on your hard drive, and it can be wiped by:
 > - Clearing your browser's site data or browsing history
 > - Browser profile resets or reinstalls
 > - Opening the file from a different path or in a different browser
