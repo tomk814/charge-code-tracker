@@ -272,7 +272,21 @@
     gap: 10px;
     padding: 7px 12px 6px;
     border-bottom: 1px solid var(--bd-2);
+    cursor: pointer;
+    user-select: none;
   }
+
+  .pg-chevron {
+    font-size: 10px;
+    color: var(--fg-2);
+    flex-shrink: 0;
+    transition: transform .15s;
+    line-height: 1;
+  }
+
+  .pg-card.collapsed .pg-chevron { transform: rotate(-90deg); }
+  .pg-card.collapsed .pg-header  { border-bottom: none; }
+  .pg-card.collapsed .pg-row     { display: none; }
 
   .pg-name {
     flex: 1;
@@ -974,6 +988,17 @@ function addTime(id, delta) {
 }
 
 
+function toggleProgramGroup(name) {
+  if (!state.collapsedGroups) state.collapsedGroups = {};
+  if (state.collapsedGroups[name]) {
+    delete state.collapsedGroups[name];
+  } else {
+    state.collapsedGroups[name] = true;
+  }
+  save(state);
+  render();
+}
+
 function toggleIncrements() {
   state.showIncrements = !state.showIncrements;
   save(state);
@@ -1035,12 +1060,14 @@ function renderIndividualCard(cc, day) {
 
 function renderProgramCard(programName, codes, day) {
   const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
+  const isCollapsed = !!(state.collapsedGroups && state.collapsedGroups[programName]);
   const rows = codes.map(cc => {
     const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
     return `<div class="pg-row${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
   }).join('');
-  return `<div class="pg-card">
-    <div class="pg-header">
+  return `<div class="pg-card${isCollapsed?' collapsed':''}" data-pg="${esc(programName)}">
+    <div class="pg-header" onclick="toggleProgramGroup(this.closest('.pg-card').dataset.pg)">
+      <span class="pg-chevron">▾</span>
       <div class="pg-name">${esc(programName)}</div>
       <div class="pg-total ${pgTotal===0?'zero':''}">${pgTotal.toFixed(1)}</div>
     </div>
