@@ -863,14 +863,14 @@ function load() {
     if (raw) return JSON.parse(raw);
   } catch(e) {}
   return migrateFromV2() || {codes: [
-    {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',            program: 'Pay Adjustment'},
-    {id: 'pa0002', code: 'B',    name: 'Bereavement',              program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0003', code: 'JD',   name: 'Jury Duty',                program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay / LWOP', program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0005', code: 'M',    name: 'Military',                 program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0007', code: 'P',    name: 'Parental',                 program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0008', code: 'STD',  name: 'Short Term Disability',    program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0009', code: 'WC',   name: "Worker's Comp",            program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',         program: 'Pay Adjustment'},
+    {id: 'pa0002', code: 'B',    name: 'Bereavement',           program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0003', code: 'JD',   name: 'Jury Duty',             program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay',     program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0005', code: 'M',    name: 'Military',              program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0007', code: 'P',    name: 'Parental',              program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0008', code: 'STD',  name: 'Short Term Disability', program: 'Pay Adjustment', hidden: true},
+    {id: 'pa0009', code: 'WC',   name: "Worker's Comp",         program: 'Pay Adjustment', hidden: true},
   ], days: {}};
 }
 
