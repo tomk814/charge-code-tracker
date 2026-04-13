@@ -120,13 +120,43 @@ export function importJSON() {
   document.getElementById('json-file-input').click();
 }
 
+function validateImport(data) {
+  if (typeof data !== 'object' || data === null || Array.isArray(data))
+    return 'Top-level value must be a JSON object, got ' + (Array.isArray(data) ? 'an array' : typeof data) + '.';
+  if (!('codes' in data))
+    return 'Missing required "codes" field — is this a charge-code tracker export?';
+  if (!Array.isArray(data.codes))
+    return '"codes" must be an array, got ' + typeof data.codes + '.';
+  for (let i = 0; i < data.codes.length; i++) {
+    const c = data.codes[i];
+    if (typeof c !== 'object' || c === null) return `codes[${i}] must be an object.`;
+    if (!c.id)   return `codes[${i}] is missing "id".`;
+    if (!c.code) return `codes[${i}] (id: "${c.id}") is missing "code".`;
+    if (!c.name) return `codes[${i}] (id: "${c.id}") is missing "name".`;
+  }
+  if ('days' in data && (typeof data.days !== 'object' || Array.isArray(data.days)))
+    return '"days" must be an object, got ' + (Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
+  return null;
+}
+
 export function handleJSONFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
+    let parsed;
     try {
-      const parsed = JSON.parse(ev.target.result);
+      parsed = JSON.parse(ev.target.result);
+    } catch (err) {
+      alert('Could not parse file as JSON:\n' + err.message);
+      return;
+    }
+    const problem = validateImport(parsed);
+    if (problem) {
+      alert('Import failed — ' + problem);
+      return;
+    }
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       _replaceState(load());
       _ensurePayAdjustmentCodes();
@@ -134,8 +164,8 @@ export function handleJSONFile(e) {
       _renderClock();
       lastSavedAt = new Date();
       updateLastSaved();
-    } catch {
-      alert('Invalid JSON file.');
+    } catch (err) {
+      alert('Import failed — could not save:\n' + err.message);
     }
   };
   reader.readAsText(file);
