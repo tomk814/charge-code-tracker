@@ -643,6 +643,9 @@
   }
 
   .pp-cell.pp-today { background: var(--bg-blue); }
+  .pp-th-day.pp-holiday { color: var(--green); }
+  .pp-th-day.pp-holiday .pp-date { color: var(--green); }
+  .pp-cell.pp-holiday { background: rgba(77,171,144,.10); }
   .pp-zero { color: var(--fg-2); }
 
   .pp-total-cell {
@@ -808,6 +811,7 @@
     <div id="data-btns">
       <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
       <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">Hide Codes</button>
+      <button class="tool-btn" onclick="openHolidays()">Holidays</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
@@ -857,21 +861,29 @@ function migrateFromV2() {
   } catch(e) { return null; }
 }
 
+// Canonical list of system-managed Pay Adjustment charge codes.
+// These can never be archived or deleted by the user.
+const PREDEFINED_PA_CODES = [
+  {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',         program: 'Pay Adjustment'},
+  {id: 'pa0002', code: 'B',    name: 'Bereavement',           program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0003', code: 'JD',   name: 'Jury Duty',             program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay',     program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0005', code: 'M',    name: 'Military',              program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0006', code: 'HOL',  name: 'Holiday',               program: 'Pay Adjustment'},
+  {id: 'pa0007', code: 'P',    name: 'Parental',              program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0008', code: 'STD',  name: 'Short Term Disability', program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0009', code: 'WC',   name: "Worker's Comp",         program: 'Pay Adjustment', hidden: true},
+];
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return migrateFromV2() || {codes: [
-    {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',         program: 'Pay Adjustment'},
-    {id: 'pa0002', code: 'B',    name: 'Bereavement',           program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0003', code: 'JD',   name: 'Jury Duty',             program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay',     program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0005', code: 'M',    name: 'Military',              program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0007', code: 'P',    name: 'Parental',              program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0008', code: 'STD',  name: 'Short Term Disability', program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0009', code: 'WC',   name: "Worker's Comp",         program: 'Pay Adjustment', hidden: true},
-  ], days: {}};
+  return migrateFromV2() || {
+    codes: PREDEFINED_PA_CODES.map(c => Object.assign({}, c)),
+    days: {}
+  };
 }
 
 function save(s) {
@@ -927,7 +939,8 @@ function handleJSONFile(e) {
     try {
       const parsed = JSON.parse(ev.target.result);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-      state = loadState();
+      state = load();
+      ensurePayAdjustmentCodes();
       render();
       renderClock();
       lastSavedAt = new Date();
@@ -947,11 +960,58 @@ function dayData(date) {
   return d;
 }
 
+// Inserts any PREDEFINED_PA_CODES missing from state.codes, preserving relative order.
+// Returns true if any codes were added (caller should save).
+function ensurePayAdjustmentCodes() {
+  let changed = false;
+  PREDEFINED_PA_CODES.forEach((def, defIdx) => {
+    if (state.codes.find(c => c.id === def.id)) return;
+    // Find insertion point: after the nearest preceding predefined PA code present in state
+    let insertAfter = -1;
+    for (let di = defIdx - 1; di >= 0; di--) {
+      const prev = state.codes.findIndex(c => c.id === PREDEFINED_PA_CODES[di].id);
+      if (prev >= 0) { insertAfter = prev; break; }
+    }
+    if (insertAfter >= 0) {
+      state.codes.splice(insertAfter + 1, 0, Object.assign({}, def));
+    } else {
+      state.codes.unshift(Object.assign({}, def));
+    }
+    changed = true;
+  });
+  return changed;
+}
+
+// Returns the current holiday list, defaulting to the test date 4/17/2026.
+function getHolidays() {
+  if (!Array.isArray(state.holidays)) state.holidays = ['2026-04-17'];
+  return state.holidays;
+}
+
+function isHoliday(dateStr) {
+  return getHolidays().includes(dateStr);
+}
+
+// If dateStr is a holiday and hours have not yet been pre-populated, sets 8h of HOL time.
+// Returns true if state was modified (caller should save).
+function applyHolidayPrePopulate(dateStr) {
+  if (!isHoliday(dateStr)) return false;
+  const holId = 'pa0006';
+  if (!state.codes.find(c => c.id === holId && !c.archived)) return false;
+  if (state.days && state.days[dateStr] && state.days[dateStr].holidayPopulated) return false;
+  const day = dayData(dateStr);
+  if ((day.hours[holId] || 0) === 0) day.hours[holId] = 8.0;
+  day.holidayPopulated = true;
+  return true;
+}
+
 // ================================================================
 // SECTION: JS-STATE-INIT  (~line 712)
 // Global state and viewDate initialisation; clears stale active timer from prior day.
 // ================================================================
 let state = load();
+// Repair any Pay Adjustment codes missing from old JSON schema
+if (ensurePayAdjustmentCodes()) save(state);
 let viewDate = today();
 
 // Clear stale active timer from a previous day
@@ -1184,12 +1244,19 @@ function openPayPeriodModal() {
 
   const isCurDay = iso => iso === todayIso;
   const isWeekend = iso => { const dow = new Date(iso + 'T12:00:00').getDay(); return dow === 0 || dow === 6; };
-  const hrsCell = (h, iso, extra) =>
-    `<td class="pp-cell${isCurDay(iso) ? ' pp-today' : ''}${isWeekend(iso) ? ' pp-weekend' : ''}${extra ? ' '+extra : ''}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+  const hrsCell = (h, iso, extra) => {
+    const cls = ['pp-cell', isCurDay(iso) ? 'pp-today' : '', isWeekend(iso) ? 'pp-weekend' : '',
+                 isHoliday(iso) ? 'pp-holiday' : '', extra].filter(Boolean).join(' ');
+    return `<td class="${cls}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+  };
 
   const thead = `<tr>
     <th class="pp-th pp-th-label">Charge code</th>
-    ${days.map(d => `<th class="pp-th pp-th-day${isCurDay(d.iso) ? ' pp-today' : ''}${d.isWeekend ? ' pp-weekend' : ''}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`).join('')}
+    ${days.map(d => {
+      const cls = ['pp-th', 'pp-th-day', isCurDay(d.iso) ? 'pp-today' : '',
+                   d.isWeekend ? 'pp-weekend' : '', isHoliday(d.iso) ? 'pp-holiday' : ''].filter(Boolean).join(' ');
+      return `<th class="${cls}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`;
+    }).join('')}
     <th class="pp-th pp-th-total">Total</th>
   </tr>`;
 
@@ -1228,6 +1295,7 @@ function openPayPeriodModal() {
 }
 
 function render() {
+  if (applyHolidayPrePopulate(viewDate)) save(state);
   renderPayPeriod();
   const isToday = viewDate === today();
   const viewDt = new Date(viewDate + 'T12:00:00');
@@ -1299,6 +1367,13 @@ function uid() { return Math.random().toString(36).slice(2,8); }
 // Charge code modals: Add (with Dayforce paste), Edit, Manage list, and Delete.
 // ================================================================
 // ── Modals ───────────────────────────────────────────────────────────────────
+
+// Pay Adjustment CCs are system-managed and cannot be archived or deleted.
+function isProtectedCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  return cc && cc.program === 'Pay Adjustment';
+}
+
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
@@ -1345,6 +1420,7 @@ function submitAddCC() {
 }
 
 function toggleArchiveCC(id) {
+  if (isProtectedCC(id)) return;
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   cc.archived = cc.archived ? undefined : true;
@@ -1437,9 +1513,9 @@ function openManage() {
                 <span class="cc-manage-code">${esc(cc.code)}</span>
               </div>
               <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-              <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+              ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
               <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-              <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+              ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
             </div>`).join('');
           return `<div class="pg-manage-block">
             <div class="pg-manage-header">
@@ -1462,9 +1538,9 @@ function openManage() {
               <span class="cc-manage-code">${esc(cc.code)}</span>
             </div>
             <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-            <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+            ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
             <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-            <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+            ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
           </div>`;
         }
       }).join('');
@@ -1479,7 +1555,7 @@ function openManage() {
           </div>
           <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
           <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+          ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
         </div>`).join('')}
       </div>`
     : '';
@@ -1543,6 +1619,7 @@ function submitEditCC(id) {
 }
 
 function deleteCC(id) {
+  if (isProtectedCC(id)) return;
   if (state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   state.codes = state.codes.filter(c => c.id !== id);
   Object.values(state.days||{}).forEach(day => {
@@ -1699,6 +1776,7 @@ function doReset() {
   state.codes.forEach(c => { day.hours[c.id] = 0; });
   day.clock = {sessions: []};
   day.notes = {};
+  delete day.holidayPopulated;
   if (viewDate === today()) state.activeTimer = null;
   save(state);
   closeModal();
@@ -1706,6 +1784,54 @@ function doReset() {
   renderClock();
 }
 
+
+function openHolidays() {
+  const hols = getHolidays();
+  // Display as M/D/YYYY for readability
+  const lines = hols.map(iso => {
+    const [y, m, d] = iso.split('-');
+    return `${parseInt(m)}/${parseInt(d)}/${y}`;
+  }).join('\n');
+
+  showModal(`<h2>Holidays</h2>
+    <p style="font-size:12px;color:var(--fg-2);margin-bottom:10px">
+      One date per line (M/D/YYYY). Holiday days auto-fill 8 hours of Holiday time.
+    </p>
+    <div class="field">
+      <label>Holiday dates</label>
+      <textarea id="hol-textarea" rows="8" style="width:100%;box-sizing:border-box;background:var(--bg-1);color:var(--fg-0);border:1px solid var(--bd-1);border-radius:4px;padding:8px;font-family:var(--font-mono);font-size:12px;resize:vertical">${esc(lines)}</textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn primary" onclick="saveHolidays()">Save</button>
+    </div>`);
+  setTimeout(() => document.getElementById('hol-textarea')?.focus(), 50);
+}
+
+function saveHolidays() {
+  const raw = document.getElementById('hol-textarea').value;
+  const parsed = [];
+  raw.split('\n').forEach(line => {
+    const s = line.trim();
+    if (!s) return;
+    // Accept M/D/YYYY, MM/DD/YYYY, or YYYY-MM-DD
+    let iso = null;
+    const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const dash  = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (slash) {
+      iso = `${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`;
+    } else if (dash) {
+      iso = s;
+    }
+    if (iso && !parsed.includes(iso)) parsed.push(iso);
+  });
+  state.holidays = parsed;
+  // Clear holidayPopulated flags so updated list re-applies cleanly
+  Object.values(state.days || {}).forEach(d => { delete d.holidayPopulated; });
+  save(state);
+  closeModal();
+  render();
+}
 
 // ================================================================
 // SECTION: JS-SPREAD-HOURS  (~line 1201)
