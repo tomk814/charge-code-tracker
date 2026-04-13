@@ -277,7 +277,7 @@
   }
 
   .pg-chevron {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--fg-2);
     flex-shrink: 0;
     transition: transform .15s;
@@ -1067,7 +1067,7 @@ function renderProgramCard(programName, codes, day) {
   }).join('');
   return `<div class="pg-card${isCollapsed?' collapsed':''}" data-pg="${esc(programName)}">
     <div class="pg-header" onclick="toggleProgramGroup(this.closest('.pg-card').dataset.pg)">
-      <span class="pg-chevron">▾</span>
+      <span class="pg-chevron">▼</span>
       <div class="pg-name">${esc(programName)}</div>
       <div class="pg-total ${pgTotal===0?'zero':''}">${pgTotal.toFixed(1)}</div>
     </div>
@@ -1235,7 +1235,7 @@ function render() {
   const day = dayData(viewDate);
 
   const list = document.getElementById('cc-list');
-  const activeCodes = state.codes.filter(cc => !cc.archived);
+  const activeCodes = state.codes.filter(cc => !cc.archived && !cc.hidden);
   if (!activeCodes.length) {
     list.innerHTML = '<div class="cc-card empty-state">No charge codes yet — add one above</div>';
     return;
@@ -1339,18 +1339,29 @@ function toggleArchiveCC(id) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   cc.archived = cc.archived ? undefined : true;
+  if (cc.archived) { cc.hidden = undefined; }
   if (cc.archived && state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   save(state);
   render();
   openManage();
 }
 
-// Returns active (non-archived) codes as ordered blocks:
+function toggleHideCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  cc.hidden = cc.hidden ? undefined : true;
+  if (cc.hidden && state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
+  save(state);
+  render();
+  openManage();
+}
+
+// Returns active (non-archived, non-hidden) codes as ordered blocks:
 //   { type:'program', name, codes[] }  or  { type:'single', codes:[cc] }
 function getBlocks() {
   const blocks = [];
   const seen = {};
-  state.codes.filter(cc => !cc.archived).forEach(cc => {
+  state.codes.filter(cc => !cc.archived && !cc.hidden).forEach(cc => {
     const prog = (cc.program || '').trim();
     if (prog) {
       if (!seen[prog]) { seen[prog] = { type:'program', name:prog, codes:[] }; blocks.push(seen[prog]); }
@@ -1370,9 +1381,10 @@ function moveBlock(blockIdx, dir) {
   const j = blockIdx + dir;
   if (j < 0 || j >= blocks.length) return;
   [blocks[blockIdx], blocks[j]] = [blocks[j], blocks[blockIdx]];
-  // Preserve archived codes at their original positions after active codes.
+  // Preserve hidden and archived codes after active codes.
+  const hidden   = state.codes.filter(cc => cc.hidden && !cc.archived);
   const archived = state.codes.filter(cc => cc.archived);
-  state.codes = [...blocksToFlat(blocks), ...archived];
+  state.codes = [...blocksToFlat(blocks), ...hidden, ...archived];
   save(state); render(); openManage();
 }
 
@@ -1385,8 +1397,9 @@ function moveCCInBlock(ccId, dir) {
     const j = i + dir;
     if (j < 0 || j >= block.codes.length) return;
     [block.codes[i], block.codes[j]] = [block.codes[j], block.codes[i]];
+    const hidden   = state.codes.filter(cc => cc.hidden && !cc.archived);
     const archived = state.codes.filter(cc => cc.archived);
-    state.codes = [...blocksToFlat(blocks), ...archived];
+    state.codes = [...blocksToFlat(blocks), ...hidden, ...archived];
     save(state); render(); openManage();
     return;
   }
@@ -1395,6 +1408,7 @@ function moveCCInBlock(ccId, dir) {
 function openManage() {
   const blocks = getBlocks();
   const nb = blocks.length;
+  const hidden   = state.codes.filter(cc => cc.hidden && !cc.archived);
   const archived = state.codes.filter(cc => cc.archived);
 
   const activeSection = nb === 0
@@ -1413,6 +1427,7 @@ function openManage() {
                 <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
                 <span class="cc-manage-code">${esc(cc.code)}</span>
               </div>
+              <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
               <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
               <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
               <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
@@ -1437,12 +1452,28 @@ function openManage() {
               <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
               <span class="cc-manage-code">${esc(cc.code)}</span>
             </div>
+            <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
             <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
             <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
             <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
           </div>`;
         }
       }).join('');
+
+  const hiddenSection = hidden.length
+    ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
+        <div style="font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Hidden</div>
+        ${hidden.map(cc => `<div class="cc-manage-item">
+          <div class="cc-manage-info">
+            <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
+            <span class="cc-manage-code">${esc(cc.code)}</span>
+          </div>
+          <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
+          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
+          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+        </div>`).join('')}
+      </div>`
+    : '';
 
   const archivedSection = archived.length
     ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
@@ -1459,11 +1490,11 @@ function openManage() {
       </div>`
     : '';
 
-  const emptyState = nb === 0 && !archived.length
+  const emptyState = nb === 0 && !hidden.length && !archived.length
     ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
     : '';
 
-  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeSection}${archivedSection}
+  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeSection}${hiddenSection}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
 }
 
@@ -1701,9 +1732,9 @@ let _spreadState = null; // {candidateCCs, day, unallocTenths}
 function openSpread() {
   const day = dayData(viewDate);
   const clockHrs = parseFloat((Math.floor(clockTotalHours()*10)/10).toFixed(1));
-  const loggedHrs = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s+(day.hours[c.id]||0), 0).toFixed(1));
+  const loggedHrs = parseFloat(state.codes.filter(c => !c.archived && !c.hidden).reduce((s,c) => s+(day.hours[c.id]||0), 0).toFixed(1));
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
-  const candidateCCs = state.codes.filter(c => !c.archived && (day.hours[c.id]||0) > 0);
+  const candidateCCs = state.codes.filter(c => !c.archived && !c.hidden && (day.hours[c.id]||0) > 0);
 
   const bail = (msg) => showModal(`<h2>Spread hours</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
