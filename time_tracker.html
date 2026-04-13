@@ -793,6 +793,7 @@
     <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
     <div id="data-btns">
       <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
+      <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">Hide Codes</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
@@ -873,6 +874,8 @@ function revealDataButtons() {
   btns.style.display = 'flex';
   const toggleBtn = document.getElementById('incr-toggle-btn');
   if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Scroll to Increment' : 'Click to Increment';
+  const codesBtn = document.getElementById('codes-toggle-btn');
+  if (codesBtn) codesBtn.textContent = state.showCodes !== false ? 'Hide Codes' : 'Show Codes';
   clearTimeout(_dataBtnTimer);
   _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
 }
@@ -979,6 +982,14 @@ function toggleIncrements() {
   render();
 }
 
+function toggleCodes() {
+  state.showCodes = state.showCodes === false ? true : false;
+  save(state);
+  const codesBtn = document.getElementById('codes-toggle-btn');
+  if (codesBtn) codesBtn.textContent = state.showCodes !== false ? 'Hide Codes' : 'Show Codes';
+  render();
+}
+
 function handleIncrementClick(id, sign, e) {
   addTime(id, sign * (e.shiftKey ? 1.0 : 0.1));
 }
@@ -998,10 +1009,11 @@ function renderCCControls(cc, day) {
     ? `<button class="btn-inc pos" onclick="handleIncrementClick('${cc.id}',1,event)" title="+0.1 hr (Shift: +1.0 hr)">+</button>`
     : '';
   const eodDone = !!(day.notes && day.notes[cc.id]);
+  const codeRow = state.showCodes !== false ? `<div class="cc-code">${esc(cc.code)}</div>` : '';
   return `<div class="cc-top">
         <div class="cc-label">
           <div class="cc-name${eodDone?' eod-done':''}">${esc(cc.nickname || cc.name)}</div>
-          <div class="cc-code">${esc(cc.code)}</div>
+          ${codeRow}
         </div>
         ${btnNeg}${trackControls}${btnPos}
         <div class="cc-hours${hrs===0?' zero':(isRunning?' accumulating':'')}" id="cc-hours-${cc.id}">${hrs.toFixed(1)}</div>
