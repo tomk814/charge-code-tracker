@@ -1794,6 +1794,11 @@ let _clockSessionsInitial = null;   // snapshot on modal open — used by Reset/
 function clockSessions() { return dayData(viewDate).clock.sessions; }
 function clockIsRunning() { return clockSessions().some(s => s.end === null); }
 
+function sortClockSessions() {
+  const hhmmToMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  clockSessions().sort((a,b) => hhmmToMins(a.start) - hhmmToMins(b.start));
+}
+
 function parseHHMM(hhmm) {
   const [h,m] = hhmm.split(':').map(Number);
   const d = new Date(); d.setHours(h,m,0,0); return d;
@@ -1854,7 +1859,7 @@ function openClockStart() {
     state.activeTimer.sessionStart = Date.now();
     state.activeTimer.committedTenths = 0;
   }
-  save(state); renderClock(); render();
+  sortClockSessions(); save(state); renderClock(); render();
 }
 
 function openClockStop() {
@@ -1863,7 +1868,7 @@ function openClockStop() {
   finalizeActiveTimer();
   state.activeTimer = null;
   running.end = currentHHMM();
-  save(state); renderClock(); render();
+  sortClockSessions(); save(state); renderClock(); render();
 }
 
 function openClockSessions() {
@@ -1919,7 +1924,7 @@ function adjustClockSessionTime(i, field, deltaMinutes) {
   const [h, m] = current.split(':').map(Number);
   const total = ((h * 60 + m + deltaMinutes) % 1440 + 1440) % 1440;
   sessions[i][field] = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
-  save(state); renderClockSessionsModal();
+  sortClockSessions(); save(state); renderClockSessionsModal();
 }
 
 function handleTimeInputWheel(i, field, e) {
@@ -1945,17 +1950,17 @@ function updateClockSession(i, field, val) {
   if (field==='end' && trimmed==='') { sessions[i].end = null; }
   else if (isValidHHMM(trimmed))     { sessions[i][field] = trimmed; }
   else return;
-  save(state); renderClockSessionsModal();
+  sortClockSessions(); save(state); renderClockSessionsModal();
 }
 
 function deleteClockSession(i) {
   clockSessions().splice(i,1);
-  save(state); renderClockSessionsModal();
+  sortClockSessions(); save(state); renderClockSessionsModal();
 }
 
 function addClockSession() {
   clockSessions().push({start: currentHHMM(), end: null});
-  save(state); renderClockSessionsModal();
+  sortClockSessions(); save(state); renderClockSessionsModal();
 }
 
 // ================================================================
