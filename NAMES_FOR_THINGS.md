@@ -68,6 +68,30 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | **Clock Start / Stop button** | Toggles the running state |
 | **Sessions button** | Opens the Clock Sessions modal |
 
+### Clock Sessions modal
+
+Each session row shows start → end fields with optional increment buttons and a delete button.
+
+```
+Session row  (.session-row)
+├── Decrement button  (.btn-inc.neg)  — "−"; optional, shown when increments are enabled; Shift+click: ±1 hr
+├── Start time input  (.time-input)   — scroll up/down ±1 min; Shift+scroll ±1 hr
+├── Increment button  (.btn-inc.pos)  — "+"; optional, shown when increments are enabled
+├── Arrow separator   (→)
+├── Decrement button  (.btn-inc.neg)  — end field only, hidden when session is still running
+├── End time input    (.time-input)   — scroll up/down ±1 min; Shift+scroll ±1 hr; blank = running
+├── Increment button  (.btn-inc.pos)  — end field only, hidden when session is still running
+└── Delete button     (.del-btn)
+```
+
+Modal actions bar buttons:
+
+| Name | Description |
+|------|-------------|
+| **Reset** | Restores all sessions to the state they were in when the modal was opened; keeps the modal open |
+| **Cancel** | Restores all sessions to the state they were in when the modal was opened and closes |
+| **Done** | Commits all changes and closes the modal |
+
 ### Program group card
 
 When one or more charge codes share a **Program** label, they are rendered together inside a **program group card** (`.pg-card`).
@@ -127,6 +151,6 @@ Named modals:
 | **Spread Hours modal** | "Spread hours" toolbar button |
 | **Pay Period modal** | "Pay period" toolbar button |
 | **Reset Day modal** | "Reset day" toolbar button |
-| **Clock Sessions modal** | "Sessions" button in the clock bar |
+| **Clock Sessions modal** | "Sessions" button in the clock bar; includes Undo and Cancel buttons |
 | **Clock Start modal** | "Start" button in the clock bar |
 | **Clock Stop modal** | "Stop" button in the clock bar |
