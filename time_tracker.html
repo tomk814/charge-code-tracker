@@ -862,7 +862,17 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return migrateFromV2() || {codes: [], days: {}};
+  return migrateFromV2() || {codes: [
+    {id: 'pa0001', code: '', name: 'PTO',                      program: 'Pay Adjustment'},
+    {id: 'pa0002', code: '', name: 'Bereavement',              program: 'Pay Adjustment'},
+    {id: 'pa0003', code: '', name: 'Jury Duty',                program: 'Pay Adjustment'},
+    {id: 'pa0004', code: '', name: 'Leave Without Pay / LWOP', program: 'Pay Adjustment'},
+    {id: 'pa0005', code: '', name: 'Military',                 program: 'Pay Adjustment'},
+    {id: 'pa0006', code: '', name: 'Military Unpaid',          program: 'Pay Adjustment'},
+    {id: 'pa0007', code: '', name: 'Parental',                 program: 'Pay Adjustment'},
+    {id: 'pa0008', code: '', name: 'Short Term Disability',    program: 'Pay Adjustment'},
+    {id: 'pa0009', code: '', name: "Worker's Comp",            program: 'Pay Adjustment'},
+  ], days: {}};
 }
 
 function save(s) {
