@@ -54,6 +54,7 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | Name | `onclick` | Description |
 |------|-----------|-------------|
 | **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
+| **Show / Hide codes** | `toggleCodes()` | Toggles the `.cc-code` row on each CC card; hiding it makes cards more compact; label flips between "Hide Codes" and "Show Codes" |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
 | **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
