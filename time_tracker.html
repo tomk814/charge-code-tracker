@@ -74,6 +74,7 @@
     /* accents */
     --red:    #e05555;
     --green:  #4dab90;
+    --yellow: #c8a44a;
     --blue:   #5aafed;
 
     /* borders */
@@ -776,6 +777,48 @@
     align-items: center;
     gap: 8px;
   }
+
+  /* ── backup permission banner ── */
+  #backup-banner {
+    font-size: 11px;
+    color: var(--yellow);
+    background: rgba(200,164,74,.08);
+    border: 1px solid rgba(200,164,74,.3);
+    border-radius: 2px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── backup status badge (inside #data-btns) ── */
+  .backup-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--fg-1);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  .backup-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--fg-2);
+    flex-shrink: 0;
+  }
+
+  .backup-status.linked            { color: var(--green); }
+  .backup-status.linked .backup-dot { background: var(--green); }
+
+  .backup-status.permission-needed            { color: var(--yellow); cursor: pointer; }
+  .backup-status.permission-needed .backup-dot { background: var(--yellow); }
 </style>
 </head>
 <body>
@@ -819,6 +862,11 @@
       <button class="tool-btn" onclick="openHolidays()">Holidays</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+      <span id="backup-ui" style="display:none">
+        <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
+        <span id="backup-status" class="backup-status not-linked"><span class="backup-dot"></span>No backup file</span>
+        <button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()" disabled>Save to file now</button>
+      </span>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
     </div>
   </div>
@@ -955,6 +1003,182 @@ function handleJSONFile(e) {
     }
   };
   reader.readAsText(file);
+}
+
+// ── Backup file (IndexedDB + File System Access API) ─────────────────────────
+
+let _idbPromise = null;
+let _backupHandleMem = null; // in-memory fallback when IDB is unavailable
+let _idbUnavailable = false;
+
+function openIDB() {
+  if (_idbPromise) return _idbPromise;
+  _idbPromise = new Promise((resolve, reject) => {
+    try {
+      const req = indexedDB.open('cc_tracker_fs', 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore('fileHandles');
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => { _idbUnavailable = true; reject(e.target.error); };
+    } catch(e) { _idbUnavailable = true; reject(e); }
+  });
+  return _idbPromise;
+}
+
+async function getBackupHandle() {
+  if (_idbUnavailable) return _backupHandleMem;
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction('fileHandles', 'readonly');
+      const req = tx.objectStore('fileHandles').get('backupHandle');
+      req.onsuccess = e => resolve(e.target.result || null);
+      req.onerror   = e => reject(e.target.error);
+    });
+  } catch(e) {
+    _idbUnavailable = true;
+    return _backupHandleMem;
+  }
+}
+
+async function setBackupHandle(handle) {
+  _backupHandleMem = handle;
+  if (_idbUnavailable) return;
+  try {
+    const db = await openIDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('fileHandles', 'readwrite');
+      tx.objectStore('fileHandles').put(handle, 'backupHandle');
+      tx.oncomplete = resolve;
+      tx.onerror    = e => reject(e.target.error);
+    });
+  } catch(e) {
+    _idbUnavailable = true;
+    console.warn('Backup handle stored in memory only (IndexedDB unavailable). Handle will not persist across page loads.');
+  }
+}
+
+async function clearBackupHandle() {
+  _backupHandleMem = null;
+  if (_idbUnavailable) return;
+  try {
+    const db = await openIDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('fileHandles', 'readwrite');
+      tx.objectStore('fileHandles').delete('backupHandle');
+      tx.oncomplete = resolve;
+      tx.onerror    = e => reject(e.target.error);
+    });
+  } catch(e) { _idbUnavailable = true; }
+}
+
+function renderBackupStatus(perm) {
+  const el      = document.getElementById('backup-status');
+  const saveBtn = document.getElementById('save-backup-btn');
+  if (!el) return;
+  if (perm === 'granted') {
+    const note = _idbUnavailable ? ' (session only)' : '';
+    el.className = 'backup-status linked';
+    el.innerHTML = `<span class="backup-dot"></span>Backup linked${esc(note)}`;
+    el.onclick = null;
+    if (saveBtn) saveBtn.disabled = false;
+  } else if (perm === 'prompt') {
+    el.className = 'backup-status permission-needed';
+    el.innerHTML = '<span class="backup-dot"></span>Click to reconnect';
+    el.onclick = reconnectBackup;
+    if (saveBtn) saveBtn.disabled = true;
+  } else {
+    el.className = 'backup-status not-linked';
+    el.innerHTML = '<span class="backup-dot"></span>No backup file';
+    el.onclick = null;
+    if (saveBtn) saveBtn.disabled = true;
+  }
+}
+
+function renderBackupBanner() {
+  if (document.getElementById('backup-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'backup-banner';
+  banner.innerHTML =
+    'Backup file needs permission \u2014 ' +
+    '<button class="tool-btn" onclick="grantBackupAccess()">Grant access</button>' +
+    '<button class="tool-btn" onclick="dismissBackupBanner()">Dismiss</button>';
+  const clockBar = document.getElementById('clock-bar');
+  if (clockBar) clockBar.parentNode.insertBefore(banner, clockBar);
+}
+
+async function checkBackupPermission() {
+  const handle = await getBackupHandle().catch(() => null);
+  if (!handle) { renderBackupStatus(null); return; }
+  const perm = await handle.queryPermission({mode: 'readwrite'}).catch(() => 'denied');
+  renderBackupStatus(perm);
+  if (perm === 'prompt') renderBackupBanner();
+}
+
+async function linkBackupFile() {
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'time_tracker_archive.json',
+      types: [{ description: 'JSON archive', accept: { 'application/json': ['.json'] } }]
+    });
+    await setBackupHandle(handle);
+    renderBackupStatus('granted');
+  } catch(e) {
+    if (e.name !== 'AbortError') console.error('linkBackupFile:', e);
+  }
+}
+
+async function writeToBackupFile(s) {
+  const handle = await getBackupHandle().catch(() => null);
+  if (!handle) return;
+  try {
+    const perm = await handle.queryPermission({mode: 'readwrite'}).catch(() => 'denied');
+    if (perm !== 'granted') { renderBackupStatus(perm); return; }
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(s));
+    await writable.close();
+  } catch(e) {
+    if (e.name === 'NotFoundError') {
+      await clearBackupHandle().catch(() => {});
+      const el = document.getElementById('backup-status');
+      if (el) {
+        el.className = 'backup-status not-linked';
+        el.innerHTML = '<span class="backup-dot"></span>File not found \u2014 please re-link';
+      }
+      const saveBtn = document.getElementById('save-backup-btn');
+      if (saveBtn) saveBtn.disabled = true;
+    } else {
+      console.error('writeToBackupFile:', e);
+    }
+  }
+}
+
+async function saveToFileNow() {
+  await writeToBackupFile(state);
+}
+
+async function grantBackupAccess() {
+  const handle = await getBackupHandle().catch(() => null);
+  if (!handle) return;
+  try {
+    const perm = await handle.requestPermission({mode: 'readwrite'});
+    renderBackupStatus(perm);
+    if (perm === 'granted') dismissBackupBanner();
+  } catch(e) { console.error('grantBackupAccess:', e); }
+}
+
+function dismissBackupBanner() {
+  const banner = document.getElementById('backup-banner');
+  if (banner) banner.remove();
+}
+
+async function reconnectBackup() {
+  const handle = await getBackupHandle().catch(() => null);
+  if (!handle) return;
+  try {
+    const perm = await handle.requestPermission({mode: 'readwrite'});
+    renderBackupStatus(perm);
+    if (perm === 'granted') dismissBackupBanner();
+  } catch(e) { console.error('reconnectBackup:', e); }
 }
 
 function dayData(date) {
@@ -2278,6 +2502,13 @@ setInterval(() => {
 // ================================================================
 render();
 renderClock();
+
+// Show backup UI and check permission if File System Access API is available
+if ('showSaveFilePicker' in window) {
+  const backupUi = document.getElementById('backup-ui');
+  if (backupUi) backupUi.style.display = 'contents';
+  checkBackupPermission();
+}
 
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
 </script>
