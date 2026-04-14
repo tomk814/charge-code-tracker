@@ -1,32 +1,37 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  FILE TABLE OF CONTENTS  (for agent navigation)                          ║
-║  Total lines: ~1600  (after annotation pass)                             ║
+║  Total lines: ~2280                                                      ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  SECTION NAME                  │ Orig. lines │ Description               ║
+║  SECTION NAME                  │ Actual lines │ Description              ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  CSS-DESIGN-TOKENS             │    7–57     │ CSS custom properties     ║
-║  CSS-BASE                      │   58–83     │ Reset, html/body, app     ║
-║  CSS-HEADER                    │   84–119    │ Header, pay-period bar    ║
-║  CSS-TOOLBAR-AND-CARDS         │  120–196    │ Toolbar, data footer, CC  ║
-║  CSS-PROGRAM-CARDS             │  197–293    │ Program cards, CC rows    ║
-║  CSS-MODALS                    │  294–455    │ Modals, fields, inc btns  ║
-║  CSS-CLOCK-BAR                 │  456–554    │ Clock bar, sessions, nav  ║
-║  HTML-APP-SHELL                │  556–597    │ Static HTML skeleton      ║
-║  JS-PERSISTENCE                │  598–711    │ load/save, migrate, I/O   ║
-║  JS-STATE-INIT                 │  712–720    │ State vars, stale timer   ║
-║  JS-DAY-NAVIGATION             │  721–737    │ navigate(), goToToday()   ║
-║  JS-CC-RENDERING               │  738–813    │ Card render functions     ║
-║  JS-PAY-PERIOD-AND-RENDER      │  815–905    │ Pay period + render()     ║
-║  JS-LIVE-CC-TRACKER            │  907–928    │ setActiveCC, finalize     ║
-║  JS-UTILITIES                  │  930–934    │ esc(), uid() helpers      ║
-║  JS-CC-MODALS                  │  936–1050   │ Add/Edit/Manage/Delete    ║
-║  JS-END-OF-DAY                 │ 1052–1200   │ EOD modal, copy, reset    ║
-║  JS-SPREAD-HOURS               │ 1201–1341   │ Spread unalloc'd hours    ║
-║  JS-MODAL-INFRA                │ 1343–1347   │ showModal / closeModal    ║
-║  JS-WALL-CLOCK                 │ 1349–1473   │ Clock sessions & render   ║
-║  JS-TICK-INTERVALS             │ 1474–1520   │ 30 s + 1 s tick loops     ║
-║  JS-INIT                       │ 1522–1525   │ Bootstrap + Escape key    ║
+║  CSS-DESIGN-TOKENS             │    51–105    │ CSS custom properties    ║
+║  CSS-BASE                      │  106–134     │ Reset, html/body, app    ║
+║  CSS-HEADER                    │  135–174     │ Header, pay-period bar   ║
+║  CSS-TOOLBAR-AND-CARDS         │  175–255     │ Toolbar, data footer, CC ║
+║  CSS-PROGRAM-CARDS             │  256–370     │ Program cards, CC rows   ║
+║  CSS-MODALS                    │  371–672     │ Modals, fields, inc btns ║
+║  CSS-CLOCK-BAR                 │  673–777     │ Clock bar, sessions, nav ║
+║  HTML-APP-SHELL                │  778–826     │ Static HTML skeleton     ║
+║  JS-PERSISTENCE                │  827–1008    │ PREDEFINED_PA_CODES,     ║
+║                                │              │ load/save, migrate, I/O, ║
+║                                │              │ ensurePayAdjustmentCodes,║
+║                                │              │ holidays helpers         ║
+║  JS-STATE-INIT                 │ 1009–1023    │ State vars, stale timer  ║
+║  JS-DAY-NAVIGATION             │ 1024–1044    │ navigate(), goToToday()  ║
+║  JS-CC-RENDERING               │ 1045–1147    │ Card render functions    ║
+║  JS-PAY-PERIOD-AND-RENDER      │ 1148–1328    │ Pay period + render()    ║
+║  JS-LIVE-CC-TRACKER            │ 1329–1355    │ setActiveCC, finalize    ║
+║  JS-UTILITIES                  │ 1356–1365    │ esc(), uid() helpers     ║
+║  JS-CC-MODALS                  │ 1366–1633    │ isProtectedCC,           ║
+║                                │              │ Add/Edit/Manage/Delete   ║
+║  JS-END-OF-DAY                 │ 1634–1836    │ EOD modal, copy, reset,  ║
+║                                │              │ openHolidays/saveHolidays║
+║  JS-SPREAD-HOURS               │ 1837–1981    │ Spread unalloc'd hours   ║
+║  JS-MODAL-INFRA                │ 1982–1992    │ showModal / closeModal   ║
+║  JS-WALL-CLOCK                 │ 1993–2171    │ Clock sessions & render  ║
+║  JS-TICK-INTERVALS             │ 2172–2270    │ 30 s + 1 s tick loops    ║
+║  JS-INIT                       │ 2271–2280    │ Bootstrap + Escape key   ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
   AGENT NAVIGATION GUIDE
@@ -37,8 +42,8 @@
   2. Use view_range / Read with offset+limit to fetch only the relevant lines.
   3. grep for "SECTION:" or a symbol name to get a precise line number fast.
 
-  Line numbers above are pre-annotation originals; actual lines are ~50–80 higher
-  due to inserted comments.  Grep for the SECTION name to find the exact current line.
+  Line numbers above reflect the current file; grep for SECTION: to confirm
+  the exact line after further edits.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +53,7 @@
 <title>Time Tracker</title>
 <style>
   /* ============================================================
-     SECTION: CSS-DESIGN-TOKENS  (~line 7)
+     SECTION: CSS-DESIGN-TOKENS  (~line 56)
      CSS custom properties: color palette, typography vars, border/fill aliases.
      ============================================================ */
   :root {
@@ -103,7 +108,7 @@
   }
 
   /* ============================================================
-     SECTION: CSS-BASE  (~line 58)
+     SECTION: CSS-BASE  (~line 111)
      Global reset, html/body base styles, #app layout, and scrollbar theming.
      ============================================================ */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -132,7 +137,7 @@
   ::-webkit-scrollbar-thumb:hover { background: #444; }
 
   /* ============================================================
-     SECTION: CSS-HEADER  (~line 84)
+     SECTION: CSS-HEADER  (~line 140)
      Header bar, pay-period bar, title, and date badge styles.
      ============================================================ */
   /* ── header ── */
@@ -172,7 +177,7 @@
   }
 
   /* ============================================================
-     SECTION: CSS-TOOLBAR-AND-CARDS  (~line 120)
+     SECTION: CSS-TOOLBAR-AND-CARDS  (~line 180)
      Toolbar, tool-btn, CC list container, data footer, last-saved label, CC card base styles.
      ============================================================ */
   /* ── toolbar ── */
@@ -253,7 +258,7 @@
   }
 
   /* ============================================================
-     SECTION: CSS-PROGRAM-CARDS  (~line 197)
+     SECTION: CSS-PROGRAM-CARDS  (~line 261)
      Program group card, pg-header/name/total, pg-row, CC row internals, active tracking, btn-track.
      ============================================================ */
   /* ── program group cards ── */
@@ -368,7 +373,7 @@
   .btn-track.on:hover   { background: rgba(77,171,144,.18); }
 
   /* ============================================================
-     SECTION: CSS-MODALS  (~line 294)
+     SECTION: CSS-MODALS  (~line 376)
      Modal overlay/box, form fields, EOD note input, manage-list items, export box, increment buttons.
      ============================================================ */
   /* ── modals ── */
@@ -643,6 +648,9 @@
   }
 
   .pp-cell.pp-today { background: var(--bg-blue); }
+  .pp-th-day.pp-holiday { color: var(--green); }
+  .pp-th-day.pp-holiday .pp-date { color: var(--green); }
+  .pp-cell.pp-holiday { background: rgba(77,171,144,.10); }
   .pp-zero { color: var(--fg-2); }
 
   .pp-total-cell {
@@ -667,7 +675,7 @@
   }
 
   /* ============================================================
-     SECTION: CSS-CLOCK-BAR  (~line 456)
+     SECTION: CSS-CLOCK-BAR  (~line 678)
      Clock bar, running/stopped states, sessions modal rows, day-navigation buttons, past-day banner.
      ============================================================ */
   /* ── clock bar ── */
@@ -772,7 +780,7 @@
 </head>
 <body>
 <!-- ============================================================
-     SECTION: HTML-APP-SHELL  (~line 556)
+     SECTION: HTML-APP-SHELL  (~line 783)
      Static HTML skeleton: header, pay-period bar, toolbar, clock bar, CC list, data footer, modal root.
      ============================================================ -->
 <div id="app">
@@ -808,6 +816,7 @@
     <div id="data-btns">
       <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
       <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">Hide Codes</button>
+      <button class="tool-btn" onclick="openHolidays()">Holidays</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
@@ -820,7 +829,7 @@
 
 <script>
 // ================================================================
-// SECTION: JS-PERSISTENCE  (~line 598)
+// SECTION: JS-PERSISTENCE  (~line 832)
 // localStorage load/save, v2→v3 migration, dayData accessor, JSON export/import.
 // ================================================================
 const STORAGE_KEY = 'cc_tracker_v3';
@@ -857,21 +866,29 @@ function migrateFromV2() {
   } catch(e) { return null; }
 }
 
+// Canonical list of system-managed Pay Adjustment charge codes.
+// These can never be archived or deleted by the user.
+const PREDEFINED_PA_CODES = [
+  {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',         program: 'Pay Adjustment'},
+  {id: 'pa0002', code: 'B',    name: 'Bereavement',           program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0003', code: 'JD',   name: 'Jury Duty',             program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay',     program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0005', code: 'M',    name: 'Military',              program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0006', code: 'HOL',  name: 'Holiday',               program: 'Pay Adjustment'},
+  {id: 'pa0007', code: 'P',    name: 'Parental',              program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0008', code: 'STD',  name: 'Short Term Disability', program: 'Pay Adjustment', hidden: true},
+  {id: 'pa0009', code: 'WC',   name: "Worker's Comp",         program: 'Pay Adjustment', hidden: true},
+];
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return migrateFromV2() || {codes: [
-    {id: 'pa0001', code: 'PTO',  name: 'Paid Time Off',         program: 'Pay Adjustment'},
-    {id: 'pa0002', code: 'B',    name: 'Bereavement',           program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0003', code: 'JD',   name: 'Jury Duty',             program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0004', code: 'LWOP', name: 'Leave Without Pay',     program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0005', code: 'M',    name: 'Military',              program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0007', code: 'P',    name: 'Parental',              program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0008', code: 'STD',  name: 'Short Term Disability', program: 'Pay Adjustment', hidden: true},
-    {id: 'pa0009', code: 'WC',   name: "Worker's Comp",         program: 'Pay Adjustment', hidden: true},
-  ], days: {}};
+  return migrateFromV2() || {
+    codes: PREDEFINED_PA_CODES.map(c => Object.assign({}, c)),
+    days: {}
+  };
 }
 
 function save(s) {
@@ -927,7 +944,8 @@ function handleJSONFile(e) {
     try {
       const parsed = JSON.parse(ev.target.result);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-      state = loadState();
+      state = load();
+      ensurePayAdjustmentCodes();
       render();
       renderClock();
       lastSavedAt = new Date();
@@ -947,11 +965,58 @@ function dayData(date) {
   return d;
 }
 
+// Inserts any PREDEFINED_PA_CODES missing from state.codes, preserving relative order.
+// Returns true if any codes were added (caller should save).
+function ensurePayAdjustmentCodes() {
+  let changed = false;
+  PREDEFINED_PA_CODES.forEach((def, defIdx) => {
+    if (state.codes.find(c => c.id === def.id)) return;
+    // Find insertion point: after the nearest preceding predefined PA code present in state
+    let insertAfter = -1;
+    for (let di = defIdx - 1; di >= 0; di--) {
+      const prev = state.codes.findIndex(c => c.id === PREDEFINED_PA_CODES[di].id);
+      if (prev >= 0) { insertAfter = prev; break; }
+    }
+    if (insertAfter >= 0) {
+      state.codes.splice(insertAfter + 1, 0, Object.assign({}, def));
+    } else {
+      state.codes.unshift(Object.assign({}, def));
+    }
+    changed = true;
+  });
+  return changed;
+}
+
+// Returns the current holiday list, defaulting to the test date 4/17/2026.
+function getHolidays() {
+  if (!Array.isArray(state.holidays)) state.holidays = ['2026-04-17'];
+  return state.holidays;
+}
+
+function isHoliday(dateStr) {
+  return getHolidays().includes(dateStr);
+}
+
+// If dateStr is a holiday and hours have not yet been pre-populated, sets 8h of HOL time.
+// Returns true if state was modified (caller should save).
+function applyHolidayPrePopulate(dateStr) {
+  if (!isHoliday(dateStr)) return false;
+  const holId = 'pa0006';
+  if (!state.codes.find(c => c.id === holId && !c.archived)) return false;
+  if (state.days && state.days[dateStr] && state.days[dateStr].holidayPopulated) return false;
+  const day = dayData(dateStr);
+  if ((day.hours[holId] || 0) === 0) day.hours[holId] = 8.0;
+  day.holidayPopulated = true;
+  return true;
+}
+
 // ================================================================
-// SECTION: JS-STATE-INIT  (~line 712)
+// SECTION: JS-STATE-INIT  (~line 1014)
 // Global state and viewDate initialisation; clears stale active timer from prior day.
 // ================================================================
 let state = load();
+// Repair any Pay Adjustment codes missing from old JSON schema
+if (ensurePayAdjustmentCodes()) save(state);
 let viewDate = today();
 
 // Clear stale active timer from a previous day
@@ -961,7 +1026,7 @@ if (state.activeTimer && state.activeTimer.startedDate !== today()) {
 }
 
 // ================================================================
-// SECTION: JS-DAY-NAVIGATION  (~line 721)
+// SECTION: JS-DAY-NAVIGATION  (~line 1029)
 // Day navigation: navigate(delta) and goToToday() for browsing past days.
 // ================================================================
 // ── Day navigation ───────────────────────────────────────────────────────────
@@ -982,7 +1047,7 @@ function goToToday() {
 }
 
 // ================================================================
-// SECTION: JS-CC-RENDERING  (~line 738)
+// SECTION: JS-CC-RENDERING  (~line 1050)
 // CC card rendering: renderCCControls, renderIndividualCard, renderProgramCard, wheel handler.
 // ================================================================
 // ── CC logic ─────────────────────────────────────────────────────────────────
@@ -1085,7 +1150,7 @@ function renderProgramCard(programName, codes, day) {
 }
 
 // ================================================================
-// SECTION: JS-PAY-PERIOD-AND-RENDER  (~line 815)
+// SECTION: JS-PAY-PERIOD-AND-RENDER  (~line 1153)
 // Pay period bar calculation and the main render() function that rebuilds the CC list.
 // ================================================================
 // ── Pay period ───────────────────────────────────────────────────────────────
@@ -1184,12 +1249,19 @@ function openPayPeriodModal() {
 
   const isCurDay = iso => iso === todayIso;
   const isWeekend = iso => { const dow = new Date(iso + 'T12:00:00').getDay(); return dow === 0 || dow === 6; };
-  const hrsCell = (h, iso, extra) =>
-    `<td class="pp-cell${isCurDay(iso) ? ' pp-today' : ''}${isWeekend(iso) ? ' pp-weekend' : ''}${extra ? ' '+extra : ''}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+  const hrsCell = (h, iso, extra) => {
+    const cls = ['pp-cell', isCurDay(iso) ? 'pp-today' : '', isWeekend(iso) ? 'pp-weekend' : '',
+                 isHoliday(iso) ? 'pp-holiday' : '', extra].filter(Boolean).join(' ');
+    return `<td class="${cls}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
+  };
 
   const thead = `<tr>
     <th class="pp-th pp-th-label">Charge code</th>
-    ${days.map(d => `<th class="pp-th pp-th-day${isCurDay(d.iso) ? ' pp-today' : ''}${d.isWeekend ? ' pp-weekend' : ''}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`).join('')}
+    ${days.map(d => {
+      const cls = ['pp-th', 'pp-th-day', isCurDay(d.iso) ? 'pp-today' : '',
+                   d.isWeekend ? 'pp-weekend' : '', isHoliday(d.iso) ? 'pp-holiday' : ''].filter(Boolean).join(' ');
+      return `<th class="${cls}">${esc(d.dow)}<br><span class="pp-date">${d.md}</span></th>`;
+    }).join('')}
     <th class="pp-th pp-th-total">Total</th>
   </tr>`;
 
@@ -1228,6 +1300,7 @@ function openPayPeriodModal() {
 }
 
 function render() {
+  if (applyHolidayPrePopulate(viewDate)) save(state);
   renderPayPeriod();
   const isToday = viewDate === today();
   const viewDt = new Date(viewDate + 'T12:00:00');
@@ -1258,7 +1331,7 @@ function render() {
 }
 
 // ================================================================
-// SECTION: JS-LIVE-CC-TRACKER  (~line 907)
+// SECTION: JS-LIVE-CC-TRACKER  (~line 1334)
 // Active CC tracking: setActiveCC, finalizeActiveTimer — links clock sessions to a CC.
 // ================================================================
 // ── Live CC tracker ──────────────────────────────────────────────────────────
@@ -1285,7 +1358,7 @@ function setActiveCC(ccId) {
 // ── end live CC tracker ───────────────────────────────────────────────────────
 
 // ================================================================
-// SECTION: JS-UTILITIES  (~line 930)
+// SECTION: JS-UTILITIES  (~line 1361)
 // Global helper functions: esc() for HTML escaping, uid() for random IDs.
 // ================================================================
 function esc(s) {
@@ -1295,10 +1368,17 @@ function esc(s) {
 function uid() { return Math.random().toString(36).slice(2,8); }
 
 // ================================================================
-// SECTION: JS-CC-MODALS  (~line 936)
+// SECTION: JS-CC-MODALS  (~line 1371)
 // Charge code modals: Add (with Dayforce paste), Edit, Manage list, and Delete.
 // ================================================================
 // ── Modals ───────────────────────────────────────────────────────────────────
+
+// Pay Adjustment CCs are system-managed and cannot be archived or deleted.
+function isProtectedCC(id) {
+  const cc = state.codes.find(c => c.id === id);
+  return cc && cc.program === 'Pay Adjustment';
+}
+
 function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
@@ -1345,6 +1425,7 @@ function submitAddCC() {
 }
 
 function toggleArchiveCC(id) {
+  if (isProtectedCC(id)) return;
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   cc.archived = cc.archived ? undefined : true;
@@ -1437,9 +1518,9 @@ function openManage() {
                 <span class="cc-manage-code">${esc(cc.code)}</span>
               </div>
               <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-              <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+              ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
               <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-              <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+              ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
             </div>`).join('');
           return `<div class="pg-manage-block">
             <div class="pg-manage-header">
@@ -1462,9 +1543,9 @@ function openManage() {
               <span class="cc-manage-code">${esc(cc.code)}</span>
             </div>
             <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-            <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>
+            ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
             <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-            <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+            ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
           </div>`;
         }
       }).join('');
@@ -1479,7 +1560,7 @@ function openManage() {
           </div>
           <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
           <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+          ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
         </div>`).join('')}
       </div>`
     : '';
@@ -1543,6 +1624,7 @@ function submitEditCC(id) {
 }
 
 function deleteCC(id) {
+  if (isProtectedCC(id)) return;
   if (state.activeTimer && state.activeTimer.ccId === id) state.activeTimer = null;
   state.codes = state.codes.filter(c => c.id !== id);
   Object.values(state.days||{}).forEach(day => {
@@ -1554,7 +1636,7 @@ function deleteCC(id) {
 }
 
 // ================================================================
-// SECTION: JS-END-OF-DAY  (~line 1052)
+// SECTION: JS-END-OF-DAY  (~line 1639)
 // End-of-day modal: hours summary, per-CC note inputs, copy/CSV export, and day reset.
 // ================================================================
 function openEndOfDay() {
@@ -1699,6 +1781,7 @@ function doReset() {
   state.codes.forEach(c => { day.hours[c.id] = 0; });
   day.clock = {sessions: []};
   day.notes = {};
+  delete day.holidayPopulated;
   if (viewDate === today()) state.activeTimer = null;
   save(state);
   closeModal();
@@ -1707,8 +1790,56 @@ function doReset() {
 }
 
 
+function openHolidays() {
+  const hols = getHolidays();
+  // Display as M/D/YYYY for readability
+  const lines = hols.map(iso => {
+    const [y, m, d] = iso.split('-');
+    return `${parseInt(m)}/${parseInt(d)}/${y}`;
+  }).join('\n');
+
+  showModal(`<h2>Holidays</h2>
+    <p style="font-size:12px;color:var(--fg-2);margin-bottom:10px">
+      One date per line (M/D/YYYY). Holiday days auto-fill 8 hours of Holiday time.
+    </p>
+    <div class="field">
+      <label>Holiday dates</label>
+      <textarea id="hol-textarea" rows="8" style="width:100%;box-sizing:border-box;background:var(--bg-1);color:var(--fg-0);border:1px solid var(--bd-1);border-radius:4px;padding:8px;font-family:var(--font-mono);font-size:12px;resize:vertical">${esc(lines)}</textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="closeModal()">Cancel</button>
+      <button class="tool-btn primary" onclick="saveHolidays()">Save</button>
+    </div>`);
+  setTimeout(() => document.getElementById('hol-textarea')?.focus(), 50);
+}
+
+function saveHolidays() {
+  const raw = document.getElementById('hol-textarea').value;
+  const parsed = [];
+  raw.split('\n').forEach(line => {
+    const s = line.trim();
+    if (!s) return;
+    // Accept M/D/YYYY, MM/DD/YYYY, or YYYY-MM-DD
+    let iso = null;
+    const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const dash  = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (slash) {
+      iso = `${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`;
+    } else if (dash) {
+      iso = s;
+    }
+    if (iso && !parsed.includes(iso)) parsed.push(iso);
+  });
+  state.holidays = parsed;
+  // Clear holidayPopulated flags so updated list re-applies cleanly
+  Object.values(state.days || {}).forEach(d => { delete d.holidayPopulated; });
+  save(state);
+  closeModal();
+  render();
+}
+
 // ================================================================
-// SECTION: JS-SPREAD-HOURS  (~line 1201)
+// SECTION: JS-SPREAD-HOURS  (~line 1842)
 // Spread-hours modal: proportionally distributes unallocated clock time across selected CCs.
 // ================================================================
 // ── Spread hours ─────────────────────────────────────────────────────────────
@@ -1853,7 +1984,7 @@ function applySpread() {
 }
 
 // ================================================================
-// SECTION: JS-MODAL-INFRA  (~line 1343)
+// SECTION: JS-MODAL-INFRA  (~line 1987)
 // showModal / closeModal: inject and remove modal DOM from #modal-root.
 // ================================================================
 function showModal(html, extraClass) {
@@ -1864,7 +1995,7 @@ function showModal(html, extraClass) {
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
 // ================================================================
-// SECTION: JS-WALL-CLOCK  (~line 1349)
+// SECTION: JS-WALL-CLOCK  (~line 1998)
 // Wall-clock bar: session storage helpers, renderClock, Start/Stop, and sessions modal.
 // ================================================================
 // ── Wall clock ───────────────────────────────────────────────────────────────
@@ -2043,7 +2174,7 @@ function addClockSession() {
 }
 
 // ================================================================
-// SECTION: JS-TICK-INTERVALS  (~line 1474)
+// SECTION: JS-TICK-INTERVALS  (~line 2177)
 // 30-second tick for midnight auto-advance; 1-second tick for live CC auto-commit.
 // ================================================================
 
@@ -2142,7 +2273,7 @@ setInterval(() => {
 // ── end wall clock ───────────────────────────────────────────────────────────
 
 // ================================================================
-// SECTION: JS-INIT  (~line 1522)
+// SECTION: JS-INIT  (~line 2276)
 // Bootstrap: first render pass, clock render, and global Escape-key handler.
 // ================================================================
 render();

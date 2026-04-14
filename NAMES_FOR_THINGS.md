@@ -15,6 +15,8 @@
 - Manual "Reset day" and add/edit/remove charge codes via modal UI
 - Hide charge codes: mark a CC as hidden (`cc.hidden`) so it disappears from the CC list and spread hours, but still appears in the EOD modal and Pay Period if it has logged hours; toggled via the "Hide"/"Unhide" button in Manage CCs modal
 - Archive charge codes: mark a CC as archived (`cc.archived`) so it is hidden from the CC list, EOD summary, and spread hours while preserving its historical hours; toggled via the "Archive"/"Unarchive" button in Manage CCs modal
+- Predefined Pay Adjustment charge codes (PTO, HOL, Bereavement, Jury Duty, etc.) are system-managed; they cannot be archived or deleted; Archive and Delete buttons are suppressed for them in the Manage CCs modal
+- Holiday management: editable list of company holidays accessed via the Holidays button in the data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit; holiday columns are accented green in the Pay Period modal
 
 ## UI component terminology
 
@@ -56,6 +58,7 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 |------|-----------|-------------|
 | **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
 | **Show / Hide codes** | `toggleCodes()` | Toggles the `.cc-code` row on each CC card; hiding it makes cards more compact; label flips between "Hide Codes" and "Show Codes" |
+| **Holidays** | `openHolidays()` | Opens the Holidays modal for viewing and editing the company holiday list |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
 | **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
@@ -151,7 +154,8 @@ Named modals:
 | **End of Day modal** | "End of day" toolbar button |
 | **Export modal** | "Export / copy" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
-| **Pay Period modal** | "Pay period" toolbar button |
+| **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green |
+| **Holidays modal** | "Holidays" button in the data footer; editable list of holiday dates (one per line, M/D/YYYY) |
 | **Reset Day modal** | "Reset day" toolbar button |
 | **Clock Sessions modal** | "Sessions" button in the clock bar; includes Undo and Cancel buttons |
 | **Clock Start modal** | "Start" button in the clock bar |
