@@ -2139,7 +2139,7 @@ async function openExportCSV() {
   const defaultEnd   = today();
 
   // Determine source notice
-  let sourceNotice = 'Reading from working set only (no backup file linked \u2014 history limited to ~21\u00a0days)';
+  let sourceNotice = 'Reading from working set only (no backup file linked \u2014 history limited to ~5\u00a0weeks)';
   try {
     const handle = await getBackupHandle().catch(() => null);
     if (handle) {
