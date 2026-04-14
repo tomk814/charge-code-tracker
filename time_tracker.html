@@ -940,9 +940,9 @@ function load() {
 }
 
 function save(s) {
-  // keep at most 21 days in localStorage; older days accumulate in the backup file
+  // keep ~5 weeks locally (2 pay periods + margin); older days accumulate in the backup file
   const keys = Object.keys(s.days || {}).sort();
-  while (keys.length > 21) delete s.days[keys.shift()];
+  while (keys.length > 35) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
