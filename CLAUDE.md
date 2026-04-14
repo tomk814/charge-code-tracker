@@ -33,11 +33,13 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 - Spread hours: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
 - End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; two copy buttons: plain-text summary and CSV
-- Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; per-CC totals column and per-day totals row; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
+- Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; holiday columns accented green; per-CC totals column and per-day totals row; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
 - Export / copy: plain-text summary for EOD transcription into Costpoint (includes saved note); CSV copy outputs one row per logged CC with columns Date, Program, Work Package, Activity, Code, Nickname, Hours, Note (no header row)
-- Manual "Reset day" button (clears hours and log, keeps charge codes)
+- Manual "Reset day" button (clears hours and log, keeps charge codes); on holidays, 8 h of Holiday time re-apply on the next render
 - Add / edit / remove charge codes via modal UI
 - Escape key closes modals
+- Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed: they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
+- Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Holidays button in the hidden data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
 
 ## Keeping docs in sync
 
@@ -54,15 +56,22 @@ Key: `cc_tracker_v3`
 ```json
 {
   "codes": [
-    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A", "wp": "WP-001", "nickname": "Design" }
+    { "id": "abc123", "code": "1234-001", "name": "Program A — design", "program": "Prog A", "wp": "WP-001", "nickname": "Design" },
+    { "id": "pa0006", "code": "HOL", "name": "Holiday", "program": "Pay Adjustment" }
   ],
   "days": {
     "2026-03-31": {
       "hours": { "abc123": 2.5 },
       "clock": { "sessions": [] },
       "notes": { "abc123": "optional per-CC EOD note" }
+    },
+    "2026-04-17": {
+      "hours": { "pa0006": 8.0 },
+      "clock": { "sessions": [] },
+      "holidayPopulated": true
     }
   },
+  "holidays": ["2026-04-17"],
   "showIncrements": false
 }
 ```
@@ -70,6 +79,8 @@ Key: `cc_tracker_v3`
 - `codes` order determines display order. Hours are not stored on the code object.
 - On load, if a day entry is missing it is created with empty hours and clock. `note` is optional and may be absent or null.
 - `notes` is a sparse object — only CCs with a note have an entry. Set via End of Day modal Save button; cleared by Reset day.
+- `holidays` is an array of ISO date strings (`"YYYY-MM-DD"`). Defaults to `["2026-04-17"]` when absent. Editable via the Holidays modal.
+- `holidayPopulated` (boolean on a day entry) prevents 8 h of Holiday from being re-applied on every render. Deleted by Reset day so the default re-applies on the next render.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 
 ## Conventions
@@ -107,15 +118,15 @@ The file is annotated with greppable landmark comments so agents can navigate wi
 | `CSS-MODALS` | Modal overlay/box, form fields, EOD note, manage items, increment buttons |
 | `CSS-CLOCK-BAR` | Clock bar states, sessions modal rows, day-nav buttons, past-day banner |
 | `HTML-APP-SHELL` | Static HTML skeleton (header, toolbar, clock bar, cc-list, modal root) |
-| `JS-PERSISTENCE` | `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import |
-| `JS-STATE-INIT` | Global `state` and `viewDate` init; stale active-timer cleanup |
+| `JS-PERSISTENCE` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()` |
+| `JS-STATE-INIT` | Global `state` and `viewDate` init; `ensurePayAdjustmentCodes()` call; stale active-timer cleanup |
 | `JS-DAY-NAVIGATION` | `navigate(delta)`, `goToToday()` |
 | `JS-CC-RENDERING` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler |
-| `JS-PAY-PERIOD-AND-RENDER` | Pay period bar calculation and main `render()` |
+| `JS-PAY-PERIOD-AND-RENDER` | Pay period bar calculation, holiday column highlighting, and main `render()` |
 | `JS-LIVE-CC-TRACKER` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
 | `JS-UTILITIES` | `esc()` HTML-escape helper, `uid()` random-ID generator |
-| `JS-CC-MODALS` | Add (with Dayforce paste), Edit, Manage list, Delete modals |
-| `JS-END-OF-DAY` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset |
+| `JS-CC-MODALS` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
+| `JS-END-OF-DAY` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()` |
 | `JS-SPREAD-HOURS` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
 | `JS-MODAL-INFRA` | `showModal(html)` and `closeModal()` |
 | `JS-WALL-CLOCK` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
