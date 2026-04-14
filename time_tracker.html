@@ -940,12 +940,13 @@ function load() {
 }
 
 function save(s) {
-  // keep at most 14 days
+  // keep at most 21 days in localStorage; older days accumulate in the backup file
   const keys = Object.keys(s.days || {}).sort();
   while (keys.length > 21) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
+  writeToBackupFile(s); // async, fire-and-forget; never throws synchronously
 }
 
 function updateLastSaved() {
@@ -1133,19 +1134,44 @@ async function writeToBackupFile(s) {
   try {
     const perm = await handle.queryPermission({mode: 'readwrite'}).catch(() => 'denied');
     if (perm !== 'granted') { renderBackupStatus(perm); return; }
+
+    // Read existing archive content and merge
+    let archiveParsed = {};
+    let archiveDays = {};
+    try {
+      const file = await handle.getFile();
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object') {
+        archiveParsed = parsed;
+        if (parsed.days && typeof parsed.days === 'object') archiveDays = parsed.days;
+      }
+    } catch (e) {
+      if (e.name === 'NotFoundError') throw e; // re-throw so outer catch clears the handle
+      // empty or malformed — start fresh from state only
+    }
+
+    // state.days wins for any date present in both; archive accumulates the rest
+    const mergedDays = { ...archiveDays, ...s.days };
+    // preserve unknown extra keys from the archive so future schema additions survive a round-trip
+    const merged = {
+      ...archiveParsed,
+      codes: s.codes,
+      days: mergedDays,
+      holidays: s.holidays,
+      showIncrements: s.showIncrements,
+    };
+
     const writable = await handle.createWritable();
-    await writable.write(JSON.stringify(s));
+    await writable.write(JSON.stringify(merged, null, 2));
     await writable.close();
   } catch(e) {
     if (e.name === 'NotFoundError') {
       await clearBackupHandle().catch(() => {});
-      const el = document.getElementById('backup-status');
-      if (el) {
-        el.className = 'backup-status not-linked';
-        el.innerHTML = '<span class="backup-dot"></span>File not found \u2014 please re-link';
-      }
-      const saveBtn = document.getElementById('save-backup-btn');
-      if (saveBtn) saveBtn.disabled = true;
+      renderBackupStatus(null);
+    } else if (e.name === 'NotAllowedError') {
+      renderBackupStatus('prompt');
+      renderBackupBanner();
     } else {
       console.error('writeToBackupFile:', e);
     }
