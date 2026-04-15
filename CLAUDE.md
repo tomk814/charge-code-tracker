@@ -40,6 +40,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 - Escape key closes modals
 - Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed: they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
 - Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Holidays button in the hidden data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
+- Help / About modal: in-app quick-reference panel (data safety warning, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
 
 ## Keeping docs in sync
 

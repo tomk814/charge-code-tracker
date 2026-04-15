@@ -17,6 +17,7 @@
 - Archive charge codes: mark a CC as archived (`cc.archived`) so it is hidden from the CC list, EOD summary, and spread hours while preserving its historical hours; toggled via the "Archive"/"Unarchive" button in Manage CCs modal
 - Predefined Pay Adjustment charge codes (PTO, HOL, Bereavement, Jury Duty, etc.) are system-managed; they cannot be archived or deleted; Archive and Delete buttons are suppressed for them in the Manage CCs modal
 - Holiday management: editable list of company holidays accessed via the Holidays button in the data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit; holiday columns are accented green in the Pay Period modal
+- Help / About modal: quick-reference guidance in-app (data safety warning, shortcuts, workflow, and key features), opened from the data footer panel
 
 ## UI component terminology
 
@@ -61,6 +62,7 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | **Holidays** | `openHolidays()` | Opens the Holidays modal for viewing and editing the company holiday list |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
+| **Help / About** | `openHelpAbout()` | Opens an in-app quick-reference modal with data-safety guidance, shortcuts, workflow, and feature tips |
 | **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
 
 ### Clock bar sub-elements
@@ -156,6 +158,7 @@ Named modals:
 | **Spread Hours modal** | "Spread hours" toolbar button |
 | **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green |
 | **Holidays modal** | "Holidays" button in the data footer; editable list of holiday dates (one per line, M/D/YYYY) |
+| **Help / About modal** | "Help / About" button in the data footer; includes data safety warning, shortcuts, workflow, and quick-reference tips |
 | **Reset Day modal** | "Reset day" toolbar button |
 | **Clock Sessions modal** | "Sessions" button in the clock bar; includes Undo and Cancel buttons |
 | **Clock Start modal** | "Start" button in the clock bar |
