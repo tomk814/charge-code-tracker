@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Tracker</title>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="title">Time tracker</div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="nav-btn" onclick="navigate(-1)" title="Previous day">&#8249;</button>
+      <span class="date-badge" id="date-badge"></span>
+      <button class="nav-btn" id="nav-fwd" onclick="navigate(1)" title="Next day">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="pay-period-bar" id="pay-period-bar"></div>
+
+  <div class="toolbar">
+    <button class="tool-btn primary" onclick="openAddCC()">+ Add charge code</button>
+    <button class="tool-btn" onclick="openManage()">Manage CCs</button>
+    <button class="tool-btn" onclick="openSpread()">Spread hours</button>
+    <button class="tool-btn" onclick="openEndOfDay()">End of day</button>
+    <button class="tool-btn" onclick="openPayPeriodModal()">Pay period</button>
+    <button class="tool-btn" onclick="openExportCSV()">Export CSV&#8230;</button>
+  </div>
+
+  <div id="past-day-banner" style="display:none" class="past-day-banner">
+    Viewing a past day &mdash; edits apply to that day.
+    <button class="tool-btn" style="margin-left:auto" onclick="goToToday()">Go to today</button>
+  </div>
+  <div id="clock-bar" class="clock-bar"></div>
+
+  <div class="cc-list" id="cc-list"></div>
+
+  <div class="data-footer">
+    <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
+    <div id="data-btns">
+      <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
+      <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">Hide Codes</button>
+      <button class="tool-btn" onclick="openHolidays()">Holidays</button>
+      <button class="tool-btn" onclick="importJSON()">Import JSON</button>
+      <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+      <span id="backup-ui" style="display:none">
+        <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
+        <span id="backup-status" class="backup-status not-linked"><span class="backup-dot"></span>No backup file</span>
+        <button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()" disabled>Save to file now</button>
+        <button class="tool-btn" id="cold-storage-btn" onclick="openColdStorage()" disabled title="Requires a linked backup file">Cold storage…</button>
+      </span>
+      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="json-file-input" accept=".json,application/json" style="display:none" onchange="handleJSONFile(event)">
+
+<div id="modal-root"></div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
