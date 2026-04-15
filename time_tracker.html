@@ -2249,7 +2249,6 @@ async function openColdStorage() {
   _coldMergedDays = { ..._coldMergedDays, ...state.days };
 
   // max for the date input = yesterday (cutoff must be strictly before today)
-  const todayStr = today();
   const yest = (() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
