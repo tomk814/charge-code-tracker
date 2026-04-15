@@ -28,7 +28,7 @@ import {
 import {
   openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
   confirmReset, doReset,
-  openHolidays, saveHolidays,
+  openHolidays, saveHolidays, openHelpAbout,
   openExportCSV, doExportCSV,
   openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
 } from './js/end-of-day.js';
@@ -77,7 +77,7 @@ Object.assign(window, {
   // end of day
   openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
   confirmReset, doReset,
-  openHolidays, saveHolidays,
+  openHolidays, saveHolidays, openHelpAbout,
   openExportCSV, doExportCSV,
   openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
   // spread hours

@@ -183,6 +183,50 @@ export function openHolidays() {
   setTimeout(() => document.getElementById('hol-textarea')?.focus(), 50);
 }
 
+export function openHelpAbout() {
+  showModal(`<h2>Help / About</h2>
+    <div class="help-warning">
+      <div class="help-warning-title">Data safety (read first)</div>
+      <ul class="help-list" style="margin-bottom:0">
+        <li>Your data lives in browser <code>localStorage</code>. It is <strong>not</strong> a file on disk and can be wiped by clearing browsing data, profile resets/reinstalls, or opening this file from a different path/browser.</li>
+        <li><strong>Export JSON backup regularly</strong> (minimum: end of each pay period).</li>
+        <li>Always open from the <strong>same file path</strong> and the <strong>same browser</strong>.</li>
+        <li>Do <strong>not</strong> use "Clear browsing data" without awareness of this risk.</li>
+      </ul>
+    </div>
+
+    <div class="help-section-title">Keyboard shortcuts</div>
+    <table class="help-table">
+      <thead><tr><th>Key</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Scroll up on a CC card</td><td>+0.1 hr</td></tr>
+        <tr><td>Scroll down on a CC card</td><td>−0.1 hr</td></tr>
+        <tr><td>Shift + scroll</td><td>±1.0 hr</td></tr>
+        <tr><td>Shift + click increment button</td><td>±1.0 hr</td></tr>
+        <tr><td>Escape</td><td>Close modal</td></tr>
+      </tbody>
+    </table>
+
+    <div class="help-section-title">Daily workflow</div>
+    <ul class="help-list">
+      <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC when you switch tasks.</li>
+      <li>End of day: <strong>Stop</strong> → <strong>Spread hours</strong> (if needed) → <strong>End of day</strong> → copy to clipboard.</li>
+    </ul>
+
+    <div class="help-section-title">Quick reference</div>
+    <ul class="help-list">
+      <li>Paste a Dayforce string in Add CC import - fields auto-parse.</li>
+      <li><strong>Sessions</strong>: view/edit/add clock sessions manually.</li>
+      <li><strong>Spread hours</strong>: proportionally distributes unallocated clock time across logged CCs.</li>
+      <li><strong>Pay period</strong>: CC × working-day table for pre-submission checks.</li>
+      <li>Active CC accrues time approximately every 6 minutes (0.1 hr) while the clock runs.</li>
+    </ul>
+
+    <div class="modal-actions">
+      <button class="tool-btn primary" onclick="closeModal()">Done</button>
+    </div>`, 'wide');
+}
+
 export function saveHolidays() {
   const raw = document.getElementById('hol-textarea').value;
   const parsed = [];
