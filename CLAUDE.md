@@ -112,13 +112,8 @@ Key: `cc_tracker_v3`
       "clock": { "sessions": [] },
       "notes": { "abc123": "optional per-CC EOD note" }
     },
-    "2026-04-17": {
-      "hours": { "pa0006": 8.0 },
-      "clock": { "sessions": [] },
-      "holidayPopulated": true
-    }
   },
-  "holidays": ["2026-04-17"],
+  "holidays": [],
   "showIncrements": false
 }
 ```
@@ -126,7 +121,7 @@ Key: `cc_tracker_v3`
 - `codes` order determines display order. Hours are not stored on the code object.
 - On load, if a day entry is missing it is created with empty hours and clock. `note` is optional and may be absent or null.
 - `notes` is a sparse object — only CCs with a note have an entry. Set via End of Day modal Save button; cleared by Reset day.
-- `holidays` is an array of ISO date strings (`"YYYY-MM-DD"`). Defaults to `["2026-04-17"]` when absent. Editable via the Holidays modal.
+- `holidays` is an array of ISO date strings (`"YYYY-MM-DD"`). Defaults to `[]` when absent. Editable via the Holidays modal.
 - `holidayPopulated` (boolean on a day entry) prevents 8 h of Holiday from being re-applied on every render. Deleted by Reset day so the default re-applies on the next render.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 

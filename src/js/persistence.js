@@ -417,7 +417,7 @@ export function ensurePayAdjustmentCodes() {
 // Returns the current holiday list, defaulting to the test date 4/17/2026.
 export function getHolidays() {
   const state = _state();
-  if (!Array.isArray(state.holidays)) state.holidays = ['2026-04-17'];
+  if (!Array.isArray(state.holidays)) state.holidays = [];
   return state.holidays;
 }
 
