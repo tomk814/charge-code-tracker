@@ -31,7 +31,8 @@ npm run build    # produces dist/index.html (single self-contained file)
 
 ```
 time_tracker/
-├── time_tracker.html
+├── dist/
+│   └── time_tracker.html
 └── backups/          ← keep your JSON backups here (see Data Safety below)
 ```
 
@@ -113,7 +114,7 @@ Use **Export JSON** (click the "last saved" link to reveal the data panel) to do
 
 ### Rules to avoid data loss
 
-- Always open `time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
+- Always open `dist/time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
 - Always use the **same browser**. Chrome and Edge have separate localStorage.
 - Do **not** use "Clear browsing data" without first being aware that it may wipe your tracker history.
 - If you get a new machine or reinstall your browser, you will need to restore from a backup (once that feature is available).

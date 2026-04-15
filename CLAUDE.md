@@ -14,7 +14,6 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ├── README.md
 ├── package.json
 ├── vite.config.js
-├── time_tracker.html              ← legacy monolith (kept for reference)
 ├── src/
 │   ├── time_tracker.html          ← Vite entry point (HTML shell)
 │   ├── main.js                    ← JS entry: imports all modules, wires globals
