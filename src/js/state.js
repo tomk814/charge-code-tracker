@@ -1,10 +1,8 @@
 // Global state and viewDate initialisation; clears stale active timer from prior day.
 
-import { load, ensurePayAdjustmentCodes, save, today } from './persistence.js';
+import { load, save, today } from './persistence.js';
 
 export let state = load();
-// Repair any Pay Adjustment codes missing from old JSON schema
-if (ensurePayAdjustmentCodes()) save(state);
 export let viewDate = today();
 
 // Clear stale active timer from a previous day

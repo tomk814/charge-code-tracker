@@ -5,11 +5,10 @@ import './styles/index.css';
 // ── Module imports ─────────────────────────────────────────────────────────────
 import { state } from './js/state.js';
 import {
-  _injectDeps,
+  _injectDeps, save, ensurePayAdjustmentCodes,
   revealDataButtons, exportJSON, importJSON, handleJSONFile,
   linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner,
   reconnectBackup, checkBackupPermission,
-  ensurePayAdjustmentCodes,
 } from './js/persistence.js';
 import { replaceState } from './js/state.js';
 import { navigate, goToToday } from './js/day-navigation.js';
@@ -19,7 +18,6 @@ import {
 } from './js/cc-rendering.js';
 import { render, openPayPeriodModal } from './js/pay-period.js';
 import { setActiveCC } from './js/live-cc-tracker.js';
-import { esc } from './js/utilities.js';
 import { showModal, closeModal } from './js/modal-infra.js';
 import {
   openAddCC, parseDayforce, submitAddCC,
@@ -55,6 +53,9 @@ _injectDeps({
   renderClock,
   ensurePayAdjustmentCodes,
 });
+
+// Repair any Pay Adjustment codes missing from loaded state (must run after _injectDeps)
+if (ensurePayAdjustmentCodes()) save(state);
 
 // ── Expose functions to inline onclick handlers ────────────────────────────────
 // (HTML templates use onclick="functionName()" which requires globals)
