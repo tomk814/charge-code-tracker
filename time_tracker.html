@@ -948,7 +948,7 @@ function save(s) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
-  writeToBackupFile(s); // async, fire-and-forget; never throws synchronously
+  scheduleBackupWrite();
 }
 
 function updateLastSaved() {
@@ -1013,6 +1013,11 @@ function handleJSONFile(e) {
 let _idbPromise = null;
 let _backupHandleMem = null; // in-memory fallback when IDB is unavailable
 let _idbUnavailable = false;
+const BACKUP_AUTOSAVE_INTERVAL_MS = 360000; // every 0.1 hr
+let _backupWriteTimer = null;
+let _backupWritePending = false;
+let _lastBackupWriteAt = Date.now();
+let _backupWriteChain = Promise.resolve();
 
 function openIDB() {
   if (_idbPromise) return _idbPromise;
@@ -1128,10 +1133,36 @@ async function linkBackupFile() {
       types: [{ description: 'JSON archive', accept: { 'application/json': ['.json'] } }]
     });
     await setBackupHandle(handle);
-    renderBackupStatus('granted');
+    dismissBackupBanner();
+    await checkBackupPermission();
   } catch(e) {
     if (e.name !== 'AbortError') console.error('linkBackupFile:', e);
   }
+}
+
+function queueBackupWriteNow() {
+  _backupWritePending = false;
+  _backupWriteChain = _backupWriteChain
+    .then(async () => {
+      await writeToBackupFile(state);
+      _lastBackupWriteAt = Date.now();
+    })
+    .catch(e => console.error('queueBackupWriteNow:', e))
+    .finally(() => {
+      if (_backupWritePending && !_backupWriteTimer) scheduleBackupWrite();
+    });
+  return _backupWriteChain;
+}
+
+function scheduleBackupWrite() {
+  _backupWritePending = true;
+  if (_backupWriteTimer) return;
+  const elapsed = Date.now() - _lastBackupWriteAt;
+  const delay = Math.max(0, BACKUP_AUTOSAVE_INTERVAL_MS - elapsed);
+  _backupWriteTimer = setTimeout(() => {
+    _backupWriteTimer = null;
+    if (_backupWritePending) queueBackupWriteNow();
+  }, delay);
 }
 
 async function writeToBackupFile(s) {
@@ -1185,7 +1216,12 @@ async function writeToBackupFile(s) {
 }
 
 async function saveToFileNow() {
-  await writeToBackupFile(state);
+  _backupWritePending = true;
+  if (_backupWriteTimer) {
+    clearTimeout(_backupWriteTimer);
+    _backupWriteTimer = null;
+  }
+  await queueBackupWriteNow();
 }
 
 async function grantBackupAccess() {
