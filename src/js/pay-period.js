@@ -56,8 +56,9 @@ export function renderPayPeriod() {
   el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrsStr}`;
 }
 
-export function openPayPeriodModal() {
+export function openPayPeriodModal(offset = 0) {
   const ppEnd = payPeriodEnd(today());
+  ppEnd.setDate(ppEnd.getDate() + offset * 14);
   const ppStart = new Date(ppEnd);
   ppStart.setDate(ppStart.getDate() - 13);
 
@@ -138,7 +139,11 @@ export function openPayPeriodModal() {
        </tr>`
     : '';
 
-  showModal(`<h2>Pay period</h2>
+  showModal(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <button class="tool-btn" onclick="openPayPeriodModal(${offset - 1})" style="padding:2px 8px;font-size:14px">&#8249;</button>
+      <h2 style="margin:0;flex:1">Pay period</h2>
+      <button class="tool-btn" onclick="openPayPeriodModal(${offset + 1})" style="padding:2px 8px;font-size:14px" ${offset >= 0 ? 'disabled' : ''}>&#8250;</button>
+    </div>
     <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${startStr} – ${endStr}</p>
     <div style="overflow-x:auto">
       <table class="pp-table">

@@ -41,7 +41,7 @@ export function openSpread() {
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
   const candidateCCs = state.codes.filter(c => !c.archived && !c.hidden && (day.hours[c.id]||0) > 0);
 
-  const bail = (msg) => showModal(`<h2>Spread hours</h2>
+  const bail = (msg) => showModal(`<h2>Allocate</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
     <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
 
@@ -54,7 +54,8 @@ export function openSpread() {
   const rows = candidateCCs.map(cc => {
     const prog = (cc.program || '').trim();
     const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
-    const checked = !cc.spreadExcluded;
+    const defaultIncluded = cc.program !== 'Pay Adjustment';
+    const checked = cc.spreadExcluded !== undefined ? !cc.spreadExcluded : defaultIncluded;
     return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
       <input type="checkbox" id="sc-${cc.id}" ${checked?'checked':''} onchange="refreshSpreadPreview()" style="cursor:pointer;accent-color:var(--blue);flex-shrink:0;margin:0">
       <span style="flex:1;font-size:12px;color:var(--fg-0)">${esc(label)}</span>
@@ -64,7 +65,7 @@ export function openSpread() {
     </div>`;
   }).join('');
 
-  showModal(`<h2>Spread hours</h2>
+  showModal(`<h2>Allocate</h2>
     <div style="display:flex;gap:16px;font-size:12px;color:var(--fg-1);font-family:var(--font-mono);margin-bottom:12px">
       <span>Clock&nbsp;<strong style="color:var(--fg-0)">${clockHrs.toFixed(1)} hr</strong></span>
       <span>Logged&nbsp;<strong style="color:var(--fg-0)">${loggedHrs.toFixed(1)} hr</strong></span>

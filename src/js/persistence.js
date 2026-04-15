@@ -102,6 +102,11 @@ export function revealDataButtons() {
   if (codesBtn) codesBtn.textContent = state.showCodes !== false ? 'Hide Codes' : 'Show Codes';
   clearTimeout(_dataBtnTimer);
   _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
+  btns.onmouseenter = () => clearTimeout(_dataBtnTimer);
+  btns.onmouseleave = () => {
+    clearTimeout(_dataBtnTimer);
+    _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
+  };
 }
 
 export function exportJSON() {
