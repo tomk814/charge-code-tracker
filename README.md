@@ -31,10 +31,13 @@ npm run build    # produces dist/index.html (single self-contained file)
 
 ```
 time_tracker/
-├── dist/
-│   └── time_tracker.html
-└── backups/          ← keep your JSON backups here (see Data Safety below)
+├── time_tracker.html   ← open this in Chrome or Edge
+└── data/
+    ├── backup.json     ← link as your backup file via the data panel
+    └── init.json       ← import this to reset to a blank state
 ```
+
+The release zip ships with this layout pre-created. `backup.json` and `init.json` both start as a blank valid state.
 
 ---
 
