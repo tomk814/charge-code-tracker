@@ -1,0 +1,77 @@
+  /* ── toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--bd-2);
+  }
+
+  .tool-btn {
+    font-size: 11px;
+    font-family: var(--font-sans);
+    padding: 4px 10px;
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--fg-1);
+    cursor: pointer;
+    transition: background .1s, color .1s;
+    white-space: nowrap;
+  }
+
+  .tool-btn:hover                { background: var(--bg-2); color: var(--fg-0); }
+  .tool-btn.primary              { color: var(--blue); border-color: var(--bd-blue); }
+  .tool-btn.primary:hover        { background: var(--bg-blue); }
+
+  /* ── charge code cards ── */
+  .cc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 0;
+  }
+
+  /* ── data footer ── */
+  .data-footer {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #last-saved-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--fg-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #last-saved-label:hover { color: var(--fg-1); }
+
+  #data-btns {
+    display: none;
+    gap: 6px;
+  }
+
+  .cc-card {
+    background: var(--bg-0);
+    border: 1px solid var(--bd-2);
+    border-radius: 3px;
+    padding: 6px 12px;
+    transition: border-color .1s;
+  }
+
+  .cc-card:hover { border-color: var(--bd-1); }
+
+  .cc-card.empty-state {
+    border-style: dashed;
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--fg-2);
+    font-size: 12px;
+  }
+

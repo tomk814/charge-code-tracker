@@ -1,0 +1,111 @@
+  /* ── program group cards ── */
+  .pg-card {
+    background: var(--bg-0);
+    border: 1px solid var(--bd-2);
+    border-radius: 3px;
+    transition: border-color .1s;
+  }
+
+  .pg-card:hover { border-color: var(--bd-1); }
+
+  .pg-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 12px 6px;
+    border-bottom: 1px solid var(--bd-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .pg-chevron {
+    font-size: 9px;
+    color: var(--fg-2);
+    flex-shrink: 0;
+    transition: transform .15s;
+    line-height: 1;
+  }
+
+  .pg-card.collapsed .pg-chevron { transform: rotate(-90deg); }
+  .pg-card.collapsed .pg-header  { border-bottom: none; }
+  .pg-card.collapsed .pg-row     { display: none; }
+
+  .pg-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--fg-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pg-total {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--fg-0);
+    min-width: 44px;
+    text-align: right;
+    letter-spacing: -.02em;
+  }
+
+  .pg-total.zero { color: var(--fg-2); }
+
+  .pg-row { padding: 6px 12px; }
+  .pg-row + .pg-row { border-top: 1px dashed var(--bd-2); }
+
+  .cc-top { display: flex; align-items: baseline; gap: 10px; }
+  .cc-label { flex: 1; min-width: 0; }
+
+  .cc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cc-code {
+    font-size: 10px;
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    letter-spacing: .04em;
+    margin-top: 1px;
+  }
+
+  .cc-hours {
+    font-size: 20px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--fg-0);
+    min-width: 44px;
+    text-align: right;
+    letter-spacing: -.02em;
+  }
+
+  .cc-hours.zero { color: var(--fg-2); }
+  .cc-hours.accumulating { animation: hours-pulse 2s ease-in-out infinite; }
+
+  @keyframes hours-pulse {
+    0%, 100% { color: var(--fg-0); }
+    50%       { color: var(--green); }
+  }
+
+  /* ── live tracker ── */
+  .cc-card.active-tracking { background: rgba(77,171,144,.05); border-color: rgba(77,171,144,.35); }
+  .pg-row.active-tracking  { background: rgba(77,171,144,.05); }
+
+  .btn-track {
+    font-size: 11px; font-family: var(--font-mono);
+    padding: 3px 8px; border: 1px solid var(--bd-2); border-radius: 2px;
+    background: transparent; color: var(--fg-2); cursor: pointer;
+    transition: color .1s, border-color .1s, background .1s; white-space: nowrap;
+  }
+  .btn-track:hover      { color: var(--green); border-color: rgba(77,171,144,.4); background: rgba(77,171,144,.06); }
+  .btn-track.on         { color: var(--green); border-color: rgba(77,171,144,.5); background: rgba(77,171,144,.10); }
+  .btn-track.on:hover   { background: rgba(77,171,144,.18); }
+

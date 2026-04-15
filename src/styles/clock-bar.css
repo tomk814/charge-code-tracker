@@ -1,0 +1,140 @@
+  /* ── clock bar ── */
+  .clock-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    margin-bottom: 12px;
+    background: var(--bg-0);
+    border: 1px solid var(--bd-2);
+    border-left: 3px solid var(--bd-2);
+    border-radius: 3px;
+    transition: border-left-color .3s;
+  }
+
+  .clock-bar.running  { border-left-color: var(--green); }
+  .clock-bar.stopped  { border-left-color: var(--red); }
+
+  .clock-indicator         { font-size: 9px; color: var(--red); }
+  .clock-indicator.running { color: var(--green); animation: clock-pulse 2s infinite; }
+
+  @keyframes clock-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .35; }
+  }
+
+  .clock-status-text {
+    font-size: 11px;
+    color: var(--fg-1);
+    font-family: var(--font-mono);
+    flex: 1;
+  }
+
+  .clock-status-text.stopped { color: var(--red); font-weight: 600; }
+
+  .clock-total-display {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--fg-0);
+    min-width: 44px;
+    text-align: right;
+  }
+
+  .clock-total-display.zero { color: var(--fg-2); }
+
+  /* ── sessions modal ── */
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--bd-2);
+  }
+
+  .session-row:last-child { border-bottom: none; }
+
+  .time-input {
+    width: 68px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    padding: 3px 6px;
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    background: var(--bg);
+    color: var(--fg-0);
+    text-align: center;
+  }
+
+  .time-input:focus { outline: none; border-color: var(--bd-0); }
+  .time-input.running-end { color: var(--fg-2); }
+
+  /* ── day navigation ── */
+  .nav-btn {
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 3px;
+    border: none;
+    background: transparent;
+    color: var(--fg-2);
+    cursor: pointer;
+    transition: color .1s;
+  }
+  .nav-btn:hover:not(:disabled) { color: var(--fg-0); }
+  .nav-btn:disabled { opacity: .2; cursor: default; }
+
+  .past-day-banner {
+    font-size: 11px;
+    color: var(--blue);
+    background: var(--bg-blue);
+    border: 1px solid var(--bd-blue);
+    border-radius: 2px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── backup permission banner ── */
+  #backup-banner {
+    font-size: 11px;
+    color: var(--yellow);
+    background: rgba(200,164,74,.08);
+    border: 1px solid rgba(200,164,74,.3);
+    border-radius: 2px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── backup status badge (inside #data-btns) ── */
+  .backup-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--fg-1);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  .backup-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--fg-2);
+    flex-shrink: 0;
+  }
+
+  .backup-status.linked            { color: var(--green); }
+  .backup-status.linked .backup-dot { background: var(--green); }
+
+  .backup-status.permission-needed            { color: var(--yellow); cursor: pointer; }
+  .backup-status.permission-needed .backup-dot { background: var(--yellow); }
