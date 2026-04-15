@@ -1,0 +1,47 @@
+name: Build & Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package release zip
+        run: |
+          mkdir -p release/data
+          cp dist/time_tracker.html release/time_tracker.html
+          echo '{"codes":[],"days":{},"holidays":[],"showIncrements":false}' > release/data/init.json
+          cp release/data/init.json release/data/backup.json
+          cd release && zip -r ../time_tracker.zip .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-tracker
+          path: time_tracker.zip
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: time_tracker.zip

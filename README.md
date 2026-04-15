@@ -8,20 +8,36 @@ No install. No account. No internet required. Just open the file.
 
 ## Setup
 
-1. Download `time_tracker.html`
+### For end users
+
+1. Download `index.html` from the [latest release](../../releases/latest) (or run `npm run build` and grab `dist/index.html`)
 2. Create a folder for it somewhere convenient, e.g. `Documents/time_tracker/`
 3. Double-click the file — it opens in your browser
 4. Optionally, pin the tab so it persists across browser sessions
 
 That's it. Your charge codes and daily data are saved automatically in your browser.
 
+### For developers
+
+```bash
+git clone https://github.com/tomk814/charge-code-tracker.git
+cd charge-code-tracker
+npm install
+npm run dev      # local dev server with hot reload
+npm run build    # produces dist/index.html (single self-contained file)
+```
+
 ### Recommended folder layout
 
 ```
 time_tracker/
-├── time_tracker.html
-└── backups/          ← keep your JSON backups here (see Data Safety below)
+├── time_tracker.html   ← open this in Chrome or Edge
+└── data/
+    ├── backup.json     ← link as your backup file via the data panel
+    └── init.json       ← import this to reset to a blank state
 ```
+
+The release zip ships with this layout pre-created. `backup.json` and `init.json` both start as a blank valid state.
 
 ---
 
@@ -101,7 +117,7 @@ Use **Export JSON** (click the "last saved" link to reveal the data panel) to do
 
 ### Rules to avoid data loss
 
-- Always open `time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
+- Always open `dist/time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
 - Always use the **same browser**. Chrome and Edge have separate localStorage.
 - Do **not** use "Clear browsing data" without first being aware that it may wipe your tracker history.
 - If you get a new machine or reinstall your browser, you will need to restore from a backup (once that feature is available).
@@ -122,7 +138,8 @@ Use **Export JSON** (click the "last saved" link to reveal the data panel) to do
 
 ## Technical notes
 
-- Single HTML file — no dependencies, no build step, works fully offline.
+- Source is modular ES modules under `src/`; `npm run build` produces a single self-contained HTML file via Vite + vite-plugin-singlefile.
+- The build output (`dist/index.html`) has no external dependencies, no CDN imports, works fully offline, and is suitable for `file://` use.
 - localStorage key: `cc_tracker_v3`
 - Data is retained for the last 14 days. Older days are pruned automatically.
 - Migrates automatically from earlier versions (`cc_tracker_v2`).

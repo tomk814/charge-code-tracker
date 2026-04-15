@@ -1,0 +1,52 @@
+  :root {
+    --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'Courier New', monospace;
+
+    /* backgrounds */
+    --bg:     #0e0e0e;
+    --bg-0:   #151515;
+    --bg-1:   #1c1c1c;
+    --bg-2:   #252525;
+
+    /* foreground */
+    --fg-0:   #d0d0d0;
+    --fg-1:   #888888;
+    --fg-2:   #4a4a4a;
+
+    /* accents */
+    --red:    #e05555;
+    --green:  #4dab90;
+    --yellow: #c8a44a;
+    --blue:   #5aafed;
+
+    /* borders */
+    --bd-0:   #5aafed;   /* focus */
+    --bd-1:   #2e2e2e;   /* normal */
+    --bd-2:   #1d1d1d;   /* subtle */
+    --bd-red: #e05555;
+    --bd-blue:#1e4a72;
+
+    /* tinted fills */
+    --bg-red: rgba(224,85,85,.08);
+    --bg-blue:rgba(90,175,237,.08);
+
+    /* ── aliases consumed by inline var() references in the JS ── */
+    --color-text-primary:         var(--fg-0);
+    --color-text-secondary:       var(--fg-1);
+    --color-text-tertiary:        var(--fg-2);
+    --color-text-danger:          var(--red);
+    --color-text-success:         var(--green);
+    --color-text-info:            var(--blue);
+    --color-background-primary:   var(--bg-0);
+    --color-background-secondary: var(--bg-2);
+    --color-background-danger:    var(--bg-red);
+    --color-background-info:      var(--bg-blue);
+    --color-border-primary:       var(--bd-0);
+    --color-border-secondary:     var(--bd-1);
+    --color-border-tertiary:      var(--bd-2);
+    --color-border-danger:        var(--bd-red);
+    --color-border-info:          var(--bd-blue);
+    --border-radius-md:           2px;
+    --border-radius-lg:           3px;
+  }
+

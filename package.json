@@ -1,0 +1,26 @@
+{
+  "name": "charge-code-tracker",
+  "version": "1.0.0",
+  "description": "A lightweight, single-file HTML time tracker for engineers who charge time against multiple charge codes throughout the day, then transcribe totals into a formal system (e.g. Deltek Costpoint) at end of day.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomk814/charge-code-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/tomk814/charge-code-tracker/issues"
+  },
+  "homepage": "https://github.com/tomk814/charge-code-tracker#readme",
+  "devDependencies": {
+    "vite": "^6.4.2",
+    "vite-plugin-singlefile": "^2.3.2"
+  }
+}
