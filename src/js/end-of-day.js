@@ -183,7 +183,7 @@ export function openHolidays() {
   setTimeout(() => document.getElementById('hol-textarea')?.focus(), 50);
 }
 
-export function openHelpAbout() {
+export function openHelp() {
   showModal(`<h2>Help / About</h2>
     <div class="help-warning">
       <div class="help-warning-title">Data safety (read first)</div>
@@ -227,6 +227,19 @@ export function openHelpAbout() {
     </div>`, 'wide');
 }
 
+export function openAbout() {
+  showModal(`<h2>About</h2>
+    <div style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
+      <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version 1.0.0</div>
+      <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server — your data stays in your browser.</p>
+      <p style="font-size:13px;color:var(--fg-1);line-height:1.5">Built by Tom Knight.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn primary" onclick="closeModal()">Close</button>
+    </div>`);
+}
+
 export function openSettings() {
   showModal(`<h2>Settings</h2>
     <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:16px">
@@ -244,7 +257,8 @@ export function openSettings() {
       </div>
     </div>
     <div class="modal-actions">
-      <button class="tool-btn" onclick="openHelpAbout()">Help / About</button>
+      <button class="tool-btn" onclick="openHelp()">Help</button>
+      <button class="tool-btn" onclick="openAbout()">About</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
     </div>`);
 }
