@@ -8,12 +8,24 @@ No install. No account. No internet required. Just open the file.
 
 ## Setup
 
-1. Download `time_tracker.html`
+### For end users
+
+1. Download `index.html` from the [latest release](../../releases/latest) (or run `npm run build` and grab `dist/index.html`)
 2. Create a folder for it somewhere convenient, e.g. `Documents/time_tracker/`
 3. Double-click the file — it opens in your browser
 4. Optionally, pin the tab so it persists across browser sessions
 
 That's it. Your charge codes and daily data are saved automatically in your browser.
+
+### For developers
+
+```bash
+git clone https://github.com/tomk814/charge-code-tracker.git
+cd charge-code-tracker
+npm install
+npm run dev      # local dev server with hot reload
+npm run build    # produces dist/index.html (single self-contained file)
+```
 
 ### Recommended folder layout
 
@@ -122,7 +134,8 @@ Use **Export JSON** (click the "last saved" link to reveal the data panel) to do
 
 ## Technical notes
 
-- Single HTML file — no dependencies, no build step, works fully offline.
+- Source is modular ES modules under `src/`; `npm run build` produces a single self-contained HTML file via Vite + vite-plugin-singlefile.
+- The build output (`dist/index.html`) has no external dependencies, no CDN imports, works fully offline, and is suitable for `file://` use.
 - localStorage key: `cc_tracker_v3`
 - Data is retained for the last 14 days. Older days are pruned automatically.
 - Migrates automatically from earlier versions (`cc_tracker_v2`).

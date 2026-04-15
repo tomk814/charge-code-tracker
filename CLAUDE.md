@@ -8,18 +8,59 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 
 ```
 /
+├── .github/workflows/build.yml   ← CI: build + optional release
 ├── CLAUDE.md
 ├── NAMES_FOR_THINGS.md
 ├── README.md
-└── time_tracker.html   ← the entire app; do not split into multiple files
+├── package.json
+├── vite.config.js
+├── time_tracker.html              ← legacy monolith (kept for reference)
+├── src/
+│   ├── index.html                 ← Vite entry point (HTML shell)
+│   ├── main.js                    ← JS entry: imports all modules, wires globals
+│   ├── styles/
+│   │   ├── index.css              ← barrel import for all CSS modules
+│   │   ├── tokens.css             ← CSS custom properties (colors, fonts)
+│   │   ├── base.css               ← global reset, body, #app layout
+│   │   ├── header.css             ← header bar, pay-period bar, date badge
+│   │   ├── toolbar-and-cards.css  ← toolbar, tool-btn, data footer, CC card base
+│   │   ├── program-cards.css      ← program group cards, CC row internals
+│   │   ├── modals.css             ← modal overlay/box, form fields, EOD note
+│   │   └── clock-bar.css          ← clock bar, sessions, day-nav, past-day banner
+│   └── js/
+│       ├── utilities.js           ← esc(), uid()
+│       ├── modal-infra.js         ← showModal(), closeModal()
+│       ├── persistence.js         ← localStorage, backup file, holidays
+│       ├── state.js               ← global state + viewDate init
+│       ├── day-navigation.js      ← navigate(), goToToday()
+│       ├── cc-rendering.js        ← card rendering, getBlocks(), wheel handler
+│       ├── pay-period.js          ← pay period bar + main render()
+│       ├── live-cc-tracker.js     ← setActiveCC, finalizeActiveTimer
+│       ├── cc-modals.js           ← Add/Edit/Manage/Delete CC modals
+│       ├── end-of-day.js          ← EOD modal, holidays, export CSV, cold storage
+│       ├── spread-hours.js        ← spread-hours modal
+│       ├── clock.js               ← wall-clock bar, sessions modal
+│       └── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
+└── dist/
+    └── index.html                 ← build output (single self-contained HTML)
+```
+
+## Development
+
+```bash
+npm install          # one-time setup
+npm run dev          # local dev server with hot reload
+npm run build        # produces dist/index.html (single self-contained file)
+npm run preview      # preview the built file locally
 ```
 
 ## Constraints — read before touching anything
 
-- **Single HTML file, always.** No build step, no bundler, no node_modules, no external dependencies. Everything — HTML, CSS, JS — lives in `time_tracker.html`.
-- **No CDN imports.** The file must work fully offline and when opened via `file://` in Chrome or Edge on Windows.
+- **Build output is a single HTML file.** `npm run build` produces `dist/index.html` with all CSS and JS inlined. No external dependencies at runtime.
+- **No CDN imports.** The build output must work fully offline and when opened via `file://` in Chrome or Edge on Windows.
 - **No backend, no server.** Persistence is `localStorage` only.
 - **Target environment:** local file opened in Chrome or Edge on Windows. `file://` origin has stricter localStorage scoping than `http://` — don't assume anything about origin.
+- **Vite + vite-plugin-singlefile** is the build toolchain. Dev dependencies only; no runtime deps.
 
 ## Current features
 
@@ -96,39 +137,42 @@ Key: `cc_tracker_v3`
 - The export output is plain text, pasteable directly into an email or the formal system.
 - The whole app feels like a native browser UI, not a web app.
 
-## `time_tracker.html` section map (agent navigation)
+## Module map (agent navigation)
 
-The file is annotated with greppable landmark comments so agents can navigate without loading the whole file.
+The source is organized into ES modules under `src/js/`. Each file corresponds to one of the original SECTION landmarks.
 
 ### Workflow
 
-1. **Read the TOC** at the very top of `time_tracker.html` for the full section list with approximate original line numbers.
-2. **Grep for the section name** to get the exact current line: `grep -n "SECTION: JS-WALL-CLOCK" time_tracker.html`
-3. **Read only the slice you need** using `offset` + `limit` on the Read tool.
+1. Check the file structure above to find the right module.
+2. Read the module directly — each is small and focused.
+3. `src/main.js` is the entry point that imports everything and assigns window globals.
 
-### Section index
+### Module index
 
-| Section name | Description |
+| Module file | Description |
 |---|---|
-| `CSS-DESIGN-TOKENS` | CSS custom properties — color palette, font vars, border/fill aliases |
-| `CSS-BASE` | Global reset, html/body, `#app` layout, scrollbar |
-| `CSS-HEADER` | Header bar, pay-period bar, title, date badge |
-| `CSS-TOOLBAR-AND-CARDS` | Toolbar, tool-btn, data footer, CC card base |
-| `CSS-PROGRAM-CARDS` | Program group cards, CC row internals, active-tracking highlight, btn-track |
-| `CSS-MODALS` | Modal overlay/box, form fields, EOD note, manage items, increment buttons |
-| `CSS-CLOCK-BAR` | Clock bar states, sessions modal rows, day-nav buttons, past-day banner |
-| `HTML-APP-SHELL` | Static HTML skeleton (header, toolbar, clock bar, cc-list, modal root) |
-| `JS-PERSISTENCE` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()` |
-| `JS-STATE-INIT` | Global `state` and `viewDate` init; `ensurePayAdjustmentCodes()` call; stale active-timer cleanup |
-| `JS-DAY-NAVIGATION` | `navigate(delta)`, `goToToday()` |
-| `JS-CC-RENDERING` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler |
-| `JS-PAY-PERIOD-AND-RENDER` | Pay period bar calculation, holiday column highlighting, and main `render()` |
-| `JS-LIVE-CC-TRACKER` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
-| `JS-UTILITIES` | `esc()` HTML-escape helper, `uid()` random-ID generator |
-| `JS-CC-MODALS` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
-| `JS-END-OF-DAY` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()` |
-| `JS-SPREAD-HOURS` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
-| `JS-MODAL-INFRA` | `showModal(html)` and `closeModal()` |
-| `JS-WALL-CLOCK` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
-| `JS-TICK-INTERVALS` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
-| `JS-INIT` | Bootstrap `render()` + `renderClock()` calls; global Escape key listener |
+| `src/js/utilities.js` | `esc()` HTML-escape helper, `uid()` random-ID generator |
+| `src/js/modal-infra.js` | `showModal(html)` and `closeModal()` |
+| `src/js/persistence.js` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()`; backup file (IndexedDB + File System Access API) |
+| `src/js/state.js` | Global `state` and `viewDate` init; `ensurePayAdjustmentCodes()` call; stale active-timer cleanup |
+| `src/js/day-navigation.js` | `navigate(delta)`, `goToToday()` |
+| `src/js/cc-rendering.js` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler, `getBlocks()`, `blocksToFlat()` |
+| `src/js/pay-period.js` | Pay period bar calculation, holiday column highlighting, `openPayPeriodModal()`, and main `render()` |
+| `src/js/live-cc-tracker.js` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
+| `src/js/cc-modals.js` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
+| `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()`; Export CSV (date-range); Cold Storage |
+| `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
+| `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
+| `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
+
+### CSS module index
+
+| CSS file | Description |
+|---|---|
+| `src/styles/tokens.css` | CSS custom properties — color palette, font vars, border/fill aliases |
+| `src/styles/base.css` | Global reset, html/body, `#app` layout, scrollbar |
+| `src/styles/header.css` | Header bar, pay-period bar, title, date badge |
+| `src/styles/toolbar-and-cards.css` | Toolbar, tool-btn, data footer, CC card base |
+| `src/styles/program-cards.css` | Program group cards, CC row internals, active-tracking highlight, btn-track |
+| `src/styles/modals.css` | Modal overlay/box, form fields, EOD note, manage items, increment buttons |
+| `src/styles/clock-bar.css` | Clock bar states, sessions modal rows, day-nav buttons, past-day banner |
