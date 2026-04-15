@@ -2333,7 +2333,7 @@ function prepColdStorageConfirm() {
     <p class="reset-warn">This cannot be undone.</p>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
-      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="doColdStorage(${JSON.stringify(cutoff)})">Save CSV &amp; delete</button>
+      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="doColdStorage('${cutoff}')">Save CSV &amp; delete</button>
     </div>`);
 }
 
