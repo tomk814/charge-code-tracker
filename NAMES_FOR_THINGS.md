@@ -10,7 +10,7 @@
 - Day navigation: browse past days with `‹` / `›`; past days are read-only
 - Wall-clock tracker with Start/Stop, animated running indicator, and session log
 - Spread hours: distribute unallocated clock time across selected charge codes
-- Export / copy: plain-text EOD summary for pasting into Deltek Costpoint; CSV copy for spreadsheet import
+- Export / copy: plain-text EOD summary for pasting into Deltek Costpoint; CSV copy for spreadsheet import; multi-day CSV range download via "Export CSV…" toolbar button (`openExportCSV()`), merging backup archive with localStorage for full history
 - Auto-reset at midnight (hours + log cleared; charge codes kept)
 - Manual "Reset day" and add/edit/remove charge codes via modal UI
 - Hide charge codes: mark a CC as hidden (`cc.hidden`) so it disappears from the CC list and spread hours, but still appears in the EOD modal and Pay Period if it has logged hours; toggled via the "Hide"/"Unhide" button in Manage CCs modal
@@ -45,7 +45,7 @@ Use these names when describing changes to the interface.
 |------|-----------|
 | **Add charge code** | `openAddCC()` |
 | **Manage CCs** | `openManage()` |
-| **Export / copy** | `openExport()` |
+| **Export CSV…** | `openExportCSV()` |
 | **Spread hours** | `openSpread()` |
 | **End of day** | `openEndOfDay()` |
 | **Pay period** | `openPayPeriodModal()` |
@@ -152,7 +152,7 @@ Named modals:
 | **Manage CCs modal** | "Manage CCs" toolbar button |
 | **Edit CC modal** | "Edit" button inside Manage CCs modal |
 | **End of Day modal** | "End of day" toolbar button |
-| **Export modal** | "Export / copy" toolbar button |
+| **Export CSV modal** | "Export CSV…" toolbar button |
 | **Spread Hours modal** | "Spread hours" toolbar button |
 | **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green |
 | **Holidays modal** | "Holidays" button in the data footer; editable list of holiday dates (one per line, M/D/YYYY) |
