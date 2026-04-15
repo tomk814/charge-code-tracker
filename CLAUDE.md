@@ -16,7 +16,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ├── vite.config.js
 ├── time_tracker.html              ← legacy monolith (kept for reference)
 ├── src/
-│   ├── index.html                 ← Vite entry point (HTML shell)
+│   ├── time_tracker.html          ← Vite entry point (HTML shell)
 │   ├── main.js                    ← JS entry: imports all modules, wires globals
 │   ├── styles/
 │   │   ├── index.css              ← barrel import for all CSS modules
@@ -42,7 +42,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 │       ├── clock.js               ← wall-clock bar, sessions modal
 │       └── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
 └── dist/
-    └── index.html                 ← build output (single self-contained HTML)
+    └── time_tracker.html          ← build output (single self-contained HTML)
 ```
 
 ## Development
@@ -50,7 +50,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ```bash
 npm install          # one-time setup
 npm run dev          # local dev server with hot reload
-npm run build        # produces dist/index.html (single self-contained file)
+npm run build        # produces dist/time_tracker.html (single self-contained file)
 npm run preview      # preview the built file locally
 ```
 
