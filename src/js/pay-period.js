@@ -53,7 +53,7 @@ export function renderPayPeriod() {
   const wdLeft = workingDaysRemaining(today(), end);
   const hrs = payPeriodHours(end);
   const hrsStr = `<span${hrs >= 80 ? ' style="color:var(--green)"' : ''}>${hrs.toFixed(1)}</span>`;
-  el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'})  —  Pay period hours: ${hrsStr}`;
+  el.innerHTML = `Pay period ends ${dayAbbr} ${dateStr}  (${wdLeft} working day${wdLeft===1?'':'s'} remaining)  —  Pay period hours: ${hrsStr}`;
 }
 
 export function openPayPeriodModal(offset = 0) {
