@@ -227,6 +227,28 @@ export function openHelpAbout() {
     </div>`, 'wide');
 }
 
+export function openSettings() {
+  showModal(`<h2>Settings</h2>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+        <span style="font-size:13px;color:var(--fg-1)">Increment buttons</span>
+        <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">${state.showIncrements ? 'Scroll to Increment' : 'Click to Increment'}</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+        <span style="font-size:13px;color:var(--fg-1)">Charge codes</span>
+        <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">${state.showCodes !== false ? 'Hide Codes' : 'Show Codes'}</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0">
+        <span style="font-size:13px;color:var(--fg-1)">Holidays</span>
+        <button class="tool-btn" onclick="openHolidays()">Edit holidays&#8230;</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="openHelpAbout()">Help / About</button>
+      <button class="tool-btn primary" onclick="closeModal()">Close</button>
+    </div>`);
+}
+
 export function saveHolidays() {
   const raw = document.getElementById('hol-textarea').value;
   const parsed = [];

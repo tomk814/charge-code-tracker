@@ -92,14 +92,9 @@ export function updateLastSaved() {
 }
 
 export function revealDataButtons() {
-  const state = _state();
   const btns = document.getElementById('data-btns');
   if (!btns) return;
   btns.style.display = 'flex';
-  const toggleBtn = document.getElementById('incr-toggle-btn');
-  if (toggleBtn) toggleBtn.textContent = state.showIncrements ? 'Scroll to Increment' : 'Click to Increment';
-  const codesBtn = document.getElementById('codes-toggle-btn');
-  if (codesBtn) codesBtn.textContent = state.showCodes !== false ? 'Hide Codes' : 'Show Codes';
   clearTimeout(_dataBtnTimer);
   _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
   btns.onmouseenter = () => clearTimeout(_dataBtnTimer);

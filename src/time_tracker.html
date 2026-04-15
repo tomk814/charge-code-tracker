@@ -24,7 +24,7 @@
     <button class="tool-btn" onclick="openSpread()">Allocate</button>
     <button class="tool-btn" onclick="openEndOfDay()">End of day</button>
     <button class="tool-btn" onclick="openPayPeriodModal()">Pay period</button>
-    <button class="tool-btn" onclick="openExportCSV()">Export CSV&#8230;</button>
+    <button class="tool-btn" onclick="openSettings()" title="Settings">&#9881;</button>
   </div>
 
   <div id="past-day-banner" style="display:none" class="past-day-banner">
@@ -38,12 +38,9 @@
   <div class="data-footer">
     <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
     <div id="data-btns">
-      <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">Click to Increment</button>
-      <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">Hide Codes</button>
-      <button class="tool-btn" onclick="openHolidays()">Holidays</button>
+      <button class="tool-btn" onclick="openExportCSV()">Export CSV&#8230;</button>
       <button class="tool-btn" onclick="importJSON()">Import JSON</button>
       <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
-      <button class="tool-btn" onclick="openHelpAbout()">Help / About</button>
       <span id="backup-ui" style="display:none">
         <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
         <span id="backup-status" class="backup-status not-linked"><span class="backup-dot"></span>No backup file</span>
