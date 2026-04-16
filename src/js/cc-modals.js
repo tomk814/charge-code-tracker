@@ -9,10 +9,9 @@ import { getBlocks, blocksToFlat } from './cc-rendering.js';
 
 // ── Modals ───────────────────────────────────────────────────────────────────
 
-// Pay Adjustment CCs are system-managed and cannot be archived or deleted.
+// Only the original predefined Pay Adjustment CCs (pa0001–pa0009) are system-managed and cannot be archived or deleted.
 export function isProtectedCC(id) {
-  const cc = state.codes.find(c => c.id === id);
-  return cc && cc.program === 'Pay Adjustment';
+  return /^pa000[1-9]$/.test(id);
 }
 
 export function openAddCC() {
