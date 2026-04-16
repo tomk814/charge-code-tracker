@@ -99,7 +99,7 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 ### Day navigation
 - Use the **‹ ›** arrows in the header to browse previous days.
 - You can edit past days — useful for corrections.
-- Data is retained for the last TBD days.
+- Data is retained for the last 35 days (5 weeks).
 
 ---
 
@@ -111,16 +111,32 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 > - Browser profile resets or reinstalls
 > - Opening the file from a different path or in a different browser
 
-**To protect yourself, export a JSON backup regularly** — at minimum at the end of each pay period.
+### Pick a workflow
 
-Use **Export JSON** (click the "last saved" link to reveal the data panel) to download a backup, and **Import JSON** to restore. **Reset day** is also in this panel.
+There are two ways to use the tracker, depending on how much friction you're willing to accept.
+
+#### Workflow 1 — No linked file (low ceremony)
+
+- No file-permission prompts. Just open the file and go.
+- localStorage keeps **5 weeks** of data (≈ 2 pay periods + margin). Older days are pruned automatically.
+- Use **Cold storage** at the end of each pay period to export older days to CSV and prune localStorage before they auto-expire.
+- Use **Export JSON** to create manual save points (full state snapshots you can import later).
+- **Risk:** clearing browser data = total loss unless you have a JSON backup.
+
+#### Workflow 2 — Linked backup file (belt-and-suspenders)
+
+- Click **Link backup file** in the data panel to pick a JSON file on disk.
+- The backup file accumulates all history and auto-saves every 6 minutes.
+- Use **Cold storage** yearly — ideally at the start of performance-review season — to export the whole year's data to CSV, then prune both the archive and localStorage.
+- Compile your daily notes from the CSV into a cheat sheet for your boss to go fight for your raise and much-deserved promotion.
+- **Risk:** virtually none. The file on disk survives browser data wipes.
 
 ### Rules to avoid data loss
 
-- Always open `dist/time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
+- Always open `time_tracker.html` from the **same location** on your machine. Moving the file creates a new, empty localStorage.
 - Always use the **same browser**. Chrome and Edge have separate localStorage.
 - Do **not** use "Clear browsing data" without first being aware that it may wipe your tracker history.
-- If you get a new machine or reinstall your browser, you will need to restore from a backup (once that feature is available).
+- If you get a new machine or reinstall your browser, restore from a JSON backup or linked backup file.
 
 ---
 
@@ -141,6 +157,6 @@ Use **Export JSON** (click the "last saved" link to reveal the data panel) to do
 - Source is modular ES modules under `src/`; `npm run build` produces a single self-contained HTML file via Vite + vite-plugin-singlefile.
 - The build output (`dist/index.html`) has no external dependencies, no CDN imports, works fully offline, and is suitable for `file://` use.
 - localStorage key: `cc_tracker_v3`
-- Data is retained for the last 14 days. Older days are pruned automatically.
+- Data is retained for the last 35 days (5 weeks). Older days are pruned automatically.
 - Migrates automatically from earlier versions (`cc_tracker_v2`).
 - Tested in Chrome and Edge on Windows. Other browsers should work but are not the primary target.

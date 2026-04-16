@@ -53,8 +53,7 @@ export function openEndOfDay() {
       <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
     </div>
     <div class="modal-actions">
-      <button class="tool-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
-      <button class="tool-btn" id="eod-csv-btn" onclick="copyEodCSV()">Copy CSV</button>
+      <button class="tool-btn" id="eod-copy-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
       <button class="tool-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
     </div>`);
@@ -91,8 +90,11 @@ export function copyEndOfDay() {
   state.codes.filter(c => !c.archived).forEach(cc => {
     const hrs = day.hours[cc.id] || 0;
     if (!hrs) return;
+    const prog = (cc.program || '').trim();
+    const progDisplay = (cc.programNickname || prog).trim();
+    const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const note = (notes[cc.id] || '').trim();
-    lines.push(`${cc.code}  ${cc.nickname || cc.name}`);
+    lines.push(label);
     lines.push(`  ${hrs.toFixed(1)} hr`);
     if (note) lines.push(`  ${note}`);
     lines.push('');
@@ -100,30 +102,18 @@ export function copyEndOfDay() {
   lines.push(`Total: ${total.toFixed(1)} hr`);
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('#modal-root .primary');
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 1500); }
+    const btn = document.getElementById('eod-copy-btn');
+    if (btn) {
+      btn.textContent = '✓ Copied!';
+      btn.style.color = 'var(--color-text-success)';
+      setTimeout(() => {
+        btn.textContent = 'Copy to clipboard';
+        btn.style.color = '';
+      }, 1500);
+    }
   });
 }
 
-export function copyEodCSV() {
-  const day = dayData(viewDate);
-  const notes = Object.assign({}, day.notes || {});
-  state.codes.forEach(cc => {
-    const el = document.getElementById('eod-note-' + cc.id);
-    if (el) { const v = el.value.trim(); if (v) notes[cc.id] = v; else delete notes[cc.id]; }
-  });
-  const csvField = v => /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
-  const rows = [];
-  state.codes.filter(c => !c.archived).forEach(cc => {
-    const hrs = day.hours[cc.id] || 0;
-    if (!hrs) return;
-    rows.push([viewDate, cc.program||'', cc.wp||'', cc.name, cc.code, cc.nickname||'', hrs.toFixed(1), notes[cc.id]||''].map(csvField).join(','));
-  });
-  navigator.clipboard.writeText(rows.join('\n')).then(() => {
-    const btn = document.getElementById('eod-csv-btn');
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy CSV', 1500); }
-  });
-}
 
 export function clearEodNotes() {
   const day = dayData(viewDate);
@@ -185,16 +175,32 @@ export function openHolidays() {
 }
 
 export function openHelp() {
-  showModal(`<h2>Help / About</h2>
+  showModal(`<h2>Instructions</h2>
+    <div class="help-section-title">Daily workflow</div>
+    <ul class="help-list">
+      <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC when you switch tasks.</li>
+      <li>End of day: <strong>Stop</strong> → <strong>Spread hours</strong> (if needed) → <strong>End of day</strong> → copy to clipboard.</li>
+    </ul>
+
+    <div class="help-section-title">Data storage — pick a workflow</div>
     <div class="help-warning">
-      <div class="help-warning-title">Data safety (read first)</div>
+      <div class="help-warning-title">Data safety</div>
       <ul class="help-list" style="margin-bottom:0">
-        <li>Your data lives in browser <code>localStorage</code>. It is <strong>not</strong> a file on disk and can be wiped by clearing browsing data, profile resets/reinstalls, or opening this file from a different path/browser.</li>
-        <li><strong>Export JSON backup regularly</strong> (minimum: end of each pay period).</li>
-        <li>Always open from the <strong>same file path</strong> and the <strong>same browser</strong>.</li>
-        <li>Do <strong>not</strong> use "Clear browsing data" without awareness of this risk.</li>
+        <li>Your data lives in browser <code>localStorage</code> — not a file on disk. Always open from the <strong>same path</strong> in the <strong>same browser</strong>. Don't "Clear browsing data" without awareness of this risk.</li>
+        <li>You can avoid this by linking a backup file, which saves a copy to disk. Due to browser security, you may be asked to re-authorize saving each session.</li>
       </ul>
     </div>
+    <table class="help-table">
+      <thead><tr><th></th><th>No linked file</th><th>Linked backup file</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ceremony</strong></td><td>Zero permission prompts</td><td>File picker + periodic permission grants</td></tr>
+        <tr><td><strong>Retention</strong></td><td>5 weeks in localStorage, auto-pruned</td><td>Unlimited — backup file accumulates all history, auto-saves every 6 min</td></tr>
+        <tr><td><strong>Offloading</strong></td><td>Cold storage each pay period → exports CSV, prunes localStorage</td><td>Cold storage yearly at performance season → exports CSV, prunes both</td></tr>
+        <tr><td><strong>Save points</strong></td><td>Export JSON for manual snapshots</td><td>Backup file <em>is</em> the save point</td></tr>
+        <tr><td><strong>Risk</strong></td><td>Clearing browser data = total loss unless you have a JSON backup</td><td>File on disk survives browser wipes</td></tr>
+        <tr><td><strong>Boss fight</strong></td><td>Export CSV of the pay period, compile your notes</td><td>Export CSV of the whole year, compile notes into a perf review cheat sheet</td></tr>
+      </tbody>
+    </table>
 
     <div class="help-section-title">Keyboard shortcuts</div>
     <table class="help-table">
@@ -207,12 +213,6 @@ export function openHelp() {
         <tr><td>Escape</td><td>Close modal</td></tr>
       </tbody>
     </table>
-
-    <div class="help-section-title">Daily workflow</div>
-    <ul class="help-list">
-      <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC when you switch tasks.</li>
-      <li>End of day: <strong>Stop</strong> → <strong>Spread hours</strong> (if needed) → <strong>End of day</strong> → copy to clipboard.</li>
-    </ul>
 
     <div class="help-section-title">Quick reference</div>
     <ul class="help-list">
@@ -234,7 +234,7 @@ export function openAbout() {
     <div style="margin-bottom:16px">
       <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
       <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version 1.0.0</div>
-      <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server — your data stays in your browser.</p>
+      <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server — your data stays on your machine.</p>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5">Built by Tom Knight.</p>
     </div>
     <div class="modal-actions">
@@ -424,22 +424,17 @@ export async function doExportCSV() {
 let _coldMergedDays = null; // shared between openColdStorage and prepColdStorageConfirm
 
 export async function openColdStorage() {
-  const handle = await getBackupHandle().catch(() => null);
-  if (!handle) {
-    showModal(`<h2>Error</h2>
-      <p>No backup file linked. Link a backup file first.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
-    return;
-  }
-
-  // Merge archive days + state.days for the preview count
+  // Merge archive days (if backup file linked) + state.days for the preview count
   _coldMergedDays = {};
   try {
-    const perm = await handle.queryPermission({ mode: 'readwrite' }).catch(() => 'denied');
-    if (perm === 'granted') {
-      const file   = await handle.getFile();
-      const parsed = JSON.parse(await file.text());
-      if (parsed && typeof parsed.days === 'object') _coldMergedDays = { ...parsed.days };
+    const handle = await getBackupHandle().catch(() => null);
+    if (handle) {
+      const perm = await handle.queryPermission({ mode: 'readwrite' }).catch(() => 'denied');
+      if (perm === 'granted') {
+        const file   = await handle.getFile();
+        const parsed = JSON.parse(await file.text());
+        if (parsed && typeof parsed.days === 'object') _coldMergedDays = { ...parsed.days };
+      }
     }
   } catch(e) { /* unreadable — fall back to state.days only */ }
   _coldMergedDays = { ..._coldMergedDays, ...state.days };
@@ -533,28 +528,22 @@ export function prepColdStorageConfirm() {
 }
 
 export async function doColdStorage(cutoffISO) {
-  // 1. Read archive
+  // 1. Read archive (if backup file linked)
   const handle = await getBackupHandle().catch(() => null);
-  if (!handle) {
-    showModal(`<h2>Error</h2>
-      <p>No backup file linked.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
-    return;
-  }
-  let archive;
-  try {
-    const file = await handle.getFile();
-    archive = JSON.parse(await file.text());
-    if (!archive || typeof archive.days !== 'object') throw new Error('bad schema');
-  } catch(e) {
-    showModal(`<h2>Error</h2>
-      <p>Could not read backup file. Re-link it and try again.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
-    return;
+  let archive = null;
+  if (handle) {
+    try {
+      const perm = await handle.queryPermission({ mode: 'readwrite' }).catch(() => 'denied');
+      if (perm === 'granted') {
+        const file = await handle.getFile();
+        const parsed = JSON.parse(await file.text());
+        if (parsed && typeof parsed.days === 'object') archive = parsed;
+      }
+    } catch(e) { /* unreadable — proceed with state.days only */ }
   }
 
   // 2. Build CSV from merged days
-  const allMerged = { ...archive.days, ...state.days };
+  const allMerged = archive ? { ...archive.days, ...state.days } : { ...state.days };
   const csv       = buildRangeCSV('0000-00-00', cutoffISO, allMerged, state.codes);
   if (!csv) {
     showModal(`<h2>Nothing to archive</h2>
@@ -580,20 +569,22 @@ export async function doColdStorage(cutoffISO) {
     return;
   }
 
-  // 4–5. Prune archive and rewrite
-  const prunedDays = Object.fromEntries(
-    Object.entries(archive.days).filter(([d]) => d > cutoffISO)
-  );
-  archive.days = prunedDays;
-  try {
-    const writable = await handle.createWritable();
-    await writable.write(JSON.stringify(archive, null, 2));
-    await writable.close();
-  } catch(e) {
-    showModal(`<h2>Error</h2>
-      <p>CSV was saved but the archive could not be updated. Your archive file may be in an inconsistent state — re-link it or manually remove the archived entries.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
-    return;
+  // 4–5. Prune archive and rewrite (if backup file was read)
+  if (archive && handle) {
+    const prunedDays = Object.fromEntries(
+      Object.entries(archive.days).filter(([d]) => d > cutoffISO)
+    );
+    archive.days = prunedDays;
+    try {
+      const writable = await handle.createWritable();
+      await writable.write(JSON.stringify(archive, null, 2));
+      await writable.close();
+    } catch(e) {
+      showModal(`<h2>Error</h2>
+        <p>CSV was saved but the archive could not be updated. Your archive file may be in an inconsistent state — re-link it or manually remove the archived entries.</p>
+        <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+      return;
+    }
   }
 
   // 6–7. Prune localStorage and save
@@ -613,11 +604,12 @@ export async function doColdStorage(cutoffISO) {
     });
 
   // 8. Success
+  const archiveNote = archive ? 'the backup and working set' : 'the working set';
   const orphanNotice = hasOrphans
     ? `<p style="font-size:12px;color:var(--yellow);margin-top:8px">Note: some entries referenced deleted charge codes and were not included in the CSV.</p>`
     : '';
   showModal(`<h2>Cold storage complete</h2>
-    <p>${n} day${n===1?'':'s'} archived to CSV and removed from the backup and working set.</p>
+    <p>${n} day${n===1?'':'s'} archived to CSV and removed from ${archiveNote}.</p>
     ${orphanNotice}
     <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
 }

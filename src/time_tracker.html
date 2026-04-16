@@ -45,7 +45,9 @@
         <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
         <span id="backup-status" class="backup-status not-linked"><span class="backup-dot"></span>No backup file</span>
         <button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()" disabled>Save to file now</button>
-        <button class="tool-btn" id="cold-storage-btn" onclick="openColdStorage()" disabled title="Requires a linked backup file">Cold storage…</button>
+      </span>
+      <span id="cold-storage-ui" style="display:none">
+        <button class="tool-btn" onclick="openColdStorage()">Cold storage…</button>
       </span>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
     </div>

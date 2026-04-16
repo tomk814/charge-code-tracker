@@ -248,7 +248,6 @@ async function clearBackupHandle() {
 export function renderBackupStatus(perm) {
   const el        = document.getElementById('backup-status');
   const saveBtn   = document.getElementById('save-backup-btn');
-  const coldBtn   = document.getElementById('cold-storage-btn');
   if (!el) return;
   if (perm === 'granted') {
     const note = _idbUnavailable ? ' (session only)' : '';
@@ -256,19 +255,16 @@ export function renderBackupStatus(perm) {
     el.innerHTML = `<span class="backup-dot"></span>Backup linked${esc(note)}`;
     el.onclick = null;
     if (saveBtn) saveBtn.disabled = false;
-    if (coldBtn) coldBtn.disabled = false;
   } else if (perm === 'prompt') {
     el.className = 'backup-status permission-needed';
     el.innerHTML = '<span class="backup-dot"></span>Click to reconnect';
     el.onclick = reconnectBackup;
     if (saveBtn) saveBtn.disabled = true;
-    if (coldBtn) coldBtn.disabled = true;
   } else {
     el.className = 'backup-status not-linked';
     el.innerHTML = '<span class="backup-dot"></span>No backup file';
     el.onclick = null;
     if (saveBtn) saveBtn.disabled = true;
-    if (coldBtn) coldBtn.disabled = true;
   }
 }
 

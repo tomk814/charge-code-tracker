@@ -26,7 +26,7 @@ import {
   openManage, openEditCC, submitEditCC, deleteCC,
 } from './js/cc-modals.js';
 import {
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
+  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
   confirmReset, doReset,
   openHolidays, saveHolidays, openHelp, openAbout, openSettings,
   openExportCSV, doExportCSV,
@@ -75,7 +75,7 @@ Object.assign(window, {
   moveBlock, moveCCInBlock,
   openManage, openEditCC, submitEditCC, deleteCC,
   // end of day
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
+  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
   confirmReset, doReset,
   openHolidays, saveHolidays, openHelp, openAbout, openSettings,
   openExportCSV, doExportCSV,
@@ -102,6 +102,8 @@ renderClock();
 if ('showSaveFilePicker' in window) {
   const backupUi = document.getElementById('backup-ui');
   if (backupUi) backupUi.style.display = 'contents';
+  const coldUi = document.getElementById('cold-storage-ui');
+  if (coldUi) coldUi.style.display = 'contents';
   checkBackupPermission();
 }
 

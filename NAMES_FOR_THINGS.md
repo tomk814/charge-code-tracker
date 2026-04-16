@@ -62,7 +62,11 @@ Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds
 | **Holidays** | `openHolidays()` | Opens the Holidays modal for viewing and editing the company holiday list |
 | **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
 | **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
-| **Help / About** | `openHelpAbout()` | Opens an in-app quick-reference modal with data-safety guidance, shortcuts, workflow, and feature tips |
+| **Link backup file** | `linkBackupFile()` | Pick a JSON file on disk to use as a persistent backup archive; requires File System Access API (hidden when API unavailable) |
+| **Backup status** | — | Indicator showing backup link state: linked (green dot), needs reconnect, or not linked (`#backup-status`); hidden when API unavailable |
+| **Save to file now** | `saveToFileNow()` | Immediately write current state to the linked backup file; disabled when no file is linked |
+| **Cold storage…** | `openColdStorage()` | Export older days to CSV and prune from localStorage and backup archive; requires File System Access API (hidden when API unavailable) |
+| **Help / About** | `openHelpAbout()` | Opens an in-app quick-reference modal with storage workflow comparison, shortcuts, workflow, and feature tips |
 | **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
 
 ### Clock bar sub-elements

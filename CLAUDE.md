@@ -86,7 +86,10 @@ wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
 - Escape key closes modals
 - Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed: they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
 - Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Holidays button in the hidden data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
-- Help / About modal: in-app quick-reference panel (data safety warning, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
+- Help modal: in-app quick-reference panel (two-workflow storage comparison table, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
+- About modal: version, description and author info accessed via the settings modal
+- Backup file: optional linked JSON file on disk via File System Access API; accumulates all history; auto-saves every 6 minutes; accessed via the settings modal
+- Cold storage: exports older days to CSV and prunes them from localStorage (and the backup archive, if linked); works with or without a linked backup file; requires File System Access API for CSV save
 
 ## Keeping docs in sync
 
