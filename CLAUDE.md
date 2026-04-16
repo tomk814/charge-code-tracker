@@ -53,12 +53,6 @@ npm run build        # produces dist/time_tracker.html (single self-contained fi
 npm run preview      # preview the built file locally
 ```
 
-Node is not installed natively on this machine. Run npm commands through WSL:
-
-```bash
-wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
-```
-
 ## Constraints — read before touching anything
 
 - **Build output is a single HTML file.** `npm run build` produces `dist/index.html` with all CSS and JS inlined. No external dependencies at runtime.
