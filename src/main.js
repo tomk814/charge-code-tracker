@@ -23,10 +23,10 @@ import {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
 } from './js/cc-modals.js';
 import {
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
+  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
   confirmReset, doReset,
   openHolidays, saveHolidays, openHelp, openAbout, openSettings,
   openExportCSV, doExportCSV,
@@ -73,9 +73,9 @@ Object.assign(window, {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
   // end of day
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
+  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
   confirmReset, doReset,
   openHolidays, saveHolidays, openHelp, openAbout, openSettings,
   openExportCSV, doExportCSV,
@@ -98,10 +98,8 @@ Object.assign(window, {
 render();
 renderClock();
 
-// Show backup UI and check permission if File System Access API is available
+// Check backup file permission if File System Access API is available
 if ('showSaveFilePicker' in window) {
-  const backupUi = document.getElementById('backup-ui');
-  if (backupUi) backupUi.style.display = 'contents';
   checkBackupPermission();
 }
 
