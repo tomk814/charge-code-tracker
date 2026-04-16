@@ -258,7 +258,7 @@ export function openSettings() {
     : row('Backup file', `<span style="font-size:12px;color:var(--fg-2)">Requires Chrome or Edge</span>`);
 
   const coldStorageRow = hasFileApi
-    ? row('Cold storage', `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`)
+    ? row('Offload older days to CSV and prune from storage', `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`)
     : '';
 
   showModal(`<h2>Settings</h2>
