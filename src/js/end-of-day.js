@@ -233,8 +233,22 @@ export function openAbout() {
       <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
       <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version 1.0.0</div>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server — your data stays on your machine.</p>
-      <p style="font-size:13px;color:var(--fg-1);line-height:1.5">Built by Tom Knight.</p>
+      <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:16px">Built by Tom Knight.</p>
+      <!-- If this saves you a few minutes every day, a coffee is a great way to say thanks! -->
+      <p style="font-size:13px;color:var(--fg-1);line-height:1.5">For me, this tool already paid for itself. If it saves you time too and you feel like saying thanks, buy me a <a href="https://ko-fi.com/feed_the_machine" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">coffee &#x2615;</a></p>
     </div>
+    <details style="margin-bottom:16px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--fg-2);list-style:none;user-select:none">MIT License</summary>
+      <pre style="margin:8px 0 0;padding:10px;background:var(--bg-1);border:1px solid var(--bd-2);border-radius:3px;white-space:pre-wrap;font-size:11px;line-height:1.6;font-family:var(--font-mono);color:var(--fg-1)">MIT License
+
+Copyright (c) 2026 Tom Knight
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+    </details>
     <div class="modal-actions">
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
     </div>`);
