@@ -120,5 +120,5 @@
     color: var(--fg-2);
     white-space: nowrap;
   }
-  .backup-status.linked            { color: var(--green); }
+  .backup-status.linked            { color: var(--fg-2); }
   .backup-status.permission-needed { color: var(--yellow); cursor: pointer; }

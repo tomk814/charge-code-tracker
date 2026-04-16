@@ -16,6 +16,7 @@ export function _injectDeps({ getState, replaceState, render, renderClock, ensur
 
 const STORAGE_KEY = 'cc_tracker_v3';
 let lastSavedAt = null;
+let _dataBtnTimer = null;
 
 // ── Persistence ─────────────────────────────────────────────────────────────
 // v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
@@ -229,6 +230,14 @@ async function clearBackupHandle() {
       tx.onerror    = e => reject(e.target.error);
     });
   } catch(e) { _idbUnavailable = true; }
+}
+
+export function revealDataButtons() {
+  const el = document.getElementById('data-btns');
+  if (!el) return;
+  el.style.display = 'flex';
+  clearTimeout(_dataBtnTimer);
+  _dataBtnTimer = setTimeout(() => { el.style.display = 'none'; }, 8000);
 }
 
 export function renderBackupStatus(perm) {

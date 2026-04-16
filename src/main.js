@@ -6,7 +6,7 @@ import './styles/index.css';
 import { state } from './js/state.js';
 import {
   _injectDeps, save, ensurePayAdjustmentCodes,
-  exportJSON, importJSON, handleJSONFile,
+  revealDataButtons, exportJSON, importJSON, handleJSONFile,
   linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner,
   reconnectBackup, checkBackupPermission,
 } from './js/persistence.js';
@@ -90,7 +90,7 @@ Object.assign(window, {
   resetClockSession, cancelClockSession,
   updateClockSession, deleteClockSession, addClockSession,
   // persistence / data panel
-  exportJSON, importJSON, handleJSONFile,
+  revealDataButtons, exportJSON, importJSON, handleJSONFile,
   linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner, reconnectBackup,
 });
 

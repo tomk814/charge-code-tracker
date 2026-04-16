@@ -282,9 +282,6 @@ export function openSettings() {
       <button class="tool-btn" onclick="openExportCSV()">Export CSV\u2026</button>
       ${coldStorageBtn}
     </div>
-    <div style="padding:8px 0">
-      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
-    </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openHelp()">Help</button>
       <button class="tool-btn" onclick="openAbout()">About</button>
