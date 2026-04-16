@@ -26,7 +26,8 @@ export function openEndOfDay() {
   const notes = day.notes || {};
   const rows = activeCCs.map(cc => {
     const prog = (cc.program || '').trim();
-    const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
+    const progDisplay = (cc.programNickname || prog).trim();
+    const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const savedNote = notes[cc.id] || '';
     return `<div style="padding:5px 0;border-bottom:1px solid var(--bd-2)">
       <div style="display:flex;align-items:baseline;gap:10px">
@@ -216,6 +217,7 @@ export function openHelp() {
     <div class="help-section-title">Quick reference</div>
     <ul class="help-list">
       <li>Paste a Dayforce string in Add CC import - fields auto-parse.</li>
+      <li><strong>Nicknames</strong> (program, activity, WP) replace long Dayforce names in the UI. The full real names are preserved and used in CSV export for grouping and sorting.</li>
       <li><strong>Sessions</strong>: view/edit/add clock sessions manually.</li>
       <li><strong>Spread hours</strong>: proportionally distributes unallocated clock time across logged CCs.</li>
       <li><strong>Pay period</strong>: CC × working-day table for pre-submission checks.</li>
