@@ -9,12 +9,12 @@
 - Expandable per-CC history log with timestamps and notes
 - Day navigation: browse past days with `‹` / `›`; past days are read-only
 - Wall-clock tracker with Start/Stop, animated running indicator, and session log
-- Spread hours: distribute unallocated clock time across selected charge codes
+- Auto-Allocate: distribute unallocated clock time across selected charge codes
 - Export / copy: plain-text EOD summary for pasting into Deltek Costpoint; CSV copy for spreadsheet import; multi-day CSV range download via "Export CSV…" toolbar button (`openExportCSV()`), merging backup archive with localStorage for full history
 - Auto-reset at midnight (hours + log cleared; charge codes kept)
 - Manual "Reset day" and add/edit/remove charge codes via modal UI
-- Hide charge codes: mark a CC as hidden (`cc.hidden`) so it disappears from the CC list and spread hours, but still appears in the EOD modal and Pay Period if it has logged hours; toggled via the "Hide"/"Unhide" button in Manage CCs modal
-- Archive charge codes: mark a CC as archived (`cc.archived`) so it is hidden from the CC list, EOD summary, and spread hours while preserving its historical hours; toggled via the "Archive"/"Unarchive" button in Manage CCs modal
+- Hide charge codes: mark a CC as hidden (`cc.hidden`) so it disappears from the CC list and Auto-Allocate, but still appears in the EOD modal and Pay Period if it has logged hours; toggled via the "Hide"/"Unhide" button in Manage CCs modal
+- Archive charge codes: mark a CC as archived (`cc.archived`) so it is hidden from the CC list, EOD summary, and Auto-Allocate while preserving its historical hours; toggled via the "Archive"/"Unarchive" button in Manage CCs modal
 - Predefined Pay Adjustment charge codes (PTO, HOL, Bereavement, Jury Duty, etc.) are system-managed; they cannot be archived or deleted; Archive and Delete buttons are suppressed for them in the Manage CCs modal
 - Holiday management: editable list of company holidays accessed via the Holidays button in the data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit; holiday columns are accented green in the Pay Period modal
 - Help / About modal: quick-reference guidance in-app (data safety warning, shortcuts, workflow, and key features), opened from the data footer panel
@@ -47,7 +47,7 @@ Use these names when describing changes to the interface.
 | **Add charge code** | `openAddCC()` |
 | **Manage CCs** | `openManage()` |
 | **Export CSV…** | `openExportCSV()` |
-| **Spread hours** | `openSpread()` |
+| **Auto-Allocate** | `openSpread()` |
 | **End of day** | `openEndOfDay()` |
 | **Pay period** | `openPayPeriodModal()` |
 
@@ -159,7 +159,7 @@ Named modals:
 | **Edit CC modal** | "Edit" button inside Manage CCs modal |
 | **End of Day modal** | "End of day" toolbar button |
 | **Export CSV modal** | "Export CSV…" toolbar button |
-| **Spread Hours modal** | "Spread hours" toolbar button |
+| **Auto-Allocate modal** | "Auto-Allocate" toolbar button |
 | **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green |
 | **Holidays modal** | "Holidays" button in the data footer; editable list of holiday dates (one per line, M/D/YYYY) |
 | **Help / About modal** | "Help / About" button in the data footer; includes data safety warning, shortcuts, workflow, and quick-reference tips |

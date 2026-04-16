@@ -57,7 +57,7 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 
 **End of day**
 - Click **Stop** on the clock bar.
-- If you have unallocated clock time, use **Spread hours** to distribute it proportionally across your logged CCs.
+- If you have unallocated clock time, use **Auto-Allocate** to distribute it proportionally across your logged CCs.
 - Click **End of day** → **Copy to clipboard** for a plain-text summary, or **Copy CSV** for a spreadsheet-ready row per charge code.
 - Use **Pay period** to see a compact table of all your CCs × working days for a quick sanity check before submitting.
 
@@ -82,7 +82,7 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 - The clock bar tracks wall-clock time for the day via manual sessions (Start/Stop).
 - Click **Sessions** to view, edit, or manually add sessions if you forgot to start the clock.
 - Sessions use 24h HH:MM format.
-- The clock total feeds into **Spread hours** to detect unallocated time.
+- The clock total feeds into **Auto-Allocate** to detect unallocated time.
 
 ### Active CC tracking
 - Click **Active** on any charge code to begin auto-accruing time to it as the clock runs.
@@ -90,10 +90,10 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 - Only one CC can be active at a time. Clicking **Active** on a different CC switches tracking.
 - Clicking **Active** again on the current CC deactivates tracking without stopping the clock.
 
-### Spread hours
+### Auto-Allocate
 - Compares your total clock time against your logged CC hours.
 - Distributes the difference proportionally across CCs that already have hours logged.
-- You can check/uncheck individual CCs to include or exclude them from the spread.
+- You can check/uncheck individual CCs to include or exclude them from the allocation.
 - Shows a before/after preview before you commit.
 
 ### Day navigation

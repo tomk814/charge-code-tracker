@@ -76,7 +76,7 @@ wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
 - Running grand total displayed in header
 - Day navigation: browse any past day's log with `‹` / `›` buttons; past days show a banner and are read-only for increments
 - Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
-- Spread hours: distributes unallocated clock time across selected charge codes
+- Auto-Allocate: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
 - End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; two copy buttons: plain-text summary and CSV
 - Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; holiday columns accented green; per-CC totals column and per-day totals row; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
@@ -165,7 +165,7 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 | `src/js/live-cc-tracker.js` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
 | `src/js/cc-modals.js` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
 | `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()`, `openHelpAbout()`; Export CSV (date-range); Cold Storage |
-| `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
+| `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` — Auto-Allocate modal |
 | `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
 | `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
 

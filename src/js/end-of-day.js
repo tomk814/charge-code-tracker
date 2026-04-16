@@ -178,15 +178,25 @@ export function openHelp() {
   showModal(`<h2>Instructions</h2>
     <div class="help-section-title">Daily workflow</div>
     <ul class="help-list">
-      <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC when you switch tasks.</li>
-      <li>End of day: <strong>Stop</strong> → <strong>Spread hours</strong> (if needed) → <strong>End of day</strong> → copy to clipboard.</li>
+      <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC to accumulate time on that number too.</li>
+      <li>End of day: <strong>Stop</strong> → <strong>Manually Adjust Hours</strong> or <strong>Auto-Allocate</strong> → <strong>End of day</strong> → Jot down notes for the day.</li>
     </ul>
 
-    <div class="help-section-title">Data storage — pick a workflow</div>
+    <div class="help-section-title">Getting started</div>
+    <ul class="help-list">
+      <li>Paste a Dayforce string in Add CC import — fields auto-parse.</li>
+      <li><strong>Nicknames</strong> (program, activity, WP) replace long Dayforce names in the UI. The full real names are preserved and used in CSV export for grouping and sorting.</li>
+      <li><strong>Sessions</strong>: view/edit/add clock sessions manually.</li>
+      <li><strong>Auto-Allocate</strong>: proportionally distributes unallocated clock time across logged CCs.</li>
+      <li><strong>Pay period</strong>: CC × working-day table for pre-submission checks.</li>
+      <li>Active CC accrues time approximately every 6 minutes (0.1 hr) while the clock runs.</li>
+    </ul>
+
+    <div class="help-section-title">Data storage — pick a strategy</div>
     <div class="help-warning">
       <div class="help-warning-title">Data safety</div>
       <ul class="help-list" style="margin-bottom:0">
-        <li>Your data lives in browser <code>localStorage</code> — not a file on disk. Always open from the <strong>same path</strong> in the <strong>same browser</strong>. Don't "Clear browsing data" without awareness of this risk.</li>
+        <li>Your short term data lives in browser <code>localStorage</code> — not a file on disk. Always open from the <strong>same path</strong> in the <strong>same browser</strong>. Don't "Clear browsing data" without awareness of this risk.</li>
         <li>You can avoid this by linking a backup file, which saves a copy to disk. Due to browser security, you may be asked to re-authorize saving each session.</li>
       </ul>
     </div>
@@ -198,7 +208,7 @@ export function openHelp() {
         <tr><td><strong>Offloading</strong></td><td>Cold storage each pay period → exports CSV, prunes localStorage</td><td>Cold storage yearly at performance season → exports CSV, prunes both</td></tr>
         <tr><td><strong>Save points</strong></td><td>Export JSON for manual snapshots</td><td>Backup file <em>is</em> the save point</td></tr>
         <tr><td><strong>Risk</strong></td><td>Clearing browser data = total loss unless you have a JSON backup</td><td>File on disk survives browser wipes</td></tr>
-        <tr><td><strong>Boss fight</strong></td><td>Export CSV of the pay period, compile your notes</td><td>Export CSV of the whole year, compile notes into a perf review cheat sheet</td></tr>
+        <tr><td><strong>Boss fight</strong></td><td>Export CSV of the pay period, compile your notes</td><td>Export CSV of the whole year, compile notes into a performance review cheat sheet</td></tr>
       </tbody>
     </table>
 
@@ -213,16 +223,6 @@ export function openHelp() {
         <tr><td>Escape</td><td>Close modal</td></tr>
       </tbody>
     </table>
-
-    <div class="help-section-title">Quick reference</div>
-    <ul class="help-list">
-      <li>Paste a Dayforce string in Add CC import - fields auto-parse.</li>
-      <li><strong>Nicknames</strong> (program, activity, WP) replace long Dayforce names in the UI. The full real names are preserved and used in CSV export for grouping and sorting.</li>
-      <li><strong>Sessions</strong>: view/edit/add clock sessions manually.</li>
-      <li><strong>Spread hours</strong>: proportionally distributes unallocated clock time across logged CCs.</li>
-      <li><strong>Pay period</strong>: CC × working-day table for pre-submission checks.</li>
-      <li>Active CC accrues time approximately every 6 minutes (0.1 hr) while the clock runs.</li>
-    </ul>
 
     <div class="modal-actions">
       <button class="tool-btn primary" onclick="closeModal()">Done</button>
