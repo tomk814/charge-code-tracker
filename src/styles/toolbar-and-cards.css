@@ -11,6 +11,7 @@
   .tool-btn {
     font-size: 11px;
     font-family: var(--font-sans);
+    line-height: 1;
     padding: 4px 10px;
     border: 1px solid var(--bd-1);
     border-radius: 2px;

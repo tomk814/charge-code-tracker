@@ -23,7 +23,7 @@ import {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
 } from './js/cc-modals.js';
 import {
   openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
@@ -73,7 +73,7 @@ Object.assign(window, {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
   // end of day
   openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
   confirmReset, doReset,

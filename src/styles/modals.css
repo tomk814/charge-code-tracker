@@ -116,16 +116,22 @@
 
   .del-btn {
     font-size: 11px;
+    font-family: var(--font-sans);
+    line-height: 1;
     padding: 4px 7px;
     border: 1px solid var(--bd-red);
     border-radius: 2px;
     background: transparent;
     color: var(--red);
     cursor: pointer;
-    margin-right: 4px;
   }
 
   .del-btn:hover { background: var(--bg-red); }
+
+  /* Last action button in any manage row gets the right-edge buffer,
+     regardless of whether a Delete button is present. */
+  .cc-manage-item > button:last-child,
+  .cc-manage-item--nested > button:last-child { margin-right: 4px; }
 
   .reorder-btns {
     display: flex;
