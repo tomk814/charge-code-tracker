@@ -276,7 +276,6 @@ export function openSettings() {
     ${coldStorageRow}
     <div class="modal-actions">
       <button class="tool-btn" onclick="openHelp()">Help</button>
-      <button class="tool-btn" onclick="openAbout()">About</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
     </div>`);
 }

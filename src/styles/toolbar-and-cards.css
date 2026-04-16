@@ -54,6 +54,8 @@
 
   #data-btns {
     display: none;
+    flex-direction: column;
+    align-items: center;
     gap: 6px;
   }
 
