@@ -130,9 +130,12 @@ function validateImport(data) {
   for (let i = 0; i < data.codes.length; i++) {
     const c = data.codes[i];
     if (typeof c !== 'object' || c === null) return `codes[${i}] must be an object.`;
-    if (!c.id)   return `codes[${i}] is missing "id".`;
-    if (!c.code) return `codes[${i}] (id: "${c.id}") is missing "code".`;
-    if (!c.name) return `codes[${i}] (id: "${c.id}") is missing "name".`;
+    if (!('id' in c)) return `codes[${i}] is missing "id".`;
+    if (typeof c.id !== 'string') return `codes[${i}] has invalid "id" (expected string).`;
+    if (!('code' in c)) return `codes[${i}] (id: "${c.id}") is missing "code".`;
+    if (typeof c.code !== 'string') return `codes[${i}] (id: "${c.id}") has invalid "code" (expected string).`;
+    if (!('name' in c)) return `codes[${i}] (id: "${c.id}") is missing "name".`;
+    if (typeof c.name !== 'string') return `codes[${i}] (id: "${c.id}") has invalid "name" (expected string).`;
   }
   if ('days' in data && (typeof data.days !== 'object' || Array.isArray(data.days)))
     return '"days" must be an object, got ' + (Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
