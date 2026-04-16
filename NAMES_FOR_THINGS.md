@@ -53,21 +53,30 @@ Use these names when describing changes to the interface.
 
 ### Data footer panel
 
-Hidden behind the **"last saved"** link. Click the link to reveal for ~4 seconds.
+Hidden behind the **"last saved"** link. Click the link to reveal for ~8 seconds.
 
 | Name | `onclick` | Description |
 |------|-----------|-------------|
-| **Show / Hide increments** | `toggleIncrements()` | Toggles +/− increment buttons on each CC card; label flips to reflect current state |
-| **Show / Hide codes** | `toggleCodes()` | Toggles the `.cc-code` row on each CC card; hiding it makes cards more compact; label flips between "Hide Codes" and "Show Codes" |
-| **Holidays** | `openHolidays()` | Opens the Holidays modal for viewing and editing the company holiday list |
-| **Import JSON** | `importJSON()` | Restore data from a backup JSON file |
-| **Export JSON** | `exportJSON()` | Download current localStorage data as JSON |
-| **Link backup file** | `linkBackupFile()` | Pick a JSON file on disk to use as a persistent backup archive; requires File System Access API (hidden when API unavailable) |
-| **Backup status** | — | Indicator showing backup link state: linked (green dot), needs reconnect, or not linked (`#backup-status`); hidden when API unavailable |
-| **Save to file now** | `saveToFileNow()` | Immediately write current state to the linked backup file; disabled when no file is linked |
-| **Cold storage…** | `openColdStorage()` | Export older days to CSV and prune from localStorage and backup archive; requires File System Access API (hidden when API unavailable) |
-| **Help / About** | `openHelpAbout()` | Opens an in-app quick-reference modal with storage workflow comparison, shortcuts, workflow, and feature tips |
+| **Backup status** | — | Inline text indicator showing backup link state (`#backup-status`): " \| backup linked", " \| click to reconnect", or hidden when not linked |
 | **Reset day** | `confirmReset()` | Clears all hours, clock sessions, and notes for the viewed day; styled in red |
+| **About** | `openAbout()` | Opens the About modal (version, description, author) |
+
+### Settings modal
+
+Opened via the **⚙ (gear) button** at the right end of the toolbar (`openSettings()`). Contains all data management and UI preference controls.
+
+| Name | `onclick` | Description |
+|------|-----------|-------------|
+| **Increment buttons** (UI section) | `toggleIncrements()` | Toggles +/− click-to-increment buttons on each CC card |
+| **Charge codes** (UI section) | `toggleCodes()` | Toggles the `.cc-code` row on each CC card; label flips between "Hide Codes" / "Show Codes" |
+| **Holidays** (UI section) | `openHolidays()` | Opens the Holidays modal for viewing and editing the company holiday list |
+| **Export data** (Manual Backup) | `exportJSON()` | Download current localStorage data as a JSON snapshot |
+| **Import data** (Manual Backup) | `importJSON()` | Restore data from a JSON snapshot file |
+| **Link backup file** (Auto-Backup) | `linkBackupFile()` | Pick a JSON file on disk to use as a persistent backup archive; requires File System Access API (hidden when API unavailable) |
+| **Save to file now** (Auto-Backup) | `saveToFileNow()` | Immediately write current state to the linked backup file; disabled when no file is linked |
+| **Export date range** (Data Management) | `openExportCSV()` | Opens the Export CSV modal to download a date-range CSV |
+| **Cold storage…** (Data Management) | `openColdStorage()` | Export older days to CSV and prune from localStorage and backup archive; requires File System Access API |
+| **Help** (modal actions) | `openHelp()` | Opens the Help modal (daily workflow, storage comparison, shortcuts) |
 
 ### Clock bar sub-elements
 
@@ -157,13 +166,16 @@ Named modals:
 | **Add CC modal** | "Add charge code" toolbar button |
 | **Manage CCs modal** | "Manage CCs" toolbar button |
 | **Edit CC modal** | "Edit" button inside Manage CCs modal |
+| **Delete CC confirmation modal** | "Delete" button inside Manage CCs modal; offers Archive as an alternative; calls `confirmDeleteCC()` |
 | **End of Day modal** | "End of day" toolbar button |
-| **Export CSV modal** | "Export CSV…" toolbar button |
+| **Export CSV modal** | Settings → "Export CSV…" or "Export CSV" button in Pay Period modal |
 | **Auto-Allocate modal** | "Auto-Allocate" toolbar button |
-| **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green |
-| **Holidays modal** | "Holidays" button in the data footer; editable list of holiday dates (one per line, M/D/YYYY) |
-| **Help / About modal** | "Help / About" button in the data footer; includes data safety warning, shortcuts, workflow, and quick-reference tips |
-| **Reset Day modal** | "Reset day" toolbar button |
+| **Pay Period modal** | "Pay period" toolbar button; holiday columns accented green; note-cells accented; includes "Export CSV" button |
+| **Settings modal** | ⚙ gear button at the right end of the toolbar |
+| **Holidays modal** | Settings → "Edit holidays…"; editable list of holiday dates (one per line, M/D/YYYY) |
+| **Help modal** | Settings → "Help"; daily workflow, storage comparison table, shortcuts, and feature tips |
+| **About modal** | "About" link in the data footer |
+| **Reset Day modal** | "Reset day" button in the data footer |
 | **Clock Sessions modal** | "Sessions" button in the clock bar; includes Undo and Cancel buttons |
 | **Clock Start modal** | "Start" button in the clock bar |
 | **Clock Stop modal** | "Stop" button in the clock bar |
