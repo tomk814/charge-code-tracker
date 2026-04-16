@@ -137,8 +137,8 @@ function validateImport(data) {
     if (!('name' in c)) return `codes[${i}] (id: "${c.id}") is missing "name".`;
     if (typeof c.name !== 'string') return `codes[${i}] (id: "${c.id}") has invalid "name" (expected string).`;
   }
-  if ('days' in data && (typeof data.days !== 'object' || Array.isArray(data.days)))
-    return '"days" must be an object, got ' + (Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
+  if ('days' in data && (typeof data.days !== 'object' || data.days === null || Array.isArray(data.days)))
+    return '"days" must be an object, got ' + (data.days === null ? 'null' : Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
   return null;
 }
 
