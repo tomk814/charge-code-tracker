@@ -12,6 +12,7 @@ import {
   getHolidays,
   isHoliday,
   applyHolidayPrePopulate,
+  validateImport,
 } from './persistence.js';
 import { state, replaceState, setViewDate } from './state.js';
 
@@ -265,5 +266,119 @@ describe('applyHolidayPrePopulate()', () => {
   it('returns false when the HOL code is absent from state.codes', () => {
     replaceState({ codes: [], days: {}, holidays: ['2026-04-17'] });
     expect(applyHolidayPrePopulate('2026-04-17')).toBe(false);
+  });
+});
+
+// ── validateImport() ──────────────────────────────────────────────────────────
+
+const VALID_CODE = { id: 'abc123', code: '1234-001', name: 'Prog A — design' };
+
+describe('validateImport()', () => {
+  // ── valid inputs ────────────────────────────────────────────────────────────
+
+  it('returns null for a minimal valid object with an empty codes array', () => {
+    expect(validateImport({ codes: [] })).toBeNull();
+  });
+
+  it('returns null for a valid object with a well-formed code entry', () => {
+    expect(validateImport({ codes: [VALID_CODE] })).toBeNull();
+  });
+
+  it('returns null when the optional days field is absent', () => {
+    expect(validateImport({ codes: [VALID_CODE] })).toBeNull();
+  });
+
+  it('returns null when days is a valid object', () => {
+    expect(validateImport({ codes: [VALID_CODE], days: { '2026-04-16': { hours: {} } } })).toBeNull();
+  });
+
+  it('returns null for a full valid export (codes + days + holidays)', () => {
+    const data = { codes: [VALID_CODE], days: {}, holidays: [] };
+    expect(validateImport(data)).toBeNull();
+  });
+
+  // ── top-level type errors ───────────────────────────────────────────────────
+
+  it('returns an error string for null', () => {
+    expect(validateImport(null)).toMatch(/Top-level value must be a JSON object/);
+  });
+
+  it('returns an error string for an array', () => {
+    const msg = validateImport([]);
+    expect(msg).toMatch(/Top-level value must be a JSON object/);
+    expect(msg).toMatch(/array/);
+  });
+
+  it('returns an error string for a number', () => {
+    expect(validateImport(42)).toMatch(/Top-level value must be a JSON object/);
+  });
+
+  it('returns an error string for a string', () => {
+    expect(validateImport('hello')).toMatch(/Top-level value must be a JSON object/);
+  });
+
+  // ── missing / wrong-type codes field ───────────────────────────────────────
+
+  it('returns an error when the codes field is missing', () => {
+    expect(validateImport({})).toMatch(/Missing required "codes" field/);
+  });
+
+  it('returns an error when codes is not an array (object)', () => {
+    expect(validateImport({ codes: {} })).toMatch(/"codes" must be an array/);
+  });
+
+  it('returns an error when codes is not an array (string)', () => {
+    expect(validateImport({ codes: 'bad' })).toMatch(/"codes" must be an array/);
+  });
+
+  // ── per-entry validation errors ─────────────────────────────────────────────
+
+  it('returns an error when a codes entry is null', () => {
+    expect(validateImport({ codes: [null] })).toMatch(/codes\[0\] must be an object/);
+  });
+
+  it('returns an error when a codes entry is missing "id"', () => {
+    expect(validateImport({ codes: [{ code: 'X', name: 'Y' }] })).toMatch(/codes\[0\] is missing "id"/);
+  });
+
+  it('returns an error when "id" is not a string', () => {
+    expect(validateImport({ codes: [{ id: 99, code: 'X', name: 'Y' }] })).toMatch(/has invalid "id"/);
+  });
+
+  it('returns an error when a codes entry is missing "code"', () => {
+    expect(validateImport({ codes: [{ id: 'abc', name: 'Y' }] })).toMatch(/is missing "code"/);
+  });
+
+  it('returns an error when "code" is not a string', () => {
+    expect(validateImport({ codes: [{ id: 'abc', code: 123, name: 'Y' }] })).toMatch(/has invalid "code"/);
+  });
+
+  it('returns an error when a codes entry is missing "name"', () => {
+    expect(validateImport({ codes: [{ id: 'abc', code: 'X' }] })).toMatch(/is missing "name"/);
+  });
+
+  it('returns an error when "name" is not a string', () => {
+    expect(validateImport({ codes: [{ id: 'abc', code: 'X', name: true }] })).toMatch(/has invalid "name"/);
+  });
+
+  it('reports the correct index for the first invalid entry', () => {
+    const codes = [VALID_CODE, { code: 'Y', name: 'Z' }]; // second entry missing id
+    expect(validateImport({ codes })).toMatch(/codes\[1\]/);
+  });
+
+  // ── days field validation ───────────────────────────────────────────────────
+
+  it('returns an error when days is null', () => {
+    expect(validateImport({ codes: [], days: null })).toMatch(/"days" must be an object/);
+  });
+
+  it('returns an error when days is an array', () => {
+    const msg = validateImport({ codes: [], days: [] });
+    expect(msg).toMatch(/"days" must be an object/);
+    expect(msg).toMatch(/array/);
+  });
+
+  it('returns an error when days is a non-object primitive', () => {
+    expect(validateImport({ codes: [], days: 'bad' })).toMatch(/"days" must be an object/);
   });
 });
