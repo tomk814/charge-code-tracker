@@ -15,5 +15,6 @@ export default defineConfig({
     root: '.',
     include: ['src/**/*.test.js'],
     environment: 'node',
+    setupFiles: ['./src/test-setup.js'],
   },
 });
