@@ -257,9 +257,7 @@ export function openSettings() {
        ${row('Save to file now', `<button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()"${backupLinked ? '' : ' disabled'}>Save now</button>`)}`
     : row('Backup file', `<span style="font-size:12px;color:var(--fg-2)">Requires Chrome or Edge</span>`);
 
-  const coldStorageRow = hasFileApi
-    ? row('Offload older days to CSV and prune from storage', `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`)
-    : '';
+  const coldStorageRow = row('Offload older days to CSV and prune from storage', `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`);
 
   showModal(`<h2>Settings</h2>
     ${subtitle('UI')}
@@ -569,15 +567,27 @@ export async function doColdStorage(cutoffISO) {
     return;
   }
 
-  // 3. Save CSV via Save As dialog
+  // 3. Save CSV via Save As dialog (or blob download fallback)
   try {
-    const csvHandle = await window.showSaveFilePicker({
-      suggestedName: `time_tracker_cold_storage_through_${cutoffISO}.csv`,
-      types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }]
-    });
-    const writable = await csvHandle.createWritable();
-    await writable.write(csv);
-    await writable.close();
+    if ('showSaveFilePicker' in window) {
+      const csvHandle = await window.showSaveFilePicker({
+        suggestedName: `time_tracker_cold_storage_through_${cutoffISO}.csv`,
+        types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }]
+      });
+      const writable = await csvHandle.createWritable();
+      await writable.write(csv);
+      await writable.close();
+    } else {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `time_tracker_cold_storage_through_${cutoffISO}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   } catch(e) {
     if (e.name === 'AbortError') return; // user cancelled — no deletions
     showModal(`<h2>Error</h2>
