@@ -206,7 +206,7 @@ export function openHelp() {
         <tr><td><strong>Ceremony</strong></td><td>Zero permission prompts</td><td>File picker + periodic permission grants</td></tr>
         <tr><td><strong>Retention</strong></td><td>5 weeks in localStorage, auto-pruned</td><td>Unlimited — backup file accumulates all history, auto-saves every 6 min</td></tr>
         <tr><td><strong>Offloading</strong></td><td>Cold storage each pay period → exports CSV, prunes localStorage</td><td>Cold storage yearly at performance season → exports CSV, prunes both</td></tr>
-        <tr><td><strong>Save points</strong></td><td>Export JSON for manual snapshots</td><td>Backup file <em>is</em> the save point</td></tr>
+        <tr><td><strong>Save points</strong></td><td>Export JSON for manual snapshots — Can always replay data from Dayforce if the worst happens</td><td>Backup file <em>is</em> the save point</td></tr>
         <tr><td><strong>Risk</strong></td><td>Clearing browser data = total loss unless you have a JSON backup</td><td>File on disk survives browser wipes</td></tr>
         <tr><td><strong>Boss fight</strong></td><td>Export CSV of the pay period, compile your notes</td><td>Export CSV of the whole year, compile notes into a performance review cheat sheet</td></tr>
       </tbody>
@@ -216,10 +216,8 @@ export function openHelp() {
     <table class="help-table">
       <thead><tr><th>Key</th><th>Action</th></tr></thead>
       <tbody>
-        <tr><td>Scroll up on a CC card</td><td>+0.1 hr</td></tr>
-        <tr><td>Scroll down on a CC card</td><td>−0.1 hr</td></tr>
-        <tr><td>Shift + scroll</td><td>±1.0 hr</td></tr>
-        <tr><td>Shift + click increment button</td><td>±1.0 hr</td></tr>
+        <tr><td>Scroll up or down on a CC card (+shift)</td><td>±0.1 hr (±1.0 hr)</td></tr>
+        <tr><td>Click increment button (+shift)</td><td>±0.1 hr (±1.0 hr)</td></tr>
         <tr><td>Escape</td><td>Close modal</td></tr>
       </tbody>
     </table>
