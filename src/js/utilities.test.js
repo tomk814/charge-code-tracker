@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { esc, uid } from './utilities.js';
 
 // ── esc() ─────────────────────────────────────────────────────────────────────
@@ -57,30 +57,34 @@ describe('esc()', () => {
 // ── uid() ─────────────────────────────────────────────────────────────────────
 
 describe('uid()', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns a string', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
     expect(typeof uid()).toBe('string');
   });
 
-  it('returns a non-empty string', () => {
-    // Math.random() essentially never returns exactly 0
+  it('returns a non-empty string for typical Math.random() values', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.123456789012345);
     expect(uid().length).toBeGreaterThan(0);
   });
 
   it('returns at most 6 characters (slice(2,8) of base-36 float)', () => {
-    for (let i = 0; i < 20; i++) {
-      expect(uid().length).toBeLessThanOrEqual(6);
-    }
+    vi.spyOn(Math, 'random').mockReturnValue(0.123456789012345);
+    expect(uid().length).toBeLessThanOrEqual(6);
   });
 
   it('contains only lowercase base-36 characters [0-9a-z]', () => {
-    for (let i = 0; i < 20; i++) {
-      expect(uid()).toMatch(/^[0-9a-z]+$/);
-    }
+    vi.spyOn(Math, 'random').mockReturnValue(0.987654321);
+    expect(uid()).toMatch(/^[0-9a-z]+$/);
   });
 
-  it('generates distinct IDs across calls', () => {
+  it('generates distinct IDs for distinct Math.random() inputs', () => {
+    let counter = 0;
+    vi.spyOn(Math, 'random').mockImplementation(() => (counter++ + 1) / 200);
     const ids = new Set(Array.from({ length: 100 }, () => uid()));
-    // Collision probability ≈ C(100,2) / 36^6 ≈ 2.2e-6 — negligible
     expect(ids.size).toBe(100);
   });
 });
