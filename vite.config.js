@@ -11,4 +11,9 @@ export default defineConfig({
     },
   },
   plugins: [viteSingleFile()],
+  test: {
+    root: '.',
+    include: ['src/**/*.test.js'],
+    environment: 'node',
+  },
 });
