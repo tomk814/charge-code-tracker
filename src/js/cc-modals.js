@@ -206,7 +206,10 @@ export function openManage() {
     ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
     : '';
 
-  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeSection}${hiddenSection}${archivedSection}
+  showModal(`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Manage charge codes</h2>
+    <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-2);padding:2px 4px" title="Close">&times;</button>
+  </div>${emptyState}${activeSection}${hiddenSection}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
 }
 
