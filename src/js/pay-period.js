@@ -154,6 +154,7 @@ export function openPayPeriodModal(offset = 0) {
       </table>
     </div>
     <div class="modal-actions">
+      <button class="tool-btn" onclick="openExportCSV('${ymdLocal(ppStart)}', '${ymdLocal(ppEnd)}')">Export CSV</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
     </div>`, 'wide');
 }

@@ -348,12 +348,14 @@ async function buildExportDays() {
   return merged;
 }
 
-export async function openExportCSV() {
-  const ppEnd   = payPeriodEnd(today());
-  const ppStart = new Date(ppEnd);
-  ppStart.setDate(ppStart.getDate() - 13);
-  const defaultStart = ppStart.toISOString().slice(0, 10);
-  const defaultEnd   = today();
+export async function openExportCSV(defaultStart, defaultEnd) {
+  if (!defaultStart || !defaultEnd) {
+    const ppEnd   = payPeriodEnd(today());
+    const ppStart = new Date(ppEnd);
+    ppStart.setDate(ppStart.getDate() - 13);
+    defaultStart = ppStart.toISOString().slice(0, 10);
+    defaultEnd   = today();
+  }
 
   // Determine source notice
   let sourceNotice = 'Reading from working set only (no backup file linked \u2014 history limited to ~5\u00a0weeks)';
