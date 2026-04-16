@@ -53,12 +53,6 @@ npm run build        # produces dist/time_tracker.html (single self-contained fi
 npm run preview      # preview the built file locally
 ```
 
-Node is not installed natively on this machine. Run npm commands through WSL:
-
-```bash
-wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
-```
-
 ## Constraints — read before touching anything
 
 - **Build output is a single HTML file.** `npm run build` produces `dist/index.html` with all CSS and JS inlined. No external dependencies at runtime.
@@ -76,7 +70,7 @@ wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
 - Running grand total displayed in header
 - Day navigation: browse any past day's log with `‹` / `›` buttons; past days show a banner and are read-only for increments
 - Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
-- Spread hours: distributes unallocated clock time across selected charge codes
+- Auto-Allocate: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
 - End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; two copy buttons: plain-text summary and CSV
 - Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; holiday columns accented green; per-CC totals column and per-day totals row; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
@@ -86,7 +80,10 @@ wsl bash -c "cd /mnt/e/charge-code-tracker && npm run build"
 - Escape key closes modals
 - Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed: they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
 - Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Holidays button in the hidden data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
-- Help / About modal: in-app quick-reference panel (data safety warning, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
+- Help modal: in-app quick-reference panel (two-workflow storage comparison table, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
+- About modal: version, description and author info accessed via the settings modal
+- Backup file: optional linked JSON file on disk via File System Access API; accumulates all history; auto-saves every 6 minutes; accessed via the settings modal
+- Cold storage: exports older days to CSV and prunes them from localStorage (and the backup archive, if linked); works with or without a linked backup file; requires File System Access API for CSV save
 
 ## Keeping docs in sync
 
@@ -162,7 +159,7 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 | `src/js/live-cc-tracker.js` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
 | `src/js/cc-modals.js` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
 | `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()`, `openHelpAbout()`; Export CSV (date-range); Cold Storage |
-| `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` |
+| `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` — Auto-Allocate modal |
 | `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
 | `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
 
