@@ -317,6 +317,7 @@
     white-space: nowrap;
     border-right: 1px solid var(--bd-2);
   }
+  .pp-cell.pp-cell-has-note { color: var(--blue); font-weight: 600; }
 
   .pp-cell {
     font-family: var(--font-mono);

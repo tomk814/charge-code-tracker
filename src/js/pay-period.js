@@ -103,9 +103,10 @@ export function openPayPeriodModal(offset = 0) {
 
   const isCurDay = iso => iso === todayIso;
   const isWeekend = iso => { const dow = new Date(iso + 'T12:00:00').getDay(); return dow === 0 || dow === 6; };
-  const hrsCell = (h, iso, extra) => {
+  const hrsCell = (h, iso, extra, ccId) => {
+    const hasNote = ccId && (((state.days[iso] || {}).notes || {})[ccId] || '').trim();
     const cls = ['pp-cell', isCurDay(iso) ? 'pp-today' : '', isWeekend(iso) ? 'pp-weekend' : '',
-                 isHoliday(iso) ? 'pp-holiday' : '', extra].filter(Boolean).join(' ');
+                 isHoliday(iso) ? 'pp-holiday' : '', hasNote ? 'pp-cell-has-note' : '', extra].filter(Boolean).join(' ');
     return `<td class="${cls}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
   };
 
@@ -126,7 +127,7 @@ export function openPayPeriodModal(offset = 0) {
         const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
         return `<tr class="pp-row">
           <td class="pp-cell-label" title="${esc(cc.code)}: ${esc(cc.name)}">${esc(label)}</td>
-          ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '')).join('')}
+          ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '', cc.id)).join('')}
           <td class="pp-total-cell">${ccTotal(cc).toFixed(1)}</td>
         </tr>`;
       }).join('')
