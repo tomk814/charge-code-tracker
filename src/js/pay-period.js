@@ -122,7 +122,8 @@ export function openPayPeriodModal(offset = 0) {
   const tbody = activeCCs.length
     ? activeCCs.map(cc => {
         const prog  = (cc.program || '').trim();
-        const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
+        const progDisplay = (cc.programNickname || prog).trim();
+        const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
         return `<tr class="pp-row">
           <td class="pp-cell-label" title="${esc(cc.code)}: ${esc(cc.name)}">${esc(label)}</td>
           ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '')).join('')}

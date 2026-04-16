@@ -92,6 +92,7 @@ export function renderIndividualCard(cc, day) {
 export function renderProgramCard(programName, codes, day) {
   const pgTotal = codes.reduce((s,c) => s + (day.hours[c.id] || 0), 0);
   const isCollapsed = !!(state.collapsedGroups && state.collapsedGroups[programName]);
+  const pgDisplayName = codes.find(c => c.programNickname)?.programNickname || programName;
   const rows = codes.map(cc => {
     const isTracking = state.activeTimer && state.activeTimer.ccId === cc.id;
     return `<div class="pg-row${isTracking?' active-tracking':''}" onwheel="handleCardWheel('${cc.id}',event)">${renderCCControls(cc, day)}</div>`;
@@ -99,7 +100,7 @@ export function renderProgramCard(programName, codes, day) {
   return `<div class="pg-card${isCollapsed?' collapsed':''}" data-pg="${esc(programName)}">
     <div class="pg-header" onclick="toggleProgramGroup(this.closest('.pg-card').dataset.pg)">
       <span class="pg-chevron">▼</span>
-      <div class="pg-name">${esc(programName)}</div>
+      <div class="pg-name" title="${esc(programName)}">${esc(pgDisplayName)}</div>
       <div class="pg-total ${pgTotal===0?'zero':''}">${pgTotal.toFixed(1)}</div>
     </div>
     ${rows}

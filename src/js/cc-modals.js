@@ -19,11 +19,13 @@ export function openAddCC() {
   showModal(`<h2>Add charge code</h2>
     <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
     <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
-    <div class="field"><label>Program</label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
-    <div class="field"><label>Activity</label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
-    <div class="field"><label>Nickname (Optional)</label><input id="m-nickname" placeholder="short display name" autocomplete="off"></div>
-    <div class="field"><label>Work Package (Optional)</label><input id="m-wp" placeholder="e.g. WP-001" autocomplete="off"></div>
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
+    <div class="field"><label>Program <span style="color:var(--red)">*</span></label><input id="m-program" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Program Nickname (Optional)</label><input id="m-programNickname" autocomplete="off"></div>
+    <div class="field"><label>Work Package (Optional)</label><input id="m-wp" placeholder="e.g. WP-001" autocomplete="off"></div>
+    <div class="field"><label>WP Nickname (Optional)</label><input id="m-wpNickname" autocomplete="off"></div>
+    <div class="field"><label>Activity <span style="color:var(--red)">*</span></label><input id="m-name" placeholder="e.g. design" autocomplete="off"></div>
+    <div class="field"><label>Activity Nickname (Optional)</label><input id="m-nickname" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
@@ -51,10 +53,12 @@ export function submitAddCC() {
   const code = document.getElementById('m-code').value.trim();
   const name = document.getElementById('m-name').value.trim();
   const program = document.getElementById('m-program').value.trim();
+  const programNickname = document.getElementById('m-programNickname').value.trim();
   const wp = document.getElementById('m-wp').value.trim();
+  const wpNickname = document.getElementById('m-wpNickname').value.trim();
   const nickname = document.getElementById('m-nickname').value.trim();
-  if (!code) return;
-  state.codes.push({id:uid(), code, name: name||code, program, wp, nickname});
+  if (!program || !name) return;
+  state.codes.push({id:uid(), code, name, program, programNickname, wp, wpNickname, nickname});
   save(state);
   closeModal();
   render();
@@ -139,13 +143,14 @@ export function openManage() {
               <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
               ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
             </div>`).join('');
+          const pgDisplayName = block.codes.find(c => c.programNickname)?.programNickname || block.name;
           return `<div class="pg-manage-block">
             <div class="pg-manage-header">
               <div class="reorder-btns">
                 <button class="reorder-btn" onclick="moveBlock(${bi},-1)" ${bUp} title="Move program up">&#9650;</button>
                 <button class="reorder-btn" onclick="moveBlock(${bi},1)" ${bDn} title="Move program down">&#9660;</button>
               </div>
-              <span class="pg-manage-name">${esc(block.name)}</span>
+              <span class="pg-manage-name" title="${esc(block.name)}">${esc(pgDisplayName)}</span>
             </div>${ccRows}
           </div>`;
         } else {
@@ -209,16 +214,18 @@ export function openEditCC(id) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
   showModal(`<h2>Edit charge code</h2>
-    <div class="field"><label>Program</label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
-    <div class="field"><label>Activity</label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
-    <div class="field"><label>Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" placeholder="short display name" autocomplete="off"></div>
+    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" placeholder="e.g. 1234-001" autocomplete="off"></div>
+    <div class="field"><label>Program <span style="color:var(--red)">*</span></label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Program Nickname (Optional)</label><input id="e-programNickname" value="${esc(cc.programNickname||'')}" autocomplete="off"></div>
     <div class="field"><label>Work Package (Optional)</label><input id="e-wp" value="${esc(cc.wp||'')}" placeholder="e.g. WP-001" autocomplete="off"></div>
-    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" autocomplete="off"></div>
+    <div class="field"><label>WP Nickname (Optional)</label><input id="e-wpNickname" value="${esc(cc.wpNickname||'')}" autocomplete="off"></div>
+    <div class="field"><label>Activity <span style="color:var(--red)">*</span></label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
+    <div class="field"><label>Activity Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
     </div>`);
-  setTimeout(()=>document.getElementById('e-program')?.focus(),50);
+  setTimeout(()=>document.getElementById('e-code')?.focus(),50);
 }
 
 export function submitEditCC(id) {
@@ -227,13 +234,17 @@ export function submitEditCC(id) {
   const code = document.getElementById('e-code').value.trim();
   const name = document.getElementById('e-name').value.trim();
   const program = document.getElementById('e-program').value.trim();
+  const programNickname = document.getElementById('e-programNickname').value.trim();
   const wp = document.getElementById('e-wp').value.trim();
+  const wpNickname = document.getElementById('e-wpNickname').value.trim();
   const nickname = document.getElementById('e-nickname').value.trim();
-  if (!code) return;
+  if (!program || !name) return;
   cc.code = code;
-  cc.name = name || code;
+  cc.name = name;
   cc.program = program;
+  cc.programNickname = programNickname;
   cc.wp = wp;
+  cc.wpNickname = wpNickname;
   cc.nickname = nickname;
   save(state);
   render();
