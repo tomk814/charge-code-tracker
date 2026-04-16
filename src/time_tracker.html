@@ -36,21 +36,7 @@
   <div class="cc-list" id="cc-list"></div>
 
   <div class="data-footer">
-    <span id="last-saved-label" onclick="revealDataButtons()">not saved yet</span>
-    <div id="data-btns">
-      <button class="tool-btn" onclick="openExportCSV()">Export CSV&#8230;</button>
-      <button class="tool-btn" onclick="importJSON()">Import JSON</button>
-      <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
-      <span id="backup-ui" style="display:none">
-        <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
-        <span id="backup-status" class="backup-status not-linked"><span class="backup-dot"></span>No backup file</span>
-        <button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()" disabled>Save to file now</button>
-      </span>
-      <span id="cold-storage-ui" style="display:none">
-        <button class="tool-btn" onclick="openColdStorage()">Cold storage…</button>
-      </span>
-      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
-    </div>
+    <span id="last-saved-label">not saved yet</span><span id="backup-status" class="backup-status not-linked"></span>
   </div>
 </div>
 <input type="file" id="json-file-input" accept=".json,application/json" style="display:none" onchange="handleJSONFile(event)">

@@ -241,20 +241,49 @@ export function openAbout() {
 }
 
 export function openSettings() {
+  const hasFileApi   = 'showSaveFilePicker' in window;
+  const backupLinked = !!(document.getElementById('backup-status')?.classList.contains('linked'));
+
+  const autoBackupSection = hasFileApi
+    ? `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+         <button class="tool-btn" onclick="linkBackupFile()">Link backup file</button>
+         <button class="tool-btn" id="save-backup-btn" onclick="saveToFileNow()"${backupLinked ? '' : ' disabled'}>Save to file now</button>
+       </div>`
+    : `<p style="font-size:12px;color:var(--fg-2);padding:8px 0;border-bottom:1px solid var(--bd-2);margin:0">Not supported \u2014 use Chrome or Edge</p>`;
+
+  const coldStorageBtn = hasFileApi
+    ? `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`
+    : '';
+
+  const subtitle = label =>
+    `<div style="font-size:10px;font-weight:700;color:var(--fg-2);text-transform:uppercase;letter-spacing:.08em;padding:10px 0 4px">${label}</div>`;
+
+  const row = (label, btn) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+       <span style="font-size:13px;color:var(--fg-1)">${label}</span>${btn}
+     </div>`;
+
   showModal(`<h2>Settings</h2>
-    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
-        <span style="font-size:13px;color:var(--fg-1)">Increment buttons</span>
-        <button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">${state.showIncrements ? 'Scroll to Increment' : 'Click to Increment'}</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
-        <span style="font-size:13px;color:var(--fg-1)">Charge codes</span>
-        <button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">${state.showCodes !== false ? 'Hide Codes' : 'Show Codes'}</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0">
-        <span style="font-size:13px;color:var(--fg-1)">Holidays</span>
-        <button class="tool-btn" onclick="openHolidays()">Edit holidays&#8230;</button>
-      </div>
+    ${subtitle('UI')}
+    <div style="display:flex;flex-direction:column;gap:0;margin-bottom:4px">
+      ${row('Increment buttons', `<button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">${state.showIncrements ? 'Scroll to Increment' : 'Click to Increment'}</button>`)}
+      ${row('Charge codes', `<button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">${state.showCodes !== false ? 'Hide Codes' : 'Show Codes'}</button>`)}
+      ${row('Holidays', `<button class="tool-btn" onclick="openHolidays()">Edit holidays&#8230;</button>`)}
+    </div>
+    ${subtitle('Manual Backup')}
+    <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+      <button class="tool-btn" onclick="exportJSON()">Export JSON</button>
+      <button class="tool-btn" onclick="importJSON()">Import JSON</button>
+    </div>
+    ${subtitle('Auto-Backup File')}
+    ${autoBackupSection}
+    ${subtitle('Data Management')}
+    <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd-2)">
+      <button class="tool-btn" onclick="openExportCSV()">Export CSV\u2026</button>
+      ${coldStorageBtn}
+    </div>
+    <div style="padding:8px 0">
+      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="confirmReset()">Reset day</button>
     </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openHelp()">Help</button>

@@ -16,7 +16,6 @@ export function _injectDeps({ getState, replaceState, render, renderClock, ensur
 
 const STORAGE_KEY = 'cc_tracker_v3';
 let lastSavedAt = null;
-let _dataBtnTimer = null;
 
 // ── Persistence ─────────────────────────────────────────────────────────────
 // v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
@@ -89,19 +88,6 @@ export function updateLastSaved() {
   if (!lastSavedAt) { el.textContent = 'not saved yet'; return; }
   const t = lastSavedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   el.textContent = `last saved ${t}`;
-}
-
-export function revealDataButtons() {
-  const btns = document.getElementById('data-btns');
-  if (!btns) return;
-  btns.style.display = 'flex';
-  clearTimeout(_dataBtnTimer);
-  _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
-  btns.onmouseenter = () => clearTimeout(_dataBtnTimer);
-  btns.onmouseleave = () => {
-    clearTimeout(_dataBtnTimer);
-    _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
-  };
 }
 
 export function exportJSON() {
@@ -246,26 +232,26 @@ async function clearBackupHandle() {
 }
 
 export function renderBackupStatus(perm) {
-  const el        = document.getElementById('backup-status');
-  const saveBtn   = document.getElementById('save-backup-btn');
+  const el      = document.getElementById('backup-status');
+  const saveBtn = document.getElementById('save-backup-btn');
   if (!el) return;
   if (perm === 'granted') {
     const note = _idbUnavailable ? ' (session only)' : '';
-    el.className = 'backup-status linked';
-    el.innerHTML = `<span class="backup-dot"></span>Backup linked${esc(note)}`;
+    el.className   = 'backup-status linked';
+    el.textContent = ' | backup linked' + note;
+    el.style.display = 'inline';
     el.onclick = null;
-    if (saveBtn) saveBtn.disabled = false;
   } else if (perm === 'prompt') {
-    el.className = 'backup-status permission-needed';
-    el.innerHTML = '<span class="backup-dot"></span>Click to reconnect';
+    el.className   = 'backup-status permission-needed';
+    el.textContent = ' | click to reconnect';
+    el.style.display = 'inline';
     el.onclick = reconnectBackup;
-    if (saveBtn) saveBtn.disabled = true;
   } else {
-    el.className = 'backup-status not-linked';
-    el.innerHTML = '<span class="backup-dot"></span>No backup file';
-    el.onclick = null;
-    if (saveBtn) saveBtn.disabled = true;
+    el.className   = 'backup-status not-linked';
+    el.textContent = '';
+    el.style.display = 'none';
   }
+  if (saveBtn) saveBtn.disabled = (perm !== 'granted');
 }
 
 function renderBackupBanner() {

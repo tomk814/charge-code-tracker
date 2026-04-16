@@ -37,24 +37,14 @@
   .data-footer {
     margin-top: 18px;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
   }
 
   #last-saved-label {
     font-size: 10px;
     font-family: var(--font-mono);
     color: var(--fg-2);
-    cursor: pointer;
-    user-select: none;
-  }
-
-  #last-saved-label:hover { color: var(--fg-1); }
-
-  #data-btns {
-    display: none;
-    gap: 6px;
   }
 
   .cc-card {

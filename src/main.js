@@ -6,7 +6,7 @@ import './styles/index.css';
 import { state } from './js/state.js';
 import {
   _injectDeps, save, ensurePayAdjustmentCodes,
-  revealDataButtons, exportJSON, importJSON, handleJSONFile,
+  exportJSON, importJSON, handleJSONFile,
   linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner,
   reconnectBackup, checkBackupPermission,
 } from './js/persistence.js';
@@ -90,7 +90,7 @@ Object.assign(window, {
   resetClockSession, cancelClockSession,
   updateClockSession, deleteClockSession, addClockSession,
   // persistence / data panel
-  revealDataButtons, exportJSON, importJSON, handleJSONFile,
+  exportJSON, importJSON, handleJSONFile,
   linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner, reconnectBackup,
 });
 
@@ -98,12 +98,8 @@ Object.assign(window, {
 render();
 renderClock();
 
-// Show backup UI and check permission if File System Access API is available
+// Check backup file permission if File System Access API is available
 if ('showSaveFilePicker' in window) {
-  const backupUi = document.getElementById('backup-ui');
-  if (backupUi) backupUi.style.display = 'contents';
-  const coldUi = document.getElementById('cold-storage-ui');
-  if (coldUi) coldUi.style.display = 'contents';
   checkBackupPermission();
 }
 
