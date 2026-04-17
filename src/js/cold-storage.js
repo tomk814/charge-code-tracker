@@ -1,7 +1,8 @@
 // Cold storage: prune entries ≤ cutoff from archive and localStorage; write them to CSV first.
 
 import { state } from './state.js';
-import { getBackupHandle, today, ymdLocal, save } from './persistence.js';
+import { today, ymdLocal, save } from './persistence.js';
+import { getBackupHandle } from './backup.js';
 import { esc } from './utilities.js';
 import { showModal } from './modal-infra.js';
 import { buildRangeCSV } from './export.js';

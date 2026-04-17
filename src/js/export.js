@@ -1,7 +1,8 @@
 // CSV export: date-range picker modal and CSV file generation.
 
 import { state } from './state.js';
-import { getBackupHandle, today } from './persistence.js';
+import { today } from './persistence.js';
+import { getBackupHandle } from './backup.js';
 import { esc } from './utilities.js';
 import { showModal, closeModal } from './modal-infra.js';
 import { payPeriodEnd } from './pay-period.js';

@@ -6,10 +6,12 @@ import './styles/index.css';
 import { state } from './js/state.js';
 import {
   _injectDeps, save, ensurePayAdjustmentCodes,
-  revealDataButtons, exportJSON, importJSON, handleJSONFile,
-  linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner,
-  reconnectBackup, checkBackupPermission,
+  exportJSON, importJSON, handleJSONFile,
 } from './js/persistence.js';
+import {
+  revealDataButtons, linkBackupFile, saveToFileNow, grantBackupAccess,
+  dismissBackupBanner, reconnectBackup, checkBackupPermission,
+} from './js/backup.js';
 import { replaceState } from './js/state.js';
 import { navigate, goToToday } from './js/day-navigation.js';
 import {

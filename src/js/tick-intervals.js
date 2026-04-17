@@ -1,57 +1,9 @@
 // 30-second tick for midnight auto-advance; 1-second tick for live CC auto-commit.
 
 import { state, viewDate, setViewDate } from './state.js';
-import { dayData, save, today, ymdLocal } from './persistence.js';
-import { esc } from './utilities.js';
-import { showModal } from './modal-infra.js';
-import { clockIsRunning, renderClock } from './clock.js';
-import { finalizeActiveTimer } from './live-cc-tracker.js';
+import { dayData, save, today } from './persistence.js';
+import { clockIsRunning, renderClock, handleMidnightRollover } from './clock.js';
 import { render, renderPayPeriod } from './pay-period.js';
-
-// Splits a running clock session across midnight: closes at 23:59 on prevDate,
-// opens at 00:00 on newDate, carries over the active CC, and shows a warning modal.
-function handleMidnightRollover(prevDate, newDate) {
-  const prevDay = dayData(prevDate);
-  const openSession = prevDay.clock.sessions.find(s => s.end === null);
-
-  // Close any running session at the end of the previous day
-  if (openSession) openSession.end = "23:59";
-
-  // Capture active CC id before finalizing
-  const activeCCId = (state.activeTimer && state.activeTimer.ccId) || null;
-  finalizeActiveTimer();
-  state.activeTimer = null;
-
-  // Carry the session and active CC into the new day
-  if (openSession) {
-    dayData(newDate).clock.sessions.push({start: "00:00", end: null});
-    if (activeCCId) {
-      state.activeTimer = {ccId: activeCCId, startedDate: newDate, sessionStart: Date.now(), committedTenths: 0};
-    }
-  }
-
-  save(state);
-
-  // Build warning modal
-  const cc = activeCCId ? state.codes.find(c => c.id === activeCCId) : null;
-  const ccLabel = cc
-    ? ((cc.program||'').trim() ? `${esc(cc.program)} \u2014 ${esc(cc.name)}` : esc(cc.name))
-    : null;
-  const sessionMsg = openSession
-    ? `<p style="margin:6px 0;font-size:12px">Running session closed at <strong>23:59</strong> on ${prevDate} and continued from <strong>00:00</strong> on ${newDate}.</p>`
-    : `<p style="margin:6px 0;font-size:12px;color:var(--fg-2)">No running session to carry over.</p>`;
-  const ccMsg = (openSession && ccLabel)
-    ? `<p style="margin:6px 0;font-size:12px">Active charge code <strong>${ccLabel}</strong> continues on the new day.</p>`
-    : '';
-  showModal(
-    `<h2>&#9200; Day rolled over at midnight</h2>
-    <p style="margin:4px 0 8px;font-size:12px;color:var(--fg-2)">${prevDate} &rarr; ${newDate}</p>
-    ${sessionMsg}${ccMsg}
-    <div class="modal-actions">
-      <button class="tool-btn primary" onclick="closeModal()">OK</button>
-    </div>`
-  );
-}
 
 // Refresh every 30 s; auto-advance viewDate at midnight
 let _tickDate = today();

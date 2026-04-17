@@ -30,7 +30,8 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 │   └── js/
 │       ├── utilities.js           ← esc(), uid()
 │       ├── modal-infra.js         ← showModal(), closeModal()
-│       ├── persistence.js         ← localStorage, backup file, holidays
+│       ├── persistence.js         ← localStorage load/save, migration, dayData, JSON import/export, holidays
+│       ├── backup.js              ← backup file (IndexedDB + File System Access API), status UI, auto-save
 │       ├── state.js               ← global state + viewDate init
 │       ├── day-navigation.js      ← navigate(), goToToday()
 │       ├── cc-rendering.js        ← card rendering, getBlocks(), wheel handler
@@ -43,7 +44,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 │       ├── export.js              ← CSV export (date-range picker + file generation)
 │       ├── cold-storage.js        ← Cold storage archival workflow
 │       ├── spread-hours.js        ← Auto-Allocate modal
-│       ├── clock.js               ← wall-clock bar, sessions modal
+│       ├── clock.js               ← wall-clock bar, sessions modal, midnight rollover
 │       ├── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
 │       └── *.test.js              ← Vitest unit tests (one file per module)
 └── dist/
@@ -178,7 +179,8 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 |---|---|
 | `src/js/utilities.js` | `esc()` HTML-escape helper, `uid()` random-ID generator |
 | `src/js/modal-infra.js` | `showModal(html)` and `closeModal()` |
-| `src/js/persistence.js` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import, `validateImport()`; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()`; backup file (IndexedDB + File System Access API) |
+| `src/js/persistence.js` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import, `validateImport()`; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()` |
+| `src/js/backup.js` | Backup file management: IndexedDB handle storage, File System Access API read/write, `renderBackupStatus()`, `scheduleBackupWrite()`, `revealDataButtons()` |
 | `src/js/state.js` | Global `state` and `viewDate` init; `ensurePayAdjustmentCodes()` call; stale active-timer cleanup |
 | `src/js/day-navigation.js` | `navigate(delta)`, `goToToday()` |
 | `src/js/cc-rendering.js` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler, `getBlocks()`, `blocksToFlat()` |
@@ -191,7 +193,7 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 | `src/js/export.js` | `buildRangeCSV()` (pure), `buildExportDays()`, `openExportCSV()`, `doExportCSV()` — CSV export by date range |
 | `src/js/cold-storage.js` | `openColdStorage()`, `updateColdStoragePreview()`, `prepColdStorageConfirm()`, `doColdStorage()` — archive older days to CSV and prune from storage |
 | `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` — Auto-Allocate modal |
-| `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
+| `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal, `handleMidnightRollover()` |
 | `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
 
 ### CSS module index
