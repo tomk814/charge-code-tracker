@@ -1,7 +1,7 @@
 // CSV export: date-range picker modal and CSV file generation.
 
 import { state } from './state.js';
-import { today } from './persistence.js';
+import { today, ymdLocal } from './persistence.js';
 import { getBackupHandle } from './backup.js';
 import { esc } from './utilities.js';
 import { showModal, closeModal } from './modal-infra.js';
@@ -52,7 +52,7 @@ export async function openExportCSV(defaultStart, defaultEnd) {
     const ppEnd   = payPeriodEnd(today());
     const ppStart = new Date(ppEnd);
     ppStart.setDate(ppStart.getDate() - 13);
-    defaultStart = ppStart.toISOString().slice(0, 10);
+    defaultStart = ymdLocal(ppStart);
     defaultEnd   = today();
   }
 
