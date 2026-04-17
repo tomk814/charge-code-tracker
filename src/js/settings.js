@@ -60,7 +60,7 @@ export function openAbout() {
   showModal(`<h2>About</h2>
     <div style="margin-bottom:16px">
       <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
-      <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version 1.0.0</div>
+      <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version ${import.meta.env.VITE_APP_VERSION ?? 'dev'}</div>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server - your data stays on your machine.</p>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:16px">Built by AI, Jockeyed by Tom Knight.</p>
       <!-- If this saves you a few minutes every day, a coffee is a great way to say thanks! -->
