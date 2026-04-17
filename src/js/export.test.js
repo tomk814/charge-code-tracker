@@ -1,8 +1,8 @@
-// Tests for buildRangeCSV() — the date-range CSV export formatter.
+// Tests for export.js — specifically buildRangeCSV(), the date-range CSV formatter.
 // This is a pure function: takes explicit arguments, no state or DOM access.
 
 import { describe, it, expect } from 'vitest';
-import { buildRangeCSV } from './end-of-day.js';
+import { buildRangeCSV } from './export.js';
 
 // Minimal CC objects used across tests
 const CC_A = { id: 'a1', code: '1234-A', name: 'Alpha Task', program: 'Prog A', wp: 'WP-001', nickname: 'Alpha' };
