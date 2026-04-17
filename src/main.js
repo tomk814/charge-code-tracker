@@ -25,13 +25,11 @@ import {
   moveBlock, moveCCInBlock,
   openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
 } from './js/cc-modals.js';
-import {
-  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
-  confirmReset, doReset,
-  openHolidays, saveHolidays, openHelp, openAbout, openSettings,
-  openExportCSV, doExportCSV,
-  openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
-} from './js/end-of-day.js';
+import { openEndOfDay, saveEodNote, copyEndOfDay, confirmReset, doReset } from './js/end-of-day.js';
+import { openSettings, openHelp, openAbout } from './js/settings.js';
+import { openHolidays, saveHolidays } from './js/holidays.js';
+import { openExportCSV, doExportCSV } from './js/export.js';
+import { openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage } from './js/cold-storage.js';
 import {
   openSpread, refreshSpreadPreview, applySpread,
 } from './js/spread-hours.js';
@@ -75,10 +73,14 @@ Object.assign(window, {
   moveBlock, moveCCInBlock,
   openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
   // end of day
-  openEndOfDay, saveEodNote, copyEndOfDay, clearEodNotes,
-  confirmReset, doReset,
-  openHolidays, saveHolidays, openHelp, openAbout, openSettings,
+  openEndOfDay, saveEodNote, copyEndOfDay, confirmReset, doReset,
+  // settings / help / about
+  openSettings, openHelp, openAbout,
+  // holidays
+  openHolidays, saveHolidays,
+  // export
   openExportCSV, doExportCSV,
+  // cold storage
   openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
   // spread hours
   openSpread, refreshSpreadPreview, applySpread,

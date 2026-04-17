@@ -37,7 +37,11 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 │       ├── pay-period.js          ← pay period bar + main render()
 │       ├── live-cc-tracker.js     ← setActiveCC, finalizeActiveTimer
 │       ├── cc-modals.js           ← Add/Edit/Manage/Delete CC modals
-│       ├── end-of-day.js          ← EOD modal, holidays, export CSV, cold storage
+│       ├── end-of-day.js          ← EOD modal: hours summary, notes, copy, day reset
+│       ├── settings.js            ← Settings, Help, and About modals
+│       ├── holidays.js            ← Holiday list editor modal
+│       ├── export.js              ← CSV export (date-range picker + file generation)
+│       ├── cold-storage.js        ← Cold storage archival workflow
 │       ├── spread-hours.js        ← Auto-Allocate modal
 │       ├── clock.js               ← wall-clock bar, sessions modal
 │       ├── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
@@ -181,7 +185,11 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 | `src/js/pay-period.js` | Pay period bar calculation, holiday column highlighting, `openPayPeriodModal()`, and main `render()` |
 | `src/js/live-cc-tracker.js` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
 | `src/js/cc-modals.js` | `isProtectedCC()` (regex guard for `pa0001`–`pa0009`); Add (with Dayforce paste), Edit, Manage list, `confirmDeleteCC()`, `deleteCC()` modals; Archive/Delete guards for Pay Adjustment CCs |
-| `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, day reset; `openHolidays()`, `saveHolidays()`, `openHelp()`, `openAbout()`, `openSettings()`; Export CSV (date-range); Cold Storage |
+| `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, day reset (`confirmReset`, `doReset`) |
+| `src/js/settings.js` | `openSettings()` — settings modal (UI toggles, backup, data management); `openHelp()` — in-app quick-reference; `openAbout()` — version/license info |
+| `src/js/holidays.js` | `openHolidays()`, `saveHolidays()` — holiday list editor modal |
+| `src/js/export.js` | `buildRangeCSV()` (pure), `buildExportDays()`, `openExportCSV()`, `doExportCSV()` — CSV export by date range |
+| `src/js/cold-storage.js` | `openColdStorage()`, `updateColdStoragePreview()`, `prepColdStorageConfirm()`, `doColdStorage()` — archive older days to CSV and prune from storage |
 | `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` — Auto-Allocate modal |
 | `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
 | `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
