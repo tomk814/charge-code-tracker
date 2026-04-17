@@ -6,6 +6,9 @@ import {
   _injectDeps,
   ymdLocal,
   load,
+  save,
+  getSetting,
+  DEFAULT_SETTINGS,
   PREDEFINED_PA_CODES,
   ensurePayAdjustmentCodes,
   dayData,
@@ -68,6 +71,45 @@ describe('load()', () => {
     const result = load();
     expect(result.codes).toHaveLength(1);
     expect(result.codes[0].id).toBe('abc');
+  });
+});
+
+// ── getSetting() ─────────────────────────────────────────────────────────────
+
+describe('getSetting()', () => {
+  it('returns the state value when it is valid', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '2025-12-20' } });
+    expect(getSetting('payPeriodAnchor')).toBe('2025-12-20');
+  });
+
+  it('returns DEFAULT_SETTINGS.payPeriodAnchor when state has no settings', () => {
+    replaceState({ codes: [], days: {}, holidays: [] });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is not a string', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: 20260404 } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor has wrong format', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '4/4/2026' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is an impossible calendar date', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '2026-02-30' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is an empty string', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('does not apply payPeriodAnchor validation to other keys', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { localRetentionDays: 14 } });
+    expect(getSetting('localRetentionDays')).toBe(14);
   });
 });
 
@@ -380,5 +422,137 @@ describe('validateImport()', () => {
 
   it('returns an error when days is a non-object primitive', () => {
     expect(validateImport({ codes: [], days: 'bad' })).toMatch(/"days" must be an object/);
+  });
+
+  // ── settings field validation ───────────────────────────────────────────────
+
+  it('returns null when settings is absent', () => {
+    expect(validateImport({ codes: [] })).toBeNull();
+  });
+
+  it('returns null for a valid settings object with both known keys', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: 35, payPeriodAnchor: '2026-04-04' } })).toBeNull();
+  });
+
+  it('returns null when settings is an empty object', () => {
+    expect(validateImport({ codes: [], settings: {} })).toBeNull();
+  });
+
+  it('returns an error when settings is null', () => {
+    expect(validateImport({ codes: [], settings: null })).toMatch(/"settings" must be an object/);
+  });
+
+  it('returns an error when settings is an array', () => {
+    const msg = validateImport({ codes: [], settings: [] });
+    expect(msg).toMatch(/"settings" must be an object/);
+    expect(msg).toMatch(/array/);
+  });
+
+  it('returns an error when settings is a string', () => {
+    expect(validateImport({ codes: [], settings: 'bad' })).toMatch(/"settings" must be an object/);
+  });
+
+  // localRetentionDays
+  it('returns null when localRetentionDays is 0 (minimum valid)', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: 0 } })).toBeNull();
+  });
+
+  it('returns an error when localRetentionDays is negative', () => {
+    const msg = validateImport({ codes: [], settings: { localRetentionDays: -1 } });
+    expect(msg).toMatch(/localRetentionDays/);
+    expect(msg).toMatch(/finite non-negative integer/);
+  });
+
+  it('returns an error when localRetentionDays is a float', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: 1.5 } })).toMatch(/localRetentionDays/);
+  });
+
+  it('returns an error when localRetentionDays is Infinity', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: Infinity } })).toMatch(/localRetentionDays/);
+  });
+
+  it('returns an error when localRetentionDays is NaN', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: NaN } })).toMatch(/localRetentionDays/);
+  });
+
+  it('returns an error when localRetentionDays is a string', () => {
+    expect(validateImport({ codes: [], settings: { localRetentionDays: '35' } })).toMatch(/localRetentionDays/);
+  });
+
+  // payPeriodAnchor
+  it('returns null for a valid payPeriodAnchor', () => {
+    expect(validateImport({ codes: [], settings: { payPeriodAnchor: '2026-04-04' } })).toBeNull();
+  });
+
+  it('returns an error when payPeriodAnchor is not a string', () => {
+    expect(validateImport({ codes: [], settings: { payPeriodAnchor: 20260404 } })).toMatch(/payPeriodAnchor/);
+  });
+
+  it('returns an error when payPeriodAnchor has wrong format', () => {
+    expect(validateImport({ codes: [], settings: { payPeriodAnchor: '4/4/2026' } })).toMatch(/payPeriodAnchor/);
+  });
+
+  it('returns an error when payPeriodAnchor is an impossible calendar date', () => {
+    expect(validateImport({ codes: [], settings: { payPeriodAnchor: '2026-02-30' } })).toMatch(/payPeriodAnchor/);
+  });
+
+  it('returns an error when payPeriodAnchor is an empty string', () => {
+    expect(validateImport({ codes: [], settings: { payPeriodAnchor: '' } })).toMatch(/payPeriodAnchor/);
+  });
+});
+
+// ── save() — retentionDays clamping ───────────────────────────────────────────
+
+function makeState(retentionDays, dayKeys) {
+  const days = {};
+  for (const k of dayKeys) days[k] = { hours: {}, clock: { sessions: [] } };
+  return { codes: [], days, holidays: [], settings: { localRetentionDays: retentionDays } };
+}
+
+describe('save() retentionDays clamping', () => {
+  it('prunes oldest days when count exceeds a valid retentionDays', () => {
+    const s = makeState(2, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toEqual(['2026-01-02', '2026-01-03']);
+  });
+
+  it('does not prune when day count equals retentionDays', () => {
+    const s = makeState(3, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(3);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is negative', () => {
+    const dayKeys = Array.from({ length: DEFAULT_SETTINGS.localRetentionDays + 2 }, (_, i) => {
+      const d = new Date(2026, 0, i + 1);
+      return `2026-01-${String(i + 1).padStart(2, '0')}`;
+    });
+    const s = makeState(-1, dayKeys);
+    save(s); // must not hang; days pruned to DEFAULT value
+    expect(Object.keys(s.days).length).toBeLessThanOrEqual(DEFAULT_SETTINGS.localRetentionDays);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is Infinity', () => {
+    const s = makeState(Infinity, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(2);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is NaN', () => {
+    const s = makeState(NaN, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(2);
+  });
+
+  it('accepts 0 as a valid retentionDays and prunes all days', () => {
+    const s = makeState(0, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(0);
+  });
+
+  it('floors a fractional retentionDays (1.9 → keep 1)', () => {
+    const s = makeState(1.9, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(1);
   });
 });

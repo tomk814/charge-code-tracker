@@ -23,9 +23,20 @@ export const DEFAULT_SETTINGS = {
   payPeriodAnchor: '2026-04-04',
 };
 
+// Returns true only for strings matching YYYY-MM-DD that are real calendar dates
+// (rejects overflows like "2026-02-30" that JS Date silently rolls over).
+function isValidISODate(v) {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const dt = new Date(v + 'T12:00:00');
+  const [y, m, d] = v.split('-').map(Number);
+  return !isNaN(dt.getTime()) && dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
+}
+
 export function getSetting(key) {
   const s = _state ? _state() : null;
-  return s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+  const val = s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+  if (key === 'payPeriodAnchor' && !isValidISODate(val)) return DEFAULT_SETTINGS.payPeriodAnchor;
+  return val;
 }
 
 // ── Persistence ─────────────────────────────────────────────────────────────
@@ -88,7 +99,10 @@ export function load() {
 
 export function save(s) {
   // keep configured number of days locally; older days accumulate in the backup file
-  const retentionDays = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
+  const rawRetention = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
+  const retentionDays = Number.isFinite(rawRetention) && rawRetention >= 0
+    ? Math.floor(rawRetention)
+    : DEFAULT_SETTINGS.localRetentionDays;
   const keys = Object.keys(s.days || {}).sort();
   while (keys.length > retentionDays) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
@@ -140,6 +154,21 @@ export function validateImport(data) {
   }
   if ('days' in data && (typeof data.days !== 'object' || data.days === null || Array.isArray(data.days)))
     return '"days" must be an object, got ' + (data.days === null ? 'null' : Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
+  if ('settings' in data) {
+    const st = data.settings;
+    if (typeof st !== 'object' || st === null || Array.isArray(st))
+      return '"settings" must be an object, got ' + (st === null ? 'null' : Array.isArray(st) ? 'an array' : typeof st) + '.';
+    if ('localRetentionDays' in st) {
+      const v = st.localRetentionDays;
+      if (!Number.isFinite(v) || v < 0 || !Number.isInteger(v))
+        return `"settings.localRetentionDays" must be a finite non-negative integer, got ${JSON.stringify(v)}.`;
+    }
+    if ('payPeriodAnchor' in st) {
+      const v = st.payPeriodAnchor;
+      if (!isValidISODate(v))
+        return `"settings.payPeriodAnchor" must be a valid YYYY-MM-DD date string, got ${JSON.stringify(v)}.`;
+    }
+  }
   return null;
 }
 
