@@ -7,6 +7,7 @@ import {
   ymdLocal,
   load,
   save,
+  getSetting,
   DEFAULT_SETTINGS,
   PREDEFINED_PA_CODES,
   ensurePayAdjustmentCodes,
@@ -70,6 +71,45 @@ describe('load()', () => {
     const result = load();
     expect(result.codes).toHaveLength(1);
     expect(result.codes[0].id).toBe('abc');
+  });
+});
+
+// ── getSetting() ─────────────────────────────────────────────────────────────
+
+describe('getSetting()', () => {
+  it('returns the state value when it is valid', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '2025-12-20' } });
+    expect(getSetting('payPeriodAnchor')).toBe('2025-12-20');
+  });
+
+  it('returns DEFAULT_SETTINGS.payPeriodAnchor when state has no settings', () => {
+    replaceState({ codes: [], days: {}, holidays: [] });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is not a string', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: 20260404 } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor has wrong format', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '4/4/2026' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is an impossible calendar date', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '2026-02-30' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('falls back to default when payPeriodAnchor is an empty string', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: '' } });
+    expect(getSetting('payPeriodAnchor')).toBe(DEFAULT_SETTINGS.payPeriodAnchor);
+  });
+
+  it('does not apply payPeriodAnchor validation to other keys', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { localRetentionDays: 14 } });
+    expect(getSetting('localRetentionDays')).toBe(14);
   });
 });
 

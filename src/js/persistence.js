@@ -23,9 +23,20 @@ export const DEFAULT_SETTINGS = {
   payPeriodAnchor: '2026-04-04',
 };
 
+// Returns true only for strings matching YYYY-MM-DD that are real calendar dates
+// (rejects overflows like "2026-02-30" that JS Date silently rolls over).
+function isValidISODate(v) {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const dt = new Date(v + 'T12:00:00');
+  const [y, m, d] = v.split('-').map(Number);
+  return !isNaN(dt.getTime()) && dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
+}
+
 export function getSetting(key) {
   const s = _state ? _state() : null;
-  return s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+  const val = s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+  if (key === 'payPeriodAnchor' && !isValidISODate(val)) return DEFAULT_SETTINGS.payPeriodAnchor;
+  return val;
 }
 
 // ── Persistence ─────────────────────────────────────────────────────────────
@@ -154,13 +165,7 @@ export function validateImport(data) {
     }
     if ('payPeriodAnchor' in st) {
       const v = st.payPeriodAnchor;
-      let anchorOk = false;
-      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
-        const dt = new Date(v + 'T12:00:00');
-        const [y, m, d] = v.split('-').map(Number);
-        anchorOk = !isNaN(dt.getTime()) && dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
-      }
-      if (!anchorOk)
+      if (!isValidISODate(v))
         return `"settings.payPeriodAnchor" must be a valid YYYY-MM-DD date string, got ${JSON.stringify(v)}.`;
     }
   }

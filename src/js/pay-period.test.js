@@ -2,8 +2,22 @@
 // The anchor is a known period-end Saturday; every 14th day from it is also
 // a period-end Saturday.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { payPeriodEnd } from './pay-period.js';
+import { _injectDeps } from './persistence.js';
+import { state, replaceState, setViewDate } from './state.js';
+
+beforeEach(() => {
+  replaceState({ codes: [], days: {}, holidays: [] });
+  setViewDate('2026-04-16');
+  _injectDeps({
+    getState: () => state,
+    replaceState,
+    render: () => {},
+    renderClock: () => {},
+    ensurePayAdjustmentCodes: () => {},
+  });
+});
 
 // Convert a Date to a local YYYY-MM-DD string (avoids UTC-offset surprises
 // since payPeriodEnd() works in local time with noon-anchored Dates).
@@ -68,5 +82,12 @@ describe('payPeriodEnd()', () => {
     expect(end.getDay()).toBe(6);
     // The result should itself be a Saturday
     expect(toISO(payPeriodEnd(toISO(end)))).toBe(toISO(end));
+  });
+
+  it('falls back to the default anchor and returns a valid Saturday when payPeriodAnchor is invalid', () => {
+    replaceState({ codes: [], days: {}, holidays: [], settings: { payPeriodAnchor: 'not-a-date' } });
+    const end = payPeriodEnd('2026-04-16');
+    expect(end.getDay()).toBe(6);           // still a Saturday
+    expect(toISO(end)).toBe('2026-04-18'); // same result as with the default anchor
   });
 });
