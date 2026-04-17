@@ -21,6 +21,9 @@ let lastSavedAt = null;
 export const DEFAULT_SETTINGS = {
   localRetentionDays: 35,
   payPeriodAnchor: '2026-04-04',
+  disableUpdateCheck: false,
+  skipPatchUpdates: false,
+  skipMinorUpdates: false,
 };
 
 // Returns true only for strings matching YYYY-MM-DD that are real calendar dates
@@ -37,6 +40,13 @@ export function getSetting(key) {
   const val = s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
   if (key === 'payPeriodAnchor' && !isValidISODate(val)) return DEFAULT_SETTINGS.payPeriodAnchor;
   return val;
+}
+
+export function setSetting(key, value) {
+  const s = _state();
+  if (!s.settings) s.settings = {};
+  s.settings[key] = value;
+  save(s);
 }
 
 // ── Persistence ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 
 import { state } from './state.js';
 import { showModal } from './modal-infra.js';
+import { getSetting, setSetting } from './persistence.js';
 
 export function openHelp() {
   showModal(`<h2>Instructions</h2>
@@ -83,6 +84,32 @@ THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
     </div>`);
 }
 
+export function toggleUpdateCheck() {
+  const newVal = !getSetting('disableUpdateCheck');
+  setSetting('disableUpdateCheck', newVal);
+  const btn = document.getElementById('update-check-btn');
+  if (btn) btn.textContent = newVal ? 'Enable' : 'Disable';
+  const patchRow = document.getElementById('skip-patch-row');
+  const minorRow = document.getElementById('skip-minor-row');
+  const display = newVal ? 'none' : '';
+  if (patchRow) patchRow.style.display = display;
+  if (minorRow) minorRow.style.display = display;
+}
+
+export function toggleSkipPatch() {
+  const newVal = !getSetting('skipPatchUpdates');
+  setSetting('skipPatchUpdates', newVal);
+  const btn = document.getElementById('skip-patch-btn');
+  if (btn) btn.textContent = newVal ? 'Show patches' : 'Skip patches';
+}
+
+export function toggleSkipMinor() {
+  const newVal = !getSetting('skipMinorUpdates');
+  setSetting('skipMinorUpdates', newVal);
+  const btn = document.getElementById('skip-minor-btn');
+  if (btn) btn.textContent = newVal ? 'Show minor' : 'Skip minor';
+}
+
 export function openSettings() {
   const hasFileApi   = 'showSaveFilePicker' in window;
   const backupLinked = !!(document.getElementById('backup-status')?.classList.contains('linked'));
@@ -115,6 +142,14 @@ export function openSettings() {
     ${subtitle('Data Management')}
     ${row('Export date range', `<button class="tool-btn" onclick="openExportCSV()">Export CSV\u2026</button>`)}
     ${coldStorageRow}
+    ${subtitle('Updates')}
+    ${row('Check for updates on load', `<button class="tool-btn" id="update-check-btn" onclick="toggleUpdateCheck()">${getSetting('disableUpdateCheck') ? 'Enable' : 'Disable'}</button>`)}
+    <div id="skip-patch-row" style="${getSetting('disableUpdateCheck') ? 'display:none' : ''}">
+      ${row('Notify on patch releases (x.y.<strong>N</strong>)', `<button class="tool-btn" id="skip-patch-btn" onclick="toggleSkipPatch()">${getSetting('skipPatchUpdates') ? 'Show patches' : 'Skip patches'}</button>`)}
+    </div>
+    <div id="skip-minor-row" style="${getSetting('disableUpdateCheck') ? 'display:none' : ''}">
+      ${row('Notify on minor releases (x.<strong>N</strong>.y)', `<button class="tool-btn" id="skip-minor-btn" onclick="toggleSkipMinor()">${getSetting('skipMinorUpdates') ? 'Show minor' : 'Skip minor'}</button>`)}
+    </div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openHelp()">Help</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
