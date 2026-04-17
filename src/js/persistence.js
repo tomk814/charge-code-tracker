@@ -88,7 +88,10 @@ export function load() {
 
 export function save(s) {
   // keep configured number of days locally; older days accumulate in the backup file
-  const retentionDays = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
+  const rawRetention = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
+  const retentionDays = Number.isFinite(rawRetention) && rawRetention >= 0
+    ? Math.floor(rawRetention)
+    : DEFAULT_SETTINGS.localRetentionDays;
   const keys = Object.keys(s.days || {}).sort();
   while (keys.length > retentionDays) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));

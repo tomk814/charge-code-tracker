@@ -6,6 +6,8 @@ import {
   _injectDeps,
   ymdLocal,
   load,
+  save,
+  DEFAULT_SETTINGS,
   PREDEFINED_PA_CODES,
   ensurePayAdjustmentCodes,
   dayData,
@@ -380,5 +382,61 @@ describe('validateImport()', () => {
 
   it('returns an error when days is a non-object primitive', () => {
     expect(validateImport({ codes: [], days: 'bad' })).toMatch(/"days" must be an object/);
+  });
+});
+
+// ── save() — retentionDays clamping ───────────────────────────────────────────
+
+function makeState(retentionDays, dayKeys) {
+  const days = {};
+  for (const k of dayKeys) days[k] = { hours: {}, clock: { sessions: [] } };
+  return { codes: [], days, holidays: [], settings: { localRetentionDays: retentionDays } };
+}
+
+describe('save() retentionDays clamping', () => {
+  it('prunes oldest days when count exceeds a valid retentionDays', () => {
+    const s = makeState(2, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toEqual(['2026-01-02', '2026-01-03']);
+  });
+
+  it('does not prune when day count equals retentionDays', () => {
+    const s = makeState(3, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(3);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is negative', () => {
+    const dayKeys = Array.from({ length: DEFAULT_SETTINGS.localRetentionDays + 2 }, (_, i) => {
+      const d = new Date(2026, 0, i + 1);
+      return `2026-01-${String(i + 1).padStart(2, '0')}`;
+    });
+    const s = makeState(-1, dayKeys);
+    save(s); // must not hang; days pruned to DEFAULT value
+    expect(Object.keys(s.days).length).toBeLessThanOrEqual(DEFAULT_SETTINGS.localRetentionDays);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is Infinity', () => {
+    const s = makeState(Infinity, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(2);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.localRetentionDays when retentionDays is NaN', () => {
+    const s = makeState(NaN, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(2);
+  });
+
+  it('accepts 0 as a valid retentionDays and prunes all days', () => {
+    const s = makeState(0, ['2026-01-01', '2026-01-02']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(0);
+  });
+
+  it('floors a fractional retentionDays (1.9 → keep 1)', () => {
+    const s = makeState(1.9, ['2026-01-01', '2026-01-02', '2026-01-03']);
+    save(s);
+    expect(Object.keys(s.days)).toHaveLength(1);
   });
 });
