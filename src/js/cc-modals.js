@@ -9,10 +9,9 @@ import { getBlocks, blocksToFlat } from './cc-rendering.js';
 
 // ── Modals ───────────────────────────────────────────────────────────────────
 
-// Pay Adjustment CCs are system-managed and cannot be archived or deleted.
+// Only the original predefined Pay Adjustment CCs (pa0001–pa0009) are system-managed and cannot be archived or deleted.
 export function isProtectedCC(id) {
-  const cc = state.codes.find(c => c.id === id);
-  return cc && cc.program === 'Pay Adjustment';
+  return /^pa000[1-9]$/.test(id);
 }
 
 export function openAddCC() {
@@ -138,10 +137,10 @@ export function openManage() {
                 <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
                 <span class="cc-manage-code">${esc(cc.code)}</span>
               </div>
+              <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
               <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
               ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
-              <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-              ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
+              ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
             </div>`).join('');
           const pgDisplayName = block.codes.find(c => c.programNickname)?.programNickname || block.name;
           return `<div class="pg-manage-block">
@@ -164,10 +163,10 @@ export function openManage() {
               <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
               <span class="cc-manage-code">${esc(cc.code)}</span>
             </div>
+            <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
             <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
             ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
-            <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-            ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
+            ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
           </div>`;
         }
       }).join('');
@@ -180,9 +179,9 @@ export function openManage() {
             <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
             <span class="cc-manage-code">${esc(cc.code)}</span>
           </div>
-          <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
           <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>`}
+          <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
+          ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
         </div>`).join('')}
       </div>`
     : '';
@@ -195,9 +194,9 @@ export function openManage() {
             <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
             <span class="cc-manage-code">${esc(cc.code)}</span>
           </div>
-          <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Unarchive</button>
           <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="del-btn" onclick="deleteCC('${cc.id}')">&#10005;</button>
+          <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Unarchive</button>
+          <button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>
         </div>`).join('')}
       </div>`
     : '';
@@ -206,7 +205,10 @@ export function openManage() {
     ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
     : '';
 
-  showModal(`<h2>Manage charge codes</h2>${emptyState}${activeSection}${hiddenSection}${archivedSection}
+  showModal(`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Manage charge codes</h2>
+    <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-2);padding:2px 4px" title="Close">&times;</button>
+  </div>${emptyState}${activeSection}${hiddenSection}${archivedSection}
     <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
 }
 
@@ -249,6 +251,25 @@ export function submitEditCC(id) {
   save(state);
   render();
   openManage();
+}
+
+export function confirmDeleteCC(id) {
+  if (isProtectedCC(id)) return;
+  const cc = state.codes.find(c => c.id === id);
+  if (!cc) return;
+  const label = esc(cc.nickname || cc.name);
+  const isArchived = !!cc.archived;
+  const archiveTip = isArchived
+    ? ''
+    : `<p style="font-size:13px;color:var(--fg-2);margin:0 0 16px">Did you mean to <strong>Archive</strong> it instead? Archived codes are hidden from the main view but preserve their history.</p>`;
+  showModal(`<h2 style="color:var(--red)">Delete charge code?</h2>
+    <p style="margin:0 0 8px">This will permanently delete <strong>${label}</strong> and remove it from all logged days. This cannot be undone.</p>
+    ${archiveTip}
+    <div class="modal-actions">
+      <button class="tool-btn" onclick="openManage()">Cancel</button>
+      ${isArchived ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${id}')">Archive instead</button>`}
+      <button class="tool-btn" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="deleteCC('${id}')">Delete forever</button>
+    </div>`);
 }
 
 export function deleteCC(id) {

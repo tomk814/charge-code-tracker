@@ -6,10 +6,12 @@ import './styles/index.css';
 import { state } from './js/state.js';
 import {
   _injectDeps, save, ensurePayAdjustmentCodes,
-  revealDataButtons, exportJSON, importJSON, handleJSONFile,
-  linkBackupFile, saveToFileNow, grantBackupAccess, dismissBackupBanner,
-  reconnectBackup, checkBackupPermission,
+  exportJSON, importJSON, handleJSONFile,
 } from './js/persistence.js';
+import {
+  revealDataButtons, linkBackupFile, saveToFileNow, grantBackupAccess,
+  dismissBackupBanner, reconnectBackup, checkBackupPermission,
+} from './js/backup.js';
 import { replaceState } from './js/state.js';
 import { navigate, goToToday } from './js/day-navigation.js';
 import {
@@ -23,15 +25,13 @@ import {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
 } from './js/cc-modals.js';
-import {
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
-  confirmReset, doReset,
-  openHolidays, saveHolidays, openHelp, openAbout, openSettings,
-  openExportCSV, doExportCSV,
-  openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
-} from './js/end-of-day.js';
+import { openEndOfDay, saveEodNote, copyEndOfDay, confirmReset, doReset } from './js/end-of-day.js';
+import { openSettings, openHelp, openAbout } from './js/settings.js';
+import { openHolidays, saveHolidays } from './js/holidays.js';
+import { openExportCSV, doExportCSV } from './js/export.js';
+import { openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage } from './js/cold-storage.js';
 import {
   openSpread, refreshSpreadPreview, applySpread,
 } from './js/spread-hours.js';
@@ -73,12 +73,16 @@ Object.assign(window, {
   openAddCC, parseDayforce, submitAddCC,
   toggleArchiveCC, toggleHideCC,
   moveBlock, moveCCInBlock,
-  openManage, openEditCC, submitEditCC, deleteCC,
+  openManage, openEditCC, submitEditCC, deleteCC, confirmDeleteCC,
   // end of day
-  openEndOfDay, saveEodNote, copyEndOfDay, copyEodCSV, clearEodNotes,
-  confirmReset, doReset,
-  openHolidays, saveHolidays, openHelp, openAbout, openSettings,
+  openEndOfDay, saveEodNote, copyEndOfDay, confirmReset, doReset,
+  // settings / help / about
+  openSettings, openHelp, openAbout,
+  // holidays
+  openHolidays, saveHolidays,
+  // export
   openExportCSV, doExportCSV,
+  // cold storage
   openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage,
   // spread hours
   openSpread, refreshSpreadPreview, applySpread,
@@ -98,10 +102,8 @@ Object.assign(window, {
 render();
 renderClock();
 
-// Show backup UI and check permission if File System Access API is available
+// Check backup file permission if File System Access API is available
 if ('showSaveFilePicker' in window) {
-  const backupUi = document.getElementById('backup-ui');
-  if (backupUi) backupUi.style.display = 'contents';
   checkBackupPermission();
 }
 

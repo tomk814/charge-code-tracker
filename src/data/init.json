@@ -1,0 +1,10 @@
+{
+  "codes": [],
+  "days": {},
+  "holidays": [],
+  "showIncrements": false,
+  "settings": {
+    "localRetentionDays": 35,
+    "payPeriodAnchor": "2026-04-04"
+  }
+}

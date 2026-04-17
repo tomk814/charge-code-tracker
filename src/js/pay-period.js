@@ -1,17 +1,17 @@
 // Pay period bar calculation and the main render() function that rebuilds the CC list.
 
 import { state, viewDate } from './state.js';
-import { dayData, save, today, applyHolidayPrePopulate, isHoliday, ymdLocal } from './persistence.js';
+import { dayData, save, today, applyHolidayPrePopulate, isHoliday, ymdLocal, getSetting } from './persistence.js';
 import { getBlocks, renderProgramCard, renderIndividualCard } from './cc-rendering.js';
 import { esc } from './utilities.js';
 import { showModal, closeModal } from './modal-infra.js';
 
 // ── Pay period ───────────────────────────────────────────────────────────────
-const PP_ANCHOR = new Date('2026-04-04T12:00:00'); // known period-end Saturday
 
 export function payPeriodEnd(fromDateStr) {
+  const anchor = new Date(getSetting('payPeriodAnchor') + 'T12:00:00');
   const d = new Date(fromDateStr + 'T12:00:00');
-  const diffDays = Math.round((d - PP_ANCHOR) / 86400000);
+  const diffDays = Math.round((d - anchor) / 86400000);
   const daysIntoPeriod = ((diffDays % 14) + 14) % 14;
   const daysUntilEnd = daysIntoPeriod === 0 ? 0 : 14 - daysIntoPeriod;
   const end = new Date(d);
@@ -103,9 +103,10 @@ export function openPayPeriodModal(offset = 0) {
 
   const isCurDay = iso => iso === todayIso;
   const isWeekend = iso => { const dow = new Date(iso + 'T12:00:00').getDay(); return dow === 0 || dow === 6; };
-  const hrsCell = (h, iso, extra) => {
+  const hrsCell = (h, iso, extra, ccId) => {
+    const hasNote = ccId && (((state.days[iso] || {}).notes || {})[ccId] || '').trim();
     const cls = ['pp-cell', isCurDay(iso) ? 'pp-today' : '', isWeekend(iso) ? 'pp-weekend' : '',
-                 isHoliday(iso) ? 'pp-holiday' : '', extra].filter(Boolean).join(' ');
+                 isHoliday(iso) ? 'pp-holiday' : '', hasNote ? 'pp-cell-has-note' : '', extra].filter(Boolean).join(' ');
     return `<td class="${cls}">${h > 0 ? h.toFixed(1) : '<span class="pp-zero">—</span>'}</td>`;
   };
 
@@ -126,7 +127,7 @@ export function openPayPeriodModal(offset = 0) {
         const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
         return `<tr class="pp-row">
           <td class="pp-cell-label" title="${esc(cc.code)}: ${esc(cc.name)}">${esc(label)}</td>
-          ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '')).join('')}
+          ${days.map(d => hrsCell(hours[cc.id][d.iso], d.iso, '', cc.id)).join('')}
           <td class="pp-total-cell">${ccTotal(cc).toFixed(1)}</td>
         </tr>`;
       }).join('')
@@ -154,6 +155,7 @@ export function openPayPeriodModal(offset = 0) {
       </table>
     </div>
     <div class="modal-actions">
+      <button class="tool-btn" onclick="openExportCSV('${ymdLocal(ppStart)}', '${ymdLocal(ppEnd)}')">Export CSV</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
     </div>`, 'wide');
 }

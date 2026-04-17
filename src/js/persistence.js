@@ -1,8 +1,8 @@
 // localStorage load/save, v2→v3 migration, dayData accessor, JSON export/import.
-// Backup file (IndexedDB + File System Access API) functions.
-// Holiday helpers.
+// Holiday helpers. Backup scheduling delegated to backup.js.
 
 import { esc } from './utilities.js';
+import { scheduleBackupWrite, _injectBackupState } from './backup.js';
 
 // These are resolved lazily to avoid circular-dep issues at module evaluation time.
 let _state, _replaceState, _render, _renderClock, _ensurePayAdjustmentCodes;
@@ -12,14 +12,35 @@ export function _injectDeps({ getState, replaceState, render, renderClock, ensur
   _render = render;
   _renderClock = renderClock;
   _ensurePayAdjustmentCodes = ensurePayAdjustmentCodes;
+  _injectBackupState(getState);
 }
 
 const STORAGE_KEY = 'cc_tracker_v3';
 let lastSavedAt = null;
-let _dataBtnTimer = null;
+
+export const DEFAULT_SETTINGS = {
+  localRetentionDays: 35,
+  payPeriodAnchor: '2026-04-04',
+};
+
+// Returns true only for strings matching YYYY-MM-DD that are real calendar dates
+// (rejects overflows like "2026-02-30" that JS Date silently rolls over).
+function isValidISODate(v) {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const dt = new Date(v + 'T12:00:00');
+  const [y, m, d] = v.split('-').map(Number);
+  return !isNaN(dt.getTime()) && dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
+}
+
+export function getSetting(key) {
+  const s = _state ? _state() : null;
+  const val = s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+  if (key === 'payPeriodAnchor' && !isValidISODate(val)) return DEFAULT_SETTINGS.payPeriodAnchor;
+  return val;
+}
 
 // ── Persistence ─────────────────────────────────────────────────────────────
-// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
+// v3 schema: { codes:[...], days:{...}, settings:{localRetentionDays, payPeriodAnchor} }
 // Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
 
 export function ymdLocal(d) {
@@ -63,20 +84,27 @@ export const PREDEFINED_PA_CODES = [
 ];
 
 export function load() {
+  let data;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) data = JSON.parse(raw);
   } catch(e) {}
-  return migrateFromV2() || {
+  if (!data) data = migrateFromV2() || {
     codes: PREDEFINED_PA_CODES.map(c => Object.assign({}, c)),
     days: {}
   };
+  data.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings ?? {});
+  return data;
 }
 
 export function save(s) {
-  // keep ~5 weeks locally (2 pay periods + margin); older days accumulate in the backup file
+  // keep configured number of days locally; older days accumulate in the backup file
+  const rawRetention = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
+  const retentionDays = Number.isFinite(rawRetention) && rawRetention >= 0
+    ? Math.floor(rawRetention)
+    : DEFAULT_SETTINGS.localRetentionDays;
   const keys = Object.keys(s.days || {}).sort();
-  while (keys.length > 35) delete s.days[keys.shift()];
+  while (keys.length > retentionDays) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
@@ -89,19 +117,6 @@ export function updateLastSaved() {
   if (!lastSavedAt) { el.textContent = 'not saved yet'; return; }
   const t = lastSavedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   el.textContent = `last saved ${t}`;
-}
-
-export function revealDataButtons() {
-  const btns = document.getElementById('data-btns');
-  if (!btns) return;
-  btns.style.display = 'flex';
-  clearTimeout(_dataBtnTimer);
-  _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
-  btns.onmouseenter = () => clearTimeout(_dataBtnTimer);
-  btns.onmouseleave = () => {
-    clearTimeout(_dataBtnTimer);
-    _dataBtnTimer = setTimeout(() => { btns.style.display = 'none'; }, 4000);
-  };
 }
 
 export function exportJSON() {
@@ -120,13 +135,61 @@ export function importJSON() {
   document.getElementById('json-file-input').click();
 }
 
+export function validateImport(data) {
+  if (typeof data !== 'object' || data === null || Array.isArray(data))
+    return 'Top-level value must be a JSON object, got ' + (Array.isArray(data) ? 'an array' : typeof data) + '.';
+  if (!('codes' in data))
+    return 'Missing required "codes" field — is this a charge-code tracker export?';
+  if (!Array.isArray(data.codes))
+    return '"codes" must be an array, got ' + typeof data.codes + '.';
+  for (let i = 0; i < data.codes.length; i++) {
+    const c = data.codes[i];
+    if (typeof c !== 'object' || c === null) return `codes[${i}] must be an object.`;
+    if (!('id' in c)) return `codes[${i}] is missing "id".`;
+    if (typeof c.id !== 'string') return `codes[${i}] has invalid "id" (expected string).`;
+    if (!('code' in c)) return `codes[${i}] (id: "${c.id}") is missing "code".`;
+    if (typeof c.code !== 'string') return `codes[${i}] (id: "${c.id}") has invalid "code" (expected string).`;
+    if (!('name' in c)) return `codes[${i}] (id: "${c.id}") is missing "name".`;
+    if (typeof c.name !== 'string') return `codes[${i}] (id: "${c.id}") has invalid "name" (expected string).`;
+  }
+  if ('days' in data && (typeof data.days !== 'object' || data.days === null || Array.isArray(data.days)))
+    return '"days" must be an object, got ' + (data.days === null ? 'null' : Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
+  if ('settings' in data) {
+    const st = data.settings;
+    if (typeof st !== 'object' || st === null || Array.isArray(st))
+      return '"settings" must be an object, got ' + (st === null ? 'null' : Array.isArray(st) ? 'an array' : typeof st) + '.';
+    if ('localRetentionDays' in st) {
+      const v = st.localRetentionDays;
+      if (!Number.isFinite(v) || v < 0 || !Number.isInteger(v))
+        return `"settings.localRetentionDays" must be a finite non-negative integer, got ${JSON.stringify(v)}.`;
+    }
+    if ('payPeriodAnchor' in st) {
+      const v = st.payPeriodAnchor;
+      if (!isValidISODate(v))
+        return `"settings.payPeriodAnchor" must be a valid YYYY-MM-DD date string, got ${JSON.stringify(v)}.`;
+    }
+  }
+  return null;
+}
+
 export function handleJSONFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
+    let parsed;
     try {
-      const parsed = JSON.parse(ev.target.result);
+      parsed = JSON.parse(ev.target.result);
+    } catch (err) {
+      alert('Could not parse file as JSON:\n' + err.message);
+      return;
+    }
+    const problem = validateImport(parsed);
+    if (problem) {
+      alert('Import failed — ' + problem);
+      return;
+    }
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       _replaceState(load());
       _ensurePayAdjustmentCodes();
@@ -134,252 +197,11 @@ export function handleJSONFile(e) {
       _renderClock();
       lastSavedAt = new Date();
       updateLastSaved();
-    } catch {
-      alert('Invalid JSON file.');
+    } catch (err) {
+      alert('Import failed — could not save:\n' + err.message);
     }
   };
   reader.readAsText(file);
-}
-
-// ── Backup file (IndexedDB + File System Access API) ─────────────────────────
-
-let _idbPromise = null;
-let _backupHandleMem = null; // in-memory fallback when IDB is unavailable
-let _idbUnavailable = false;
-const BACKUP_AUTOSAVE_INTERVAL_MS = 360000; // every 0.1 hr
-let _backupWriteTimer = null;
-let _backupWritePending = false;
-let _lastBackupWriteAt = Date.now();
-let _backupWriteChain = Promise.resolve();
-
-function openIDB() {
-  if (_idbPromise) return _idbPromise;
-  _idbPromise = new Promise((resolve, reject) => {
-    try {
-      const req = indexedDB.open('cc_tracker_fs', 1);
-      req.onupgradeneeded = e => e.target.result.createObjectStore('fileHandles');
-      req.onsuccess = e => resolve(e.target.result);
-      req.onerror   = e => { _idbUnavailable = true; reject(e.target.error); };
-    } catch(e) { _idbUnavailable = true; reject(e); }
-  });
-  return _idbPromise;
-}
-
-export async function getBackupHandle() {
-  if (_idbUnavailable) return _backupHandleMem;
-  try {
-    const db = await openIDB();
-    return new Promise((resolve, reject) => {
-      const tx  = db.transaction('fileHandles', 'readonly');
-      const req = tx.objectStore('fileHandles').get('backupHandle');
-      req.onsuccess = e => resolve(e.target.result || null);
-      req.onerror   = e => reject(e.target.error);
-    });
-  } catch(e) {
-    _idbUnavailable = true;
-    return _backupHandleMem;
-  }
-}
-
-async function setBackupHandle(handle) {
-  _backupHandleMem = handle;
-  if (_idbUnavailable) return;
-  try {
-    const db = await openIDB();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction('fileHandles', 'readwrite');
-      tx.objectStore('fileHandles').put(handle, 'backupHandle');
-      tx.oncomplete = resolve;
-      tx.onerror    = e => reject(e.target.error);
-    });
-  } catch(e) {
-    _idbUnavailable = true;
-    console.warn('Backup handle stored in memory only (IndexedDB unavailable). Handle will not persist across page loads.');
-  }
-}
-
-async function clearBackupHandle() {
-  _backupHandleMem = null;
-  if (_idbUnavailable) return;
-  try {
-    const db = await openIDB();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction('fileHandles', 'readwrite');
-      tx.objectStore('fileHandles').delete('backupHandle');
-      tx.oncomplete = resolve;
-      tx.onerror    = e => reject(e.target.error);
-    });
-  } catch(e) { _idbUnavailable = true; }
-}
-
-export function renderBackupStatus(perm) {
-  const el        = document.getElementById('backup-status');
-  const saveBtn   = document.getElementById('save-backup-btn');
-  const coldBtn   = document.getElementById('cold-storage-btn');
-  if (!el) return;
-  if (perm === 'granted') {
-    const note = _idbUnavailable ? ' (session only)' : '';
-    el.className = 'backup-status linked';
-    el.innerHTML = `<span class="backup-dot"></span>Backup linked${esc(note)}`;
-    el.onclick = null;
-    if (saveBtn) saveBtn.disabled = false;
-    if (coldBtn) coldBtn.disabled = false;
-  } else if (perm === 'prompt') {
-    el.className = 'backup-status permission-needed';
-    el.innerHTML = '<span class="backup-dot"></span>Click to reconnect';
-    el.onclick = reconnectBackup;
-    if (saveBtn) saveBtn.disabled = true;
-    if (coldBtn) coldBtn.disabled = true;
-  } else {
-    el.className = 'backup-status not-linked';
-    el.innerHTML = '<span class="backup-dot"></span>No backup file';
-    el.onclick = null;
-    if (saveBtn) saveBtn.disabled = true;
-    if (coldBtn) coldBtn.disabled = true;
-  }
-}
-
-function renderBackupBanner() {
-  if (document.getElementById('backup-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'backup-banner';
-  banner.innerHTML =
-    'Backup file needs permission \u2014 ' +
-    '<button class="tool-btn" onclick="grantBackupAccess()">Grant access</button>' +
-    '<button class="tool-btn" onclick="dismissBackupBanner()">Dismiss</button>';
-  const clockBar = document.getElementById('clock-bar');
-  if (clockBar) clockBar.parentNode.insertBefore(banner, clockBar);
-}
-
-export async function checkBackupPermission() {
-  const handle = await getBackupHandle().catch(() => null);
-  if (!handle) { renderBackupStatus(null); return; }
-  const perm = await handle.queryPermission({mode: 'readwrite'}).catch(() => 'denied');
-  renderBackupStatus(perm);
-  if (perm === 'prompt') renderBackupBanner();
-}
-
-export async function linkBackupFile() {
-  try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: 'time_tracker_archive.json',
-      types: [{ description: 'JSON archive', accept: { 'application/json': ['.json'] } }]
-    });
-    await setBackupHandle(handle);
-    dismissBackupBanner();
-    await checkBackupPermission();
-  } catch(e) {
-    if (e.name !== 'AbortError') console.error('linkBackupFile:', e);
-  }
-}
-
-function queueBackupWriteNow() {
-  _backupWritePending = false;
-  _backupWriteChain = _backupWriteChain
-    .then(async () => {
-      await writeToBackupFile(_state());
-      _lastBackupWriteAt = Date.now();
-    })
-    .catch(e => console.error('queueBackupWriteNow:', e))
-    .finally(() => {
-      if (_backupWritePending && !_backupWriteTimer) scheduleBackupWrite();
-    });
-  return _backupWriteChain;
-}
-
-function scheduleBackupWrite() {
-  _backupWritePending = true;
-  if (_backupWriteTimer) return;
-  const elapsed = Date.now() - _lastBackupWriteAt;
-  const delay = Math.max(0, BACKUP_AUTOSAVE_INTERVAL_MS - elapsed);
-  _backupWriteTimer = setTimeout(() => {
-    _backupWriteTimer = null;
-    if (_backupWritePending) queueBackupWriteNow();
-  }, delay);
-}
-
-async function writeToBackupFile(s) {
-  const handle = await getBackupHandle().catch(() => null);
-  if (!handle) return;
-  try {
-    const perm = await handle.queryPermission({mode: 'readwrite'}).catch(() => 'denied');
-    if (perm !== 'granted') { renderBackupStatus(perm); return; }
-
-    // Read existing archive content and merge
-    let archiveParsed = {};
-    let archiveDays = {};
-    try {
-      const file = await handle.getFile();
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      if (parsed && typeof parsed === 'object') {
-        archiveParsed = parsed;
-        if (parsed.days && typeof parsed.days === 'object') archiveDays = parsed.days;
-      }
-    } catch (e) {
-      if (e.name === 'NotFoundError') throw e; // re-throw so outer catch clears the handle
-      // empty or malformed — start fresh from state only
-    }
-
-    // state.days wins for any date present in both; archive accumulates the rest
-    const mergedDays = { ...archiveDays, ...s.days };
-    // preserve unknown extra keys from the archive so future schema additions survive a round-trip
-    const merged = {
-      ...archiveParsed,
-      codes: s.codes,
-      days: mergedDays,
-      holidays: s.holidays,
-      showIncrements: s.showIncrements,
-    };
-
-    const writable = await handle.createWritable();
-    await writable.write(JSON.stringify(merged, null, 2));
-    await writable.close();
-  } catch(e) {
-    if (e.name === 'NotFoundError') {
-      await clearBackupHandle().catch(() => {});
-      renderBackupStatus(null);
-    } else if (e.name === 'NotAllowedError') {
-      renderBackupStatus('prompt');
-      renderBackupBanner();
-    } else {
-      console.error('writeToBackupFile:', e);
-    }
-  }
-}
-
-export async function saveToFileNow() {
-  _backupWritePending = true;
-  if (_backupWriteTimer) {
-    clearTimeout(_backupWriteTimer);
-    _backupWriteTimer = null;
-  }
-  await queueBackupWriteNow();
-}
-
-export async function grantBackupAccess() {
-  const handle = await getBackupHandle().catch(() => null);
-  if (!handle) return;
-  try {
-    const perm = await handle.requestPermission({mode: 'readwrite'});
-    renderBackupStatus(perm);
-    if (perm === 'granted') dismissBackupBanner();
-  } catch(e) { console.error('grantBackupAccess:', e); }
-}
-
-export function dismissBackupBanner() {
-  const banner = document.getElementById('backup-banner');
-  if (banner) banner.remove();
-}
-
-export async function reconnectBackup() {
-  const handle = await getBackupHandle().catch(() => null);
-  if (!handle) return;
-  try {
-    const perm = await handle.requestPermission({mode: 'readwrite'});
-    renderBackupStatus(perm);
-    if (perm === 'granted') dismissBackupBanner();
-  } catch(e) { console.error('reconnectBackup:', e); }
 }
 
 export function dayData(date) {
@@ -414,7 +236,7 @@ export function ensurePayAdjustmentCodes() {
   return changed;
 }
 
-// Returns the current holiday list, defaulting to the test date 4/17/2026.
+// Returns the current holiday list, defaulting to [].
 export function getHolidays() {
   const state = _state();
   if (!Array.isArray(state.holidays)) state.holidays = [];
