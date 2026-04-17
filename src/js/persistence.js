@@ -143,6 +143,27 @@ export function validateImport(data) {
   }
   if ('days' in data && (typeof data.days !== 'object' || data.days === null || Array.isArray(data.days)))
     return '"days" must be an object, got ' + (data.days === null ? 'null' : Array.isArray(data.days) ? 'an array' : typeof data.days) + '.';
+  if ('settings' in data) {
+    const st = data.settings;
+    if (typeof st !== 'object' || st === null || Array.isArray(st))
+      return '"settings" must be an object, got ' + (st === null ? 'null' : Array.isArray(st) ? 'an array' : typeof st) + '.';
+    if ('localRetentionDays' in st) {
+      const v = st.localRetentionDays;
+      if (!Number.isFinite(v) || v < 0 || !Number.isInteger(v))
+        return `"settings.localRetentionDays" must be a finite non-negative integer, got ${JSON.stringify(v)}.`;
+    }
+    if ('payPeriodAnchor' in st) {
+      const v = st.payPeriodAnchor;
+      let anchorOk = false;
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+        const dt = new Date(v + 'T12:00:00');
+        const [y, m, d] = v.split('-').map(Number);
+        anchorOk = !isNaN(dt.getTime()) && dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
+      }
+      if (!anchorOk)
+        return `"settings.payPeriodAnchor" must be a valid YYYY-MM-DD date string, got ${JSON.stringify(v)}.`;
+    }
+  }
   return null;
 }
 
