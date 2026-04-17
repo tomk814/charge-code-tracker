@@ -113,6 +113,8 @@ npm test -- src/js/persistence.test.js   # run a single test file
 
 Key: `cc_tracker_v3`
 
+The canonical blank-slate structure is in [`src/data/init.json`](src/data/init.json). It is the source of truth for the schema shape and is validated by `src/js/init-json.test.js`. When adding a new top-level key to the schema, add it to `init.json` and update the test.
+
 ```json
 {
   "codes": [
@@ -127,7 +129,11 @@ Key: `cc_tracker_v3`
     },
   },
   "holidays": [],
-  "showIncrements": false
+  "showIncrements": false,
+  "settings": {
+    "localRetentionDays": 35,
+    "payPeriodAnchor": "2026-04-04"
+  }
 }
 ```
 
@@ -136,6 +142,7 @@ Key: `cc_tracker_v3`
 - `notes` is a sparse object — only CCs with a note have an entry. Set via End of Day modal Save button; cleared by Reset day.
 - `holidays` is an array of ISO date strings (`"YYYY-MM-DD"`). Defaults to `[]` when absent. Editable via the Holidays modal.
 - `holidayPopulated` (boolean on a day entry) prevents 8 h of Holiday from being re-applied on every render. Deleted by Reset day so the default re-applies on the next render.
+- `settings` is a sparse object of user-configurable assumptions. Missing keys fall back to `DEFAULT_SETTINGS` in `persistence.js`. Currently: `localRetentionDays` (days to keep in localStorage, default 35) and `payPeriodAnchor` (ISO date of any known period-end Saturday, default `"2026-04-04"`). Edit via Export JSON → modify → Import JSON.
 - Hours are always stored and displayed to one decimal place. Use `.toFixed(1)` everywhere — never let float drift reach the UI.
 
 ## Conventions

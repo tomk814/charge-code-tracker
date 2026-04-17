@@ -1,17 +1,17 @@
 // Pay period bar calculation and the main render() function that rebuilds the CC list.
 
 import { state, viewDate } from './state.js';
-import { dayData, save, today, applyHolidayPrePopulate, isHoliday, ymdLocal } from './persistence.js';
+import { dayData, save, today, applyHolidayPrePopulate, isHoliday, ymdLocal, getSetting } from './persistence.js';
 import { getBlocks, renderProgramCard, renderIndividualCard } from './cc-rendering.js';
 import { esc } from './utilities.js';
 import { showModal, closeModal } from './modal-infra.js';
 
 // ── Pay period ───────────────────────────────────────────────────────────────
-const PP_ANCHOR = new Date('2026-04-04T12:00:00'); // known period-end Saturday
 
 export function payPeriodEnd(fromDateStr) {
+  const anchor = new Date(getSetting('payPeriodAnchor') + 'T12:00:00');
   const d = new Date(fromDateStr + 'T12:00:00');
-  const diffDays = Math.round((d - PP_ANCHOR) / 86400000);
+  const diffDays = Math.round((d - anchor) / 86400000);
   const daysIntoPeriod = ((diffDays % 14) + 14) % 14;
   const daysUntilEnd = daysIntoPeriod === 0 ? 0 : 14 - daysIntoPeriod;
   const end = new Date(d);

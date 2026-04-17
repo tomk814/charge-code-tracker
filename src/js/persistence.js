@@ -18,8 +18,18 @@ const STORAGE_KEY = 'cc_tracker_v3';
 let lastSavedAt = null;
 let _dataBtnTimer = null;
 
+export const DEFAULT_SETTINGS = {
+  localRetentionDays: 35,
+  payPeriodAnchor: '2026-04-04',
+};
+
+export function getSetting(key) {
+  const s = _state ? _state() : null;
+  return s?.settings?.[key] ?? DEFAULT_SETTINGS[key];
+}
+
 // ── Persistence ─────────────────────────────────────────────────────────────
-// v3 schema: { codes:[{id,code,name}], days:{"YYYY-MM-DD":{hours:{id:n},clock:{sessions:[]}}} }
+// v3 schema: { codes:[...], days:{...}, settings:{localRetentionDays, payPeriodAnchor} }
 // Migrates from v2 (cc_tracker_v2) and clock v1 (cc_tracker_clock_v1) on first load.
 
 export function ymdLocal(d) {
@@ -63,20 +73,24 @@ export const PREDEFINED_PA_CODES = [
 ];
 
 export function load() {
+  let data;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) data = JSON.parse(raw);
   } catch(e) {}
-  return migrateFromV2() || {
+  if (!data) data = migrateFromV2() || {
     codes: PREDEFINED_PA_CODES.map(c => Object.assign({}, c)),
     days: {}
   };
+  data.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings ?? {});
+  return data;
 }
 
 export function save(s) {
-  // keep ~5 weeks locally (2 pay periods + margin); older days accumulate in the backup file
+  // keep configured number of days locally; older days accumulate in the backup file
+  const retentionDays = s.settings?.localRetentionDays ?? DEFAULT_SETTINGS.localRetentionDays;
   const keys = Object.keys(s.days || {}).sort();
-  while (keys.length > 35) delete s.days[keys.shift()];
+  while (keys.length > retentionDays) delete s.days[keys.shift()];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   lastSavedAt = new Date();
   updateLastSaved();
