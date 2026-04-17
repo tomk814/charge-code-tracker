@@ -25,6 +25,7 @@ cd charge-code-tracker
 npm install
 npm run dev      # local dev server with hot reload
 npm run build    # produces dist/index.html (single self-contained file)
+npm test         # run the Vitest unit test suite (run before pushing)
 ```
 
 ### Recommended folder layout
@@ -58,8 +59,9 @@ The release zip ships with this layout pre-created. `backup.json` and `init.json
 **End of day**
 - Click **Stop** on the clock bar.
 - If you have unallocated clock time, use **Auto-Allocate** to distribute it proportionally across your logged CCs.
-- Click **End of day** → **Copy to clipboard** for a plain-text summary, or **Copy CSV** for a spreadsheet-ready row per charge code.
+- Click **End of day** → **Copy to clipboard** for a plain-text summary (use this for pasting into Costpoint or an email).
 - Use **Pay period** to see a compact table of all your CCs × working days for a quick sanity check before submitting.
+- Use ⚙ **Settings** → **Export CSV…** to download a date-range CSV (useful for records and performance reviews).
 
 ---
 

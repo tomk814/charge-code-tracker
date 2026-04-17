@@ -107,7 +107,7 @@ export function importJSON() {
   document.getElementById('json-file-input').click();
 }
 
-function validateImport(data) {
+export function validateImport(data) {
   if (typeof data !== 'object' || data === null || Array.isArray(data))
     return 'Top-level value must be a JSON object, got ' + (Array.isArray(data) ? 'an array' : typeof data) + '.';
   if (!('codes' in data))

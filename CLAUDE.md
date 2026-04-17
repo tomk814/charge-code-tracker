@@ -17,6 +17,7 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 ├── src/
 │   ├── time_tracker.html          ← Vite entry point (HTML shell)
 │   ├── main.js                    ← JS entry: imports all modules, wires globals
+│   ├── test-setup.js              ← Vitest Node shim: localStorage polyfill, document/navigator stubs
 │   ├── styles/
 │   │   ├── index.css              ← barrel import for all CSS modules
 │   │   ├── tokens.css             ← CSS custom properties (colors, fonts)
@@ -37,9 +38,10 @@ A lightweight single-file HTML time tracker for a defense industry engineer who 
 │       ├── live-cc-tracker.js     ← setActiveCC, finalizeActiveTimer
 │       ├── cc-modals.js           ← Add/Edit/Manage/Delete CC modals
 │       ├── end-of-day.js          ← EOD modal, holidays, export CSV, cold storage
-│       ├── spread-hours.js        ← spread-hours modal
+│       ├── spread-hours.js        ← Auto-Allocate modal
 │       ├── clock.js               ← wall-clock bar, sessions modal
-│       └── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
+│       ├── tick-intervals.js      ← 30s midnight tick, 1s live-CC tick
+│       └── *.test.js              ← Vitest unit tests (one file per module)
 └── dist/
     └── time_tracker.html          ← build output (single self-contained HTML)
 ```
@@ -51,6 +53,19 @@ npm install          # one-time setup
 npm run dev          # local dev server with hot reload
 npm run build        # produces dist/time_tracker.html (single self-contained file)
 npm run preview      # preview the built file locally
+npm test             # run the full Vitest unit test suite
+```
+
+## Testing
+
+Unit tests live in `src/js/*.test.js` (one file per module). A Node.js environment shim is in `src/test-setup.js` (polyfills `localStorage`, stubs `document`/`navigator`). Vitest is configured in `vite.config.js` under the `test` key.
+
+**Rule: always run `npm test` locally and confirm all tests pass before pushing.**
+
+```bash
+npm test                                 # run all tests
+npm test -- --reporter=verbose           # verbose per-test output
+npm test -- src/js/persistence.test.js   # run a single test file
 ```
 
 ## Constraints — read before touching anything
@@ -72,17 +87,18 @@ npm run preview      # preview the built file locally
 - Wall-clock tracker (clock bar): Start/Stop with animated running indicator, elapsed time, and session log
 - Auto-Allocate: distributes unallocated clock time across selected charge codes
 - Auto-resets daily hours and log at midnight; charge codes are never cleared on reset
-- End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; two copy buttons: plain-text summary and CSV
-- Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; holiday columns accented green; per-CC totals column and per-day totals row; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
-- Export / copy: plain-text summary for EOD transcription into Costpoint (includes saved note); CSV copy outputs one row per logged CC with columns Date, Program, Work Package, Activity, Code, Nickname, Hours, Note (no header row)
+- End of day modal: shows hours summary with a per-CC note input (persisted to `day.notes[id]`); CC labels turn bold+blue when their note is saved; clock bar gets a blue halo when any CC has a saved note for that day; "Copy to clipboard" button copies a plain-text summary (program-prefixed label + hours + note per CC)
+- Pay period modal: read-only table of all CCs × working days in the current pay period; today's column highlighted; holiday columns accented green; cells with a saved note are accented; per-CC totals column and per-day totals row; "Export CSV" button pre-fills the pay period date range; opened via "Pay period" toolbar button (`openPayPeriodModal()`)
+- Export / copy: plain-text summary for EOD transcription into Costpoint (includes saved note); CSV export (date range) via Settings → "Export CSV…" outputs one row per CC per day with columns Date, Program, Work Package, Activity, Code, Nickname, Hours, Note (no header row)
 - Manual "Reset day" button (clears hours and log, keeps charge codes); on holidays, 8 h of Holiday time re-apply on the next render
-- Add / edit / remove charge codes via modal UI
+- Add / edit / remove charge codes via modal UI; delete now goes through a `confirmDeleteCC()` confirmation step that offers Archive as an alternative
 - Escape key closes modals
-- Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed: they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
-- Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Holidays button in the hidden data footer; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
-- Help modal: in-app quick-reference panel (two-workflow storage comparison table, keyboard shortcuts, workflow summary, and feature tips) opened from the hidden data footer
-- About modal: version, description and author info accessed via the settings modal
-- Backup file: optional linked JSON file on disk via File System Access API; accumulates all history; auto-saves every 6 minutes; accessed via the settings modal
+- Predefined "Pay Adjustment" charge codes (PTO, HOL — Holiday, Bereavement, Jury Duty, etc.) are system-managed (IDs `pa0001`–`pa0009`): they cannot be archived or deleted; missing codes are re-injected automatically on load/import (`ensurePayAdjustmentCodes()`)
+- Holiday management: editable list of holiday dates (stored in `state.holidays`); accessed via Settings → Holidays; holiday days auto-fill 8 h of Holiday (HOL) time on first visit
+- Help modal: in-app quick-reference panel (daily workflow, data-storage comparison table, keyboard shortcuts, and feature tips); opened from Settings modal
+- About modal: version, description, and author info; accessed via the "About" link in the data footer
+- Settings modal (gear icon ⚙ in toolbar): UI toggles (increment buttons, code display), Holiday editor, Manual backup (Import/Export JSON), Auto-backup file link, Data Management (Export CSV, Cold storage), and Help button
+- Backup file: optional linked JSON file on disk via File System Access API; accumulates all history; auto-saves every 6 minutes; accessed via Settings modal
 - Cold storage: exports older days to CSV and prunes them from localStorage (and the backup archive, if linked); works with or without a linked backup file; requires File System Access API for CSV save
 
 ## Keeping docs in sync
@@ -151,14 +167,14 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 |---|---|
 | `src/js/utilities.js` | `esc()` HTML-escape helper, `uid()` random-ID generator |
 | `src/js/modal-infra.js` | `showModal(html)` and `closeModal()` |
-| `src/js/persistence.js` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()`; backup file (IndexedDB + File System Access API) |
+| `src/js/persistence.js` | `PREDEFINED_PA_CODES` constant; `localStorage` load/save, v2→v3 migration, `dayData()`, JSON export/import, `validateImport()`; `ensurePayAdjustmentCodes()`; `getHolidays()`, `isHoliday()`, `applyHolidayPrePopulate()`; backup file (IndexedDB + File System Access API) |
 | `src/js/state.js` | Global `state` and `viewDate` init; `ensurePayAdjustmentCodes()` call; stale active-timer cleanup |
 | `src/js/day-navigation.js` | `navigate(delta)`, `goToToday()` |
 | `src/js/cc-rendering.js` | `renderCCControls`, `renderIndividualCard`, `renderProgramCard`, wheel handler, `getBlocks()`, `blocksToFlat()` |
 | `src/js/pay-period.js` | Pay period bar calculation, holiday column highlighting, `openPayPeriodModal()`, and main `render()` |
 | `src/js/live-cc-tracker.js` | `setActiveCC`, `finalizeActiveTimer` — links clock sessions to a CC |
-| `src/js/cc-modals.js` | `isProtectedCC()`; Add (with Dayforce paste), Edit, Manage list, Delete modals; Archive/Delete guards for Pay Adjustment CCs |
-| `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, CSV copy, day reset; `openHolidays()`, `saveHolidays()`, `openHelpAbout()`; Export CSV (date-range); Cold Storage |
+| `src/js/cc-modals.js` | `isProtectedCC()` (regex guard for `pa0001`–`pa0009`); Add (with Dayforce paste), Edit, Manage list, `confirmDeleteCC()`, `deleteCC()` modals; Archive/Delete guards for Pay Adjustment CCs |
+| `src/js/end-of-day.js` | EOD modal: hours summary, per-CC notes, plain-text copy, day reset; `openHolidays()`, `saveHolidays()`, `openHelp()`, `openAbout()`, `openSettings()`; Export CSV (date-range); Cold Storage |
 | `src/js/spread-hours.js` | `computeSpread`, `openSpread`, `refreshSpreadPreview`, `applySpread` — Auto-Allocate modal |
 | `src/js/clock.js` | Clock session helpers, `renderClock`, Start/Stop, sessions-edit modal |
 | `src/js/tick-intervals.js` | 30 s midnight-reset tick; 1 s live-CC auto-commit tick |
