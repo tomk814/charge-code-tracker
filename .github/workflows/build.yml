@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir -p release/data
           cp dist/time_tracker.html release/time_tracker.html
-          echo '{"codes":[],"days":{},"holidays":[],"showIncrements":false}' > release/data/init.json
+          cp src/data/init.json release/data/init.json
           cp release/data/init.json release/data/backup.json
           cd release && zip -r ../time_tracker.zip .
 
