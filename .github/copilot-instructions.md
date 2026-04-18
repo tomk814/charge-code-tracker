@@ -37,7 +37,9 @@ src/
 
 ## Commits & PR titles
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/). The PR title is the squash-merge commit that release-please reads — a plain-English title produces no release.
+**Always generate PR titles in the format `<type>[(<scope>)][!]: <description>`. Never use plain English titles.**
+
+The PR title is the squash-merge commit that release-please reads — a plain-English title produces no release. Follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 | Type | Bump |
 |---|---|
