@@ -1,0 +1,37 @@
+name: PR Title Lint
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check conventional commit title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Types that release-please acts on (bump) or passes through (no-bump)
+          PATTERN='^(feat|fix|perf|revert|chore|docs|style|refactor|test|build|ci)(\([^)]+\))?(!)?: .+'
+          if echo "$PR_TITLE" | grep -qP "$PATTERN"; then
+            echo "OK: \"$PR_TITLE\""
+          else
+            echo "Error: PR title does not follow Conventional Commits format."
+            echo ""
+            echo "  Got:      $PR_TITLE"
+            echo "  Expected: <type>[(<scope>)][!]: <description>"
+            echo ""
+            echo "  Version-bumping types: feat (minor), fix/perf/revert (patch)"
+            echo "  Non-bumping types:     chore, docs, style, refactor, test, build, ci"
+            echo "  Breaking change:       append ! before the colon for a major bump"
+            echo ""
+            echo "  Examples:"
+            echo "    fix: correct hour rounding on wheel scroll"
+            echo "    feat(export): add CSV column for nickname"
+            echo "    feat!: redesign localStorage schema"
+            exit 1
+          fi
