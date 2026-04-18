@@ -1,0 +1,44 @@
+name: Cleanup Prereleases
+
+# Runs when a pull request from develop into main is merged.
+# Deletes all alpha prerelease GitHub Releases and their tags.
+# Stable releases are never touched.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all prerelease releases and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAGS=$(gh release list \
+            --repo "${{ github.repository }}" \
+            --json tagName,isPrerelease \
+            --jq '.[] | select(.isPrerelease == true) | .tagName')
+
+          if [ -z "$TAGS" ]; then
+            echo "No prerelease releases found — nothing to clean up."
+            exit 0
+          fi
+
+          echo "Prerelease releases to delete:"
+          echo "$TAGS"
+
+          echo "$TAGS" | while IFS= read -r TAG; do
+            [ -z "$TAG" ] && continue
+            echo "Deleting prerelease: $TAG"
+            gh release delete "$TAG" \
+              --repo "${{ github.repository }}" \
+              --yes \
+              --cleanup-tag
+          done

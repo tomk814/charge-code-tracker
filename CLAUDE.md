@@ -207,3 +207,40 @@ The source is organized into ES modules under `src/js/`. Each file corresponds t
 | `src/styles/program-cards.css` | Program group cards, CC row internals, active-tracking highlight, btn-track |
 | `src/styles/modals.css` | Modal overlay/box, form fields, EOD note, manage items, increment buttons, help modal |
 | `src/styles/clock-bar.css` | Clock bar states, sessions modal rows, day-nav buttons, past-day banner |
+
+## Conventional Commits & Versioning
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated semantic versioning. On push to `main` or `develop`, release-please analyzes commits since the last release tag, creates a Release PR with the correct version bump and CHANGELOG, and — when that PR is merged — publishes a GitHub Release and tag. The build workflow then attaches the packaged app zip to the release.
+
+### Commit message format
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Version bump rules
+
+| Commit type | Example | Version bump |
+|---|---|---|
+| `fix:` | `fix: correct hour rounding on wheel scroll` | Patch (`1.0.0` → `1.0.1`) |
+| `feat:` | `feat: add keyboard shortcut for EOD modal` | Minor (`1.0.0` → `1.1.0`) |
+| `feat!:` or `BREAKING CHANGE:` in footer | `feat!: redesign localStorage schema` | Major (`1.0.0` → `2.0.0`) |
+
+Other types (`chore:`, `docs:`, `style:`, `refactor:`, `test:`, `perf:`) do not trigger a version bump on their own.
+
+### Release channels
+
+| Branch | Release type | Tag format | Example |
+|---|---|---|---|
+| `main` | Stable | `vMAJOR.MINOR.PATCH` | `v1.2.3` |
+| `develop` | Alpha prerelease | `vMAJOR.MINOR.PATCH-alpha.N` | `v1.2.3-alpha.1` |
+
+Alpha prereleases are automatically deleted (releases + tags) when a PR from `develop` into `main` is merged.
+
+### Runtime version string
+
+`VITE_APP_VERSION` is injected at build time from the release tag. The About modal displays it as the app version. During development (`npm run dev`) it falls back to `'dev'`.
