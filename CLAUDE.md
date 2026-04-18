@@ -241,6 +241,15 @@ Other types (`chore:`, `docs:`, `style:`, `refactor:`, `test:`, `perf:`) do not 
 
 Alpha prereleases are automatically deleted (releases + tags) when a PR from `develop` into `main` is merged.
 
+### PR titles
+
+**PR titles must follow the same `<type>: <description>` format as commit messages.** Release-please reads the squash-merge commit — which GitHub derives from the PR title — to determine the version bump. A PR titled `fix: correct hour rounding` produces a patch bump; `feat: add keyboard shortcut` produces a minor bump. A plain English title like `"Fix the rounding bug"` is silently ignored and produces no release.
+
+- Keep the title under ~72 characters.
+- Use imperative mood: `fix: correct …`, not `fix: corrected …`.
+- No trailing period.
+- Scope is optional but helpful: `feat(export): add CSV column for nickname`.
+
 ### Runtime version string
 
 `VITE_APP_VERSION` is injected at build time from the release tag. The About modal displays it as the app version. During development (`npm run dev`) it falls back to `'dev'`.
