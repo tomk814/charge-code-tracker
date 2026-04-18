@@ -1,0 +1,36 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Stable releases from main: v1.2.3
+  release-stable:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RP_TOKEN }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Alpha prereleases from develop: v1.2.3-alpha.1
+  release-alpha:
+    if: github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RP_TOKEN }}
+          config-file: .release-please-config-alpha.json
+          manifest-file: .release-please-manifest-alpha.json
+          target-branch: develop
