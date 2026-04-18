@@ -32,5 +32,5 @@ jobs:
         with:
           token: ${{ secrets.RP_TOKEN }}
           config-file: .release-please-config-alpha.json
-          manifest-file: .release-please-manifest.json
+          manifest-file: .release-please-manifest-alpha.json
           target-branch: develop

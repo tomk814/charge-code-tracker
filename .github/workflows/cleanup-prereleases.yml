@@ -17,26 +17,26 @@ jobs:
     if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Delete all prerelease releases and tags
+      - name: Delete all alpha prerelease releases and tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAGS=$(gh release list \
             --repo "${{ github.repository }}" \
             --json tagName,isPrerelease \
-            --jq '.[] | select(.isPrerelease == true) | .tagName')
+            --jq '.[] | select(.isPrerelease == true and (.tagName | contains("-alpha."))) | .tagName')
 
           if [ -z "$TAGS" ]; then
-            echo "No prerelease releases found — nothing to clean up."
+            echo "No alpha prerelease releases found — nothing to clean up."
             exit 0
           fi
 
-          echo "Prerelease releases to delete:"
+          echo "Alpha prerelease releases to delete:"
           echo "$TAGS"
 
           echo "$TAGS" | while IFS= read -r TAG; do
             [ -z "$TAG" ] && continue
-            echo "Deleting prerelease: $TAG"
+            echo "Deleting alpha prerelease: $TAG"
             gh release delete "$TAG" \
               --repo "${{ github.repository }}" \
               --yes \
