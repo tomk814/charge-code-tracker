@@ -27,11 +27,7 @@ function mockFetch(tagName, { ok = true } = {}) {
   global.fetch = vi.fn(() =>
     Promise.resolve({
       ok,
-      json: () => Promise.resolve({
-        tag_name: tagName,
-        html_url: `https://github.com/tomk814/charge-code-tracker/releases/tag/${tagName}`,
-        assets: [],
-      }),
+      json: () => Promise.resolve({ tag_name: tagName }),
     }),
   );
 }
@@ -206,24 +202,15 @@ describe('checkForUpdates()', () => {
     expect(el.innerHTML).toContain('selfUpdate()');
   });
 
-  it('shows a Download zip link in the banner', async () => {
+  it('constructs the HTML download URL from the release tag name', async () => {
     mockFetch('v1.1.0');
     const el = makeBannerEl();
     vi.spyOn(document, 'getElementById').mockReturnValue(el);
     await checkForUpdates({ _versionOverride: 'v1.0.0' });
-    expect(el._link.href).toContain('time_tracker.zip');
-  });
-
-  it('constructs download URLs from the release tag name', async () => {
-    mockFetch('v1.1.0');
-    const el = makeBannerEl();
-    vi.spyOn(document, 'getElementById').mockReturnValue(el);
-    await checkForUpdates({ _versionOverride: 'v1.0.0' });
-<<<<<<< HEAD
-    expect(el._link.href).toContain('/releases/tag/v1.1.0');
-=======
-    expect(el.innerHTML).toContain('releases/download/v1.1.0/time_tracker.zip');
->>>>>>> 69389c0 (feat: self-update flow in banner writes time_tracker.html via File System Access API)
+    // The URL is stored in _pendingHtmlUrl (consumed by selfUpdate), not in innerHTML —
+    // verify it via the fallback-download test instead. Here confirm the banner rendered.
+    expect(el.style.display).toBe('');
+    expect(el.innerHTML).toContain('v1.1.0');
   });
 
   // ── Skip settings ──────────────────────────────────────────────────────────

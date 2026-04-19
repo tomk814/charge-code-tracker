@@ -10,7 +10,6 @@ export const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
 
 // Set by showUpdateBanner(); consumed by selfUpdate().
 let _pendingHtmlUrl = null;
-let _pendingZipUrl = null;
 
 export function initVersionFooter() {
   const el = document.getElementById('footer-version-label');
@@ -124,22 +123,19 @@ export async function checkForUpdates({ _versionOverride } = {}) {
 
     const tag = data.tag_name;
     const htmlUrl = `https://github.com/${REPO}/releases/download/${tag}/time_tracker.html`;
-    const zipUrl = `https://github.com/${REPO}/releases/download/${tag}/time_tracker.zip`;
-    showUpdateBanner(tag, htmlUrl, zipUrl);
+    showUpdateBanner(tag, htmlUrl);
   } catch {
     // fail silently — offline or API unavailable
   }
 }
 
-function showUpdateBanner(version, htmlUrl, zipUrl) {
+function showUpdateBanner(version, htmlUrl) {
   _pendingHtmlUrl = htmlUrl;
-  _pendingZipUrl = zipUrl;
   const el = document.getElementById('update-banner');
   if (!el) return;
   el.innerHTML =
     `Update available: <strong>${esc(version)}</strong> &mdash; ` +
     `<button id="update-self-btn" class="update-banner-btn" onclick="selfUpdate()">Update</button>` +
-    ` &middot; <a href="${esc(zipUrl)}" target="_blank" rel="noopener noreferrer">Download zip</a>` +
     `<button class="update-banner-dismiss" onclick="dismissUpdateBanner()" ` +
     `title="Dismiss">&#10005;</button>`;
   el.style.display = '';
