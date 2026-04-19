@@ -29,7 +29,7 @@ import {
 } from './js/cc-modals.js';
 import { openEndOfDay, saveEodNote, copyEndOfDay, confirmReset, doReset } from './js/end-of-day.js';
 import { openSettings, openHelp, openAbout, toggleUpdateCheck, toggleSkipPatch, toggleSkipMinor } from './js/settings.js';
-import { checkForUpdates, dismissUpdateBanner, initVersionFooter } from './js/version-check.js';
+import { checkForUpdates, dismissUpdateBanner, selfUpdate, initVersionFooter } from './js/version-check.js';
 import { openHolidays, saveHolidays } from './js/holidays.js';
 import { openExportCSV, doExportCSV } from './js/export.js';
 import { openColdStorage, updateColdStoragePreview, prepColdStorageConfirm, doColdStorage } from './js/cold-storage.js';
@@ -80,7 +80,7 @@ Object.assign(window, {
   // settings / help / about
   openSettings, openHelp, openAbout,
   toggleUpdateCheck, toggleSkipPatch, toggleSkipMinor,
-  dismissUpdateBanner,
+  dismissUpdateBanner, selfUpdate,
   // holidays
   openHolidays, saveHolidays,
   // export

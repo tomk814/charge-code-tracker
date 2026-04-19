@@ -1,7 +1,7 @@
-// Tests for version-check.js: parseVersion, isNewer, and checkForUpdates.
+// Tests for version-check.js: parseVersion, isNewer, checkForUpdates, selfUpdate.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { parseVersion, isNewer, checkForUpdates, dismissUpdateBanner } from './version-check.js';
+import { parseVersion, isNewer, checkForUpdates, dismissUpdateBanner, selfUpdate } from './version-check.js';
 
 // ── Mock persistence.getSetting ───────────────────────────────────────────────
 // Default: all update settings off (feature enabled, no skipping).
@@ -23,29 +23,22 @@ vi.mock('./utilities.js', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function mockFetch(tagName, { ok = true, assetUrl = null } = {}) {
+function mockFetch(tagName, { ok = true } = {}) {
   global.fetch = vi.fn(() =>
     Promise.resolve({
       ok,
       json: () => Promise.resolve({
         tag_name: tagName,
         html_url: `https://github.com/tomk814/charge-code-tracker/releases/tag/${tagName}`,
-        assets: assetUrl ? [{ browser_download_url: assetUrl }] : [],
+        assets: [],
       }),
     }),
   );
 }
 
 // Track banner mutations via a fake element.
-// Includes a mock querySelector so tests can inspect the link href set via DOM property.
 function makeBannerEl() {
-  const link = { href: '' };
-  return {
-    innerHTML: '',
-    style: { display: 'none' },
-    querySelector: (sel) => sel === '#update-banner-link' ? link : null,
-    _link: link,
-  };
+  return { innerHTML: '', style: { display: 'none' }, appendChild: vi.fn() };
 }
 
 beforeEach(() => {
@@ -56,8 +49,6 @@ beforeEach(() => {
   }[key] ?? false));
 
   global.fetch = vi.fn();
-
-  // Default getElementById returns null (from test-setup), good for most tests.
 });
 
 afterEach(() => {
@@ -206,20 +197,33 @@ describe('checkForUpdates()', () => {
     expect(el.innerHTML).toContain('v1.1.0');
   });
 
-  it('includes a download link in the banner', async () => {
-    mockFetch('v1.1.0', { assetUrl: 'https://github.com/tomk814/charge-code-tracker/releases/download/v1.1.0/time_tracker.zip' });
+  it('shows an Update button in the banner', async () => {
+    mockFetch('v1.1.0');
+    const el = makeBannerEl();
+    vi.spyOn(document, 'getElementById').mockReturnValue(el);
+    await checkForUpdates({ _versionOverride: 'v1.0.0' });
+    expect(el.innerHTML).toContain('update-self-btn');
+    expect(el.innerHTML).toContain('selfUpdate()');
+  });
+
+  it('shows a Download zip link in the banner', async () => {
+    mockFetch('v1.1.0');
     const el = makeBannerEl();
     vi.spyOn(document, 'getElementById').mockReturnValue(el);
     await checkForUpdates({ _versionOverride: 'v1.0.0' });
     expect(el._link.href).toContain('time_tracker.zip');
   });
 
-  it('falls back to html_url when there are no release assets', async () => {
-    mockFetch('v1.1.0', { assetUrl: null });
+  it('constructs download URLs from the release tag name', async () => {
+    mockFetch('v1.1.0');
     const el = makeBannerEl();
     vi.spyOn(document, 'getElementById').mockReturnValue(el);
     await checkForUpdates({ _versionOverride: 'v1.0.0' });
+<<<<<<< HEAD
     expect(el._link.href).toContain('/releases/tag/v1.1.0');
+=======
+    expect(el.innerHTML).toContain('releases/download/v1.1.0/time_tracker.zip');
+>>>>>>> 69389c0 (feat: self-update flow in banner writes time_tracker.html via File System Access API)
   });
 
   // ── Skip settings ──────────────────────────────────────────────────────────
@@ -294,5 +298,143 @@ describe('dismissUpdateBanner()', () => {
   it('does nothing when the banner element is absent', () => {
     vi.spyOn(document, 'getElementById').mockReturnValue(null);
     expect(() => dismissUpdateBanner()).not.toThrow();
+  });
+});
+
+// ── selfUpdate() ──────────────────────────────────────────────────────────────
+
+describe('selfUpdate()', () => {
+  // Each test that needs a pending URL must first call checkForUpdates() to
+  // populate _pendingHtmlUrl via showUpdateBanner().
+
+  async function setPendingUrl() {
+    mockFetch('v1.1.0');
+    const bannerEl = makeBannerEl();
+    vi.spyOn(document, 'getElementById').mockReturnValue(bannerEl);
+    await checkForUpdates({ _versionOverride: 'v1.0.0' });
+    vi.restoreAllMocks();
+  }
+
+  it('falls back to a download anchor when File System Access API is unavailable', async () => {
+    await setPendingUrl();
+
+    // Ensure showSaveFilePicker is absent from globalThis
+    delete global.showSaveFilePicker;
+
+    const createdEl = { href: '', download: '', click: vi.fn() };
+    vi.spyOn(document, 'createElement').mockReturnValue(createdEl);
+    vi.spyOn(document, 'getElementById').mockReturnValue(null);
+    // Stub body methods that selfUpdate calls
+    const origBody = document.body;
+    document.body = { appendChild: vi.fn(), removeChild: vi.fn() };
+
+    await selfUpdate();
+
+    expect(createdEl.download).toBe('time_tracker.html');
+    expect(createdEl.href).toContain('time_tracker.html');
+    expect(createdEl.click).toHaveBeenCalled();
+
+    document.body = origBody;
+  });
+
+  it('restores the Update button when the user cancels the file picker', async () => {
+    await setPendingUrl();
+
+    const btn = { disabled: false, textContent: 'Update' };
+    vi.spyOn(document, 'getElementById').mockImplementation(id =>
+      id === 'update-self-btn' ? btn : null,
+    );
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, text: () => Promise.resolve('<html></html>') }),
+    );
+
+    const abortErr = Object.assign(new Error('Aborted'), { name: 'AbortError' });
+    global.showSaveFilePicker = vi.fn(() => Promise.reject(abortErr));
+
+    await selfUpdate();
+
+    expect(btn.disabled).toBe(false);
+    expect(btn.textContent).toBe('Update');
+
+    delete global.showSaveFilePicker;
+    delete global.fetch;
+  });
+
+  it('shows an error in the banner when the fetch fails', async () => {
+    await setPendingUrl();
+
+    const btn = { disabled: false, textContent: 'Update' };
+    const bannerEl = { ...makeBannerEl() };
+    vi.spyOn(document, 'getElementById').mockImplementation(id => {
+      if (id === 'update-self-btn') return btn;
+      if (id === 'update-banner') return bannerEl;
+      return null;
+    });
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: false, status: 404 }),
+    );
+    global.showSaveFilePicker = vi.fn();
+
+    await selfUpdate();
+
+    expect(bannerEl.appendChild).toHaveBeenCalled();
+    expect(btn.disabled).toBe(false);
+
+    delete global.showSaveFilePicker;
+    delete global.fetch;
+  });
+
+  it('writes the file and prompts to reload on success', async () => {
+    await setPendingUrl();
+
+    const btn = { disabled: false, textContent: 'Update' };
+    vi.spyOn(document, 'getElementById').mockReturnValue(btn);
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, text: () => Promise.resolve('<html>new</html>') }),
+    );
+
+    const writable = { write: vi.fn(), close: vi.fn() };
+    const fileHandle = { createWritable: vi.fn(() => Promise.resolve(writable)) };
+    global.showSaveFilePicker = vi.fn(() => Promise.resolve(fileHandle));
+    global.confirm = vi.fn(() => false); // user declines reload
+
+    await selfUpdate();
+
+    expect(writable.write).toHaveBeenCalledWith('<html>new</html>');
+    expect(writable.close).toHaveBeenCalled();
+    expect(global.confirm).toHaveBeenCalled();
+
+    delete global.showSaveFilePicker;
+    delete global.confirm;
+    delete global.fetch;
+  });
+
+  it('reloads the page when the user confirms', async () => {
+    await setPendingUrl();
+
+    vi.spyOn(document, 'getElementById').mockReturnValue(null);
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, text: () => Promise.resolve('<html>new</html>') }),
+    );
+
+    const writable = { write: vi.fn(), close: vi.fn() };
+    const fileHandle = { createWritable: vi.fn(() => Promise.resolve(writable)) };
+    global.showSaveFilePicker = vi.fn(() => Promise.resolve(fileHandle));
+    global.confirm = vi.fn(() => true);
+    const reloadSpy = vi.fn();
+    global.location = { reload: reloadSpy };
+
+    await selfUpdate();
+
+    expect(reloadSpy).toHaveBeenCalled();
+
+    delete global.showSaveFilePicker;
+    delete global.confirm;
+    delete global.location;
+    delete global.fetch;
   });
 });
