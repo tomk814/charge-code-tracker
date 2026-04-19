@@ -157,6 +157,8 @@ The canonical blank-slate structure is in [`src/data/init.json`](src/data/init.j
 - Escape user-supplied strings before inserting into innerHTML (`esc()` function).
 - Modals are injected into `#modal-root` and removed on close. No `display:none` toggling.
 - Clicking the modal backdrop closes the modal. Escape key also closes.
+- **Never mix structural markup and dynamic content in a single `innerHTML` template literal.** Setting `element.innerHTML = \`<div class="${dynamic}">${html}</div>\`` is a CodeQL "DOM text reinterpreted as HTML" finding even when `html` is intentionally HTML — the sink is the whole string, so CodeQL treats `dynamic` as tainted too. Instead: build wrapper elements with `createElement` + property assignment, attach event listeners with `addEventListener`, then set `.innerHTML` on the innermost element only.
+- **Attribute values built from sanitized strings are still flagged if they appear in the same `innerHTML` assignment as other dynamic content.** A regex strip like `replace(/[^a-zA-Z0-9_-]/g, '')` is valid sanitization, but it doesn't help when CodeQL sees the sanitized value flowing into a large template literal alongside unsanitized HTML. Keep attribute-only DOM construction (`createElement`, `.className =`, `.setAttribute`) separate from HTML-content assignment (`.innerHTML = html`).
 ## What good looks like
 
 - Adding time to a CC is 1–2 clicks with no typing required.
