@@ -82,7 +82,7 @@ export async function selfUpdate() {
     if (bannerEl) {
       const span = document.createElement('span');
       span.style.color = 'var(--red)';
-      span.textContent = ' (download failed — try the zip)';
+      span.textContent = ' (download failed)';
       bannerEl.appendChild(span);
     }
     if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
@@ -134,7 +134,7 @@ function showUpdateBanner(version, htmlUrl) {
   const el = document.getElementById('update-banner');
   if (!el) return;
   el.innerHTML =
-    `Update available: <strong>${esc(version)}</strong> &mdash; ` +
+    `Update available: <strong>${esc(version)}</strong> &larr; ${esc(APP_VERSION)} &mdash; ` +
     `<button id="update-self-btn" class="update-banner-btn" onclick="selfUpdate()">Update</button>` +
     `<button class="update-banner-dismiss" onclick="dismissUpdateBanner()" ` +
     `title="Dismiss">&#10005;</button>`;
