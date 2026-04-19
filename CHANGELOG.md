@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/tomk814/charge-code-tracker/compare/v1.3.0...v1.3.1) (2026-04-19)
+
+
+### Bug Fixes
+
+* Refactor selfUpdate function and enhance About modal ([#63](https://github.com/tomk814/charge-code-tracker/issues/63)) ([42a92cf](https://github.com/tomk814/charge-code-tracker/commit/42a92cf08217a3c9a8210f4bdd907929ad3e3ef6))
+
 ## [1.3.0](https://github.com/tomk814/charge-code-tracker/compare/v1.2.0...v1.3.0) (2026-04-19)
 
 
