@@ -112,8 +112,9 @@ export function prepColdStorageConfirm() {
     <p class="reset-warn">This cannot be undone.</p>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
-      <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="doColdStorage('${cutoff}')">Save CSV &amp; delete</button>
+      <button class="tool-btn" id="_cold-proceed" style="color:var(--red);border-color:var(--bd-red)">Save CSV &amp; delete</button>
     </div>`;
+  _t.content.querySelector('#_cold-proceed').addEventListener('click', () => doColdStorage(cutoff));
   showModal(_t.content);
 }
 

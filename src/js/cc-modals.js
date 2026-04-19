@@ -123,97 +123,202 @@ export function openManage() {
   const hidden   = state.codes.filter(cc => cc.hidden && !cc.archived);
   const archived = state.codes.filter(cc => cc.archived);
 
-  const activeSection = nb === 0
-    ? '<p style="font-size:13px;color:var(--fg-2)">No active charge codes.</p>'
-    : blocks.map((block, bi) => {
-        const bUp = bi === 0 ? 'disabled' : '';
-        const bDn = bi === nb-1 ? 'disabled' : '';
-        if (block.type === 'program') {
-          const ccRows = block.codes.map((cc, ci) => `
-            <div class="cc-manage-item cc-manage-item--nested">
-              <div class="reorder-btns">
-                <button class="reorder-btn" onclick="moveCCInBlock('${cc.id}',-1)" ${ci===0?'disabled':''} title="Move up">&#9650;</button>
-                <button class="reorder-btn" onclick="moveCCInBlock('${cc.id}',1)" ${ci===block.codes.length-1?'disabled':''} title="Move down">&#9660;</button>
-              </div>
-              <div class="cc-manage-info">
-                <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
-                <span class="cc-manage-code">${esc(cc.code)}</span>
-              </div>
-              <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-              <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-              ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
-              ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
-            </div>`).join('');
-          const pgDisplayName = block.codes.find(c => c.programNickname)?.programNickname || block.name;
-          return `<div class="pg-manage-block">
-            <div class="pg-manage-header">
-              <div class="reorder-btns">
-                <button class="reorder-btn" onclick="moveBlock(${bi},-1)" ${bUp} title="Move program up">&#9650;</button>
-                <button class="reorder-btn" onclick="moveBlock(${bi},1)" ${bDn} title="Move program down">&#9660;</button>
-              </div>
-              <span class="pg-manage-name" title="${esc(block.name)}">${esc(pgDisplayName)}</span>
-            </div>${ccRows}
-          </div>`;
-        } else {
-          const cc = block.codes[0];
-          return `<div class="cc-manage-item">
-            <div class="reorder-btns">
-              <button class="reorder-btn" onclick="moveBlock(${bi},-1)" ${bUp} title="Move up">&#9650;</button>
-              <button class="reorder-btn" onclick="moveBlock(${bi},1)" ${bDn} title="Move down">&#9660;</button>
-            </div>
-            <div class="cc-manage-info">
-              <span class="cc-manage-name">${esc(cc.nickname || cc.name)}</span>
-              <span class="cc-manage-code">${esc(cc.code)}</span>
-            </div>
-            <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-            <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Hide</button>
-            ${isProtectedCC(cc.id) ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Archive</button>`}
-            ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
-          </div>`;
-        }
-      }).join('');
+  const frag = document.createDocumentFragment();
 
-  const hiddenSection = hidden.length
-    ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
-        <div style="font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Hidden</div>
-        ${hidden.map(cc => `<div class="cc-manage-item">
-          <div class="cc-manage-info">
-            <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
-            <span class="cc-manage-code">${esc(cc.code)}</span>
-          </div>
-          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="tool-btn" onclick="toggleHideCC('${cc.id}')">Unhide</button>
-          ${isProtectedCC(cc.id) ? '' : `<button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>`}
-        </div>`).join('')}
-      </div>`
-    : '';
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px';
+  const h2 = document.createElement('h2');
+  h2.style.margin = '0';
+  h2.textContent = 'Manage charge codes';
+  const closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-2);padding:2px 4px';
+  closeBtn.title = 'Close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.addEventListener('click', closeModal);
+  header.append(h2, closeBtn);
+  frag.appendChild(header);
 
-  const archivedSection = archived.length
-    ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)">
-        <div style="font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Archived</div>
-        ${archived.map(cc => `<div class="cc-manage-item">
-          <div class="cc-manage-info">
-            <span class="cc-manage-name" style="color:var(--fg-2)">${esc(cc.nickname || cc.name)}</span>
-            <span class="cc-manage-code">${esc(cc.code)}</span>
-          </div>
-          <button class="tool-btn" onclick="openEditCC('${cc.id}')">Edit</button>
-          <button class="tool-btn" onclick="toggleArchiveCC('${cc.id}')">Unarchive</button>
-          <button class="del-btn" onclick="confirmDeleteCC('${cc.id}')">Delete</button>
-        </div>`).join('')}
-      </div>`
-    : '';
+  // Empty state (only when truly no codes at all)
+  if (nb === 0 && !hidden.length && !archived.length) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;color:var(--fg-2)';
+    p.textContent = 'No charge codes yet.';
+    frag.appendChild(p);
+  }
 
-  const emptyState = nb === 0 && !hidden.length && !archived.length
-    ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
-    : '';
+  // Active section
+  if (nb === 0) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;color:var(--fg-2)';
+    p.textContent = 'No active charge codes.';
+    frag.appendChild(p);
+  } else {
+    for (let bi = 0; bi < blocks.length; bi++) {
+      const block = blocks[bi];
+      const isFirst = bi === 0;
+      const isLast  = bi === nb - 1;
 
-  const _t = document.createElement('template');
-  _t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <h2 style="margin:0">Manage charge codes</h2>
-    <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-2);padding:2px 4px" title="Close">&times;</button>
-  </div>${emptyState}${activeSection}${hiddenSection}${archivedSection}
-    <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`;
-  showModal(_t.content);
+      if (block.type === 'program') {
+        const pgDiv = document.createElement('div');
+        pgDiv.className = 'pg-manage-block';
+
+        const pgHeader = document.createElement('div');
+        pgHeader.className = 'pg-manage-header';
+
+        const pgBtns = document.createElement('div');
+        pgBtns.className = 'reorder-btns';
+        const pgUp = document.createElement('button');
+        pgUp.className = 'reorder-btn'; pgUp.innerHTML = '&#9650;'; pgUp.title = 'Move program up';
+        if (isFirst) pgUp.disabled = true;
+        pgUp.addEventListener('click', () => moveBlock(bi, -1));
+        const pgDn = document.createElement('button');
+        pgDn.className = 'reorder-btn'; pgDn.innerHTML = '&#9660;'; pgDn.title = 'Move program down';
+        if (isLast) pgDn.disabled = true;
+        pgDn.addEventListener('click', () => moveBlock(bi, 1));
+        pgBtns.append(pgUp, pgDn);
+
+        const pgDisplayName = block.codes.find(c => c.programNickname)?.programNickname || block.name;
+        const pgNameSpan = document.createElement('span');
+        pgNameSpan.className = 'pg-manage-name';
+        pgNameSpan.title = block.name;
+        pgNameSpan.textContent = pgDisplayName;
+
+        pgHeader.append(pgBtns, pgNameSpan);
+        pgDiv.appendChild(pgHeader);
+
+        block.codes.forEach((cc, ci) => {
+          pgDiv.appendChild(_makeManageItem(cc, {
+            nested: true,
+            reorderUp: () => moveCCInBlock(cc.id, -1), upDisabled: ci === 0,
+            reorderDn: () => moveCCInBlock(cc.id, 1),  dnDisabled: ci === block.codes.length - 1,
+            canHide: true, canArchive: !isProtectedCC(cc.id), canDelete: !isProtectedCC(cc.id),
+          }));
+        });
+
+        frag.appendChild(pgDiv);
+      } else {
+        const cc = block.codes[0];
+        frag.appendChild(_makeManageItem(cc, {
+          nested: false,
+          reorderUp: () => moveBlock(bi, -1), upDisabled: isFirst,
+          reorderDn: () => moveBlock(bi, 1),  dnDisabled: isLast,
+          canHide: true, canArchive: !isProtectedCC(cc.id), canDelete: !isProtectedCC(cc.id),
+        }));
+      }
+    }
+  }
+
+  // Hidden section
+  if (hidden.length) {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)';
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    lbl.textContent = 'Hidden';
+    sec.appendChild(lbl);
+    hidden.forEach(cc => sec.appendChild(_makeManageItem(cc, {
+      nameStyle: 'color:var(--fg-2)', canUnhide: true, canDelete: !isProtectedCC(cc.id),
+    })));
+    frag.appendChild(sec);
+  }
+
+  // Archived section
+  if (archived.length) {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid var(--bd-1)';
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    lbl.textContent = 'Archived';
+    sec.appendChild(lbl);
+    archived.forEach(cc => sec.appendChild(_makeManageItem(cc, {
+      nameStyle: 'color:var(--fg-2)', canUnarchive: true, canDelete: true,
+    })));
+    frag.appendChild(sec);
+  }
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.className = 'modal-actions';
+  const doneBtn = document.createElement('button');
+  doneBtn.className = 'tool-btn';
+  doneBtn.textContent = 'Done';
+  doneBtn.addEventListener('click', closeModal);
+  footer.appendChild(doneBtn);
+  frag.appendChild(footer);
+
+  showModal(frag);
+}
+
+// Build a single cc-manage-item element using DOM APIs (no innerHTML for user data).
+function _makeManageItem(cc, opts = {}) {
+  const item = document.createElement('div');
+  item.className = opts.nested ? 'cc-manage-item cc-manage-item--nested' : 'cc-manage-item';
+
+  if (opts.reorderUp) {
+    const btns = document.createElement('div');
+    btns.className = 'reorder-btns';
+    const up = document.createElement('button');
+    up.className = 'reorder-btn'; up.innerHTML = '&#9650;'; up.title = 'Move up';
+    if (opts.upDisabled) up.disabled = true;
+    up.addEventListener('click', opts.reorderUp);
+    const dn = document.createElement('button');
+    dn.className = 'reorder-btn'; dn.innerHTML = '&#9660;'; dn.title = 'Move down';
+    if (opts.dnDisabled) dn.disabled = true;
+    dn.addEventListener('click', opts.reorderDn);
+    btns.append(up, dn);
+    item.appendChild(btns);
+  }
+
+  const info = document.createElement('div');
+  info.className = 'cc-manage-info';
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'cc-manage-name';
+  if (opts.nameStyle) nameSpan.style.cssText = opts.nameStyle;
+  nameSpan.textContent = cc.nickname || cc.name;
+  const codeSpan = document.createElement('span');
+  codeSpan.className = 'cc-manage-code';
+  codeSpan.textContent = cc.code;
+  info.append(nameSpan, codeSpan);
+  item.appendChild(info);
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'tool-btn'; editBtn.textContent = 'Edit';
+  editBtn.addEventListener('click', () => openEditCC(cc.id));
+  item.appendChild(editBtn);
+
+  if (opts.canHide) {
+    const hideBtn = document.createElement('button');
+    hideBtn.className = 'tool-btn'; hideBtn.textContent = 'Hide';
+    hideBtn.addEventListener('click', () => toggleHideCC(cc.id));
+    item.appendChild(hideBtn);
+  }
+  if (opts.canUnhide) {
+    const unhideBtn = document.createElement('button');
+    unhideBtn.className = 'tool-btn'; unhideBtn.textContent = 'Unhide';
+    unhideBtn.addEventListener('click', () => toggleHideCC(cc.id));
+    item.appendChild(unhideBtn);
+  }
+  if (opts.canArchive) {
+    const archBtn = document.createElement('button');
+    archBtn.className = 'tool-btn'; archBtn.textContent = 'Archive';
+    archBtn.addEventListener('click', () => toggleArchiveCC(cc.id));
+    item.appendChild(archBtn);
+  }
+  if (opts.canUnarchive) {
+    const unarchBtn = document.createElement('button');
+    unarchBtn.className = 'tool-btn'; unarchBtn.textContent = 'Unarchive';
+    unarchBtn.addEventListener('click', () => toggleArchiveCC(cc.id));
+    item.appendChild(unarchBtn);
+  }
+  if (opts.canDelete) {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn'; delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', () => confirmDeleteCC(cc.id));
+    item.appendChild(delBtn);
+  }
+
+  return item;
 }
 
 export function openEditCC(id) {
