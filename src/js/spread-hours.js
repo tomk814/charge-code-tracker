@@ -41,9 +41,13 @@ export function openSpread() {
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
   const candidateCCs = state.codes.filter(c => !c.archived && !c.hidden && (day.hours[c.id]||0) > 0);
 
-  const bail = (msg) => showModal(`<h2>Allocate</h2>
+  const bail = (msg) => {
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>Allocate</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
-    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
+  };
 
   if (clockHrs === 0)            return bail('No clock time recorded for this day.');
   if (candidateCCs.length === 0) return bail('No charge code hours to spread from — log some time first.');
@@ -65,7 +69,8 @@ export function openSpread() {
     </div>`;
   }).join('');
 
-  showModal(`<h2>Allocate</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Allocate</h2>
     <div style="display:flex;gap:16px;font-size:12px;color:var(--fg-1);font-family:var(--font-mono);margin-bottom:12px">
       <span>Clock&nbsp;<strong style="color:var(--fg-0)">${clockHrs.toFixed(1)} hr</strong></span>
       <span>Logged&nbsp;<strong style="color:var(--fg-0)">${loggedHrs.toFixed(1)} hr</strong></span>
@@ -88,7 +93,8 @@ export function openSpread() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" id="sp-apply-btn" onclick="applySpread()">Apply</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 
   refreshSpreadPreview();
 }

@@ -15,9 +15,11 @@ export function openEndOfDay() {
   const total = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
 
   if (!activeCCs.length) {
-    showModal(`<h2>End of day</h2>
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>End of day</h2>
       <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">No hours logged for this day.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
     return;
   }
 
@@ -39,7 +41,8 @@ export function openEndOfDay() {
     </div>`;
   }).join('');
 
-  showModal(`<h2>End of day</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>End of day</h2>
     <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${dateStr}</p>
     <div style="display:flex;gap:10px;padding:2px 0 5px;font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd-1)">
       <span style="flex:1">Charge code</span>
@@ -54,7 +57,8 @@ export function openEndOfDay() {
       <button class="tool-btn" id="eod-copy-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
       <button class="tool-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 function collectEodNotes() {
@@ -116,13 +120,15 @@ export function confirmReset() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const label = viewDate===today() ? 'today'
     : viewDt.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
-  showModal(`<h2>Reset day</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Reset day</h2>
     <p style="font-size:14px;color:var(--color-text-secondary)">This clears all hours, history, and clock sessions for ${label}. Charge codes are kept.</p>
     <p class="reset-warn">This cannot be undone.</p>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn" style="color:var(--color-text-danger);border-color:var(--color-border-danger)" onclick="doReset()">Reset</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function doReset() {

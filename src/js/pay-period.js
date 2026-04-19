@@ -141,7 +141,8 @@ export function openPayPeriodModal(offset = 0) {
        </tr>`
     : '';
 
-  showModal(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+  const _t = document.createElement('template');
+  _t.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
       <button class="tool-btn" onclick="openPayPeriodModal(${offset - 1})" style="padding:2px 8px;font-size:14px">&#8249;</button>
       <h2 style="margin:0;flex:1">Pay period</h2>
       <button class="tool-btn" onclick="openPayPeriodModal(${offset + 1})" style="padding:2px 8px;font-size:14px" ${offset >= 0 ? 'disabled' : ''}>&#8250;</button>
@@ -157,7 +158,8 @@ export function openPayPeriodModal(offset = 0) {
     <div class="modal-actions">
       <button class="tool-btn" onclick="openExportCSV('${ymdLocal(ppStart)}', '${ymdLocal(ppEnd)}')">Export CSV</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
-    </div>`, 'wide');
+    </div>`;
+  showModal(_t.content, 'wide');
 }
 
 export function render() {
