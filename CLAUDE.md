@@ -157,6 +157,8 @@ The canonical blank-slate structure is in [`src/data/init.json`](src/data/init.j
 - Escape user-supplied strings before inserting into innerHTML (`esc()` function).
 - Modals are injected into `#modal-root` and removed on close. No `display:none` toggling.
 - Clicking the modal backdrop closes the modal. Escape key also closes.
+- **`showModal` accepts a `Node`, not an HTML string.** Each caller wraps its template literal in a `<template>` element and passes `.content`: `const _t = document.createElement('template'); _t.innerHTML = \`...\`; showModal(_t.content);`. This keeps `innerHTML` local to each call site (where static analysis can inspect it) and out of `showModal`'s parameter. `<template>` is preferred over a live element because its content fragment is inert — scripts inside never execute during parsing.
+- **Never mix structural markup and dynamic content in a single `innerHTML` assignment on a live element.** If a template literal contains both fixed structure (`<div class="...">`) and dynamic content (`${userValue}`), assign it to `element.innerHTML` only if all dynamic parts go through `esc()`. Even then, prefer the `<template>` parse pattern above — it removes the live-element concern entirely. Passing a mixed template literal as a function *parameter* that gets assigned to `innerHTML` inside the function is always a CodeQL finding; the taint follows the parameter regardless of how the caller constructs the string.
 ## What good looks like
 
 - Adding time to a CC is 1–2 clicks with no typing required.
