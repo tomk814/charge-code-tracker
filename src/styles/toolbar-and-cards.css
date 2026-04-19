@@ -101,6 +101,19 @@
   .update-banner a { color: var(--blue); text-decoration: none; }
   .update-banner a:hover { text-decoration: underline; }
 
+  .update-banner-btn {
+    background: none;
+    border: 1px solid var(--bd-blue);
+    border-radius: 3px;
+    color: var(--blue);
+    cursor: pointer;
+    font-size: 12px;
+    line-height: inherit;
+    padding: 1px 7px;
+  }
+  .update-banner-btn:hover { background: var(--bg-0); }
+  .update-banner-btn:disabled { opacity: .5; cursor: default; }
+
   .update-banner-dismiss {
     margin-left: auto;
     background: none;

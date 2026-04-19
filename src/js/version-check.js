@@ -8,6 +8,9 @@ import { esc } from './utilities.js';
 const REPO = 'tomk814/charge-code-tracker';
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
 
+// Set by showUpdateBanner(); consumed by selfUpdate().
+let _pendingHtmlUrl = null;
+
 export function initVersionFooter() {
   const el = document.getElementById('footer-version-label');
   if (el) el.textContent = APP_VERSION;
@@ -32,6 +35,58 @@ export function isNewer(current, latest) {
 export function dismissUpdateBanner() {
   const el = document.getElementById('update-banner');
   if (el) el.style.display = 'none';
+}
+
+// Fetches the latest release HTML and writes it to disk via the File System
+// Access API, then prompts to reload. Falls back to a direct download anchor
+// when the API is unavailable (e.g. opened via file:// on older Chromium).
+export async function selfUpdate() {
+  if (!_pendingHtmlUrl) return;
+
+  const btn = document.getElementById('update-self-btn');
+
+  if (!('showSaveFilePicker' in globalThis)) {
+    const a = document.createElement('a');
+    a.href = _pendingHtmlUrl;
+    a.download = 'time_tracker.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Downloading…'; }
+
+  try {
+    const resp = await fetch(_pendingHtmlUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+
+    const fh = await globalThis.showSaveFilePicker({
+      suggestedName: 'time_tracker.html',
+      types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }],
+    });
+    const writable = await fh.createWritable();
+    await writable.write(text);
+    await writable.close();
+
+    if (globalThis.confirm('time_tracker.html saved. Reload now to run the new version?')) {
+      globalThis.location.reload();
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+      return;
+    }
+    const bannerEl = document.getElementById('update-banner');
+    if (bannerEl) {
+      const span = document.createElement('span');
+      span.style.color = 'var(--red)';
+      span.textContent = ' (download failed)';
+      bannerEl.appendChild(span);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
 }
 
 // _versionOverride is used by unit tests to bypass the APP_VERSION module constant.
@@ -66,28 +121,22 @@ export async function checkForUpdates({ _versionOverride } = {}) {
     if (isPatch && getSetting('skipPatchUpdates')) return;
     if (isMinor && getSetting('skipMinorUpdates')) return;
 
-    const downloadUrl =
-      data.assets?.[0]?.browser_download_url ?? data.html_url;
-    showUpdateBanner(data.tag_name, downloadUrl);
+    const tag = data.tag_name;
+    const htmlUrl = `https://github.com/${REPO}/releases/download/${tag}/time_tracker.html`;
+    showUpdateBanner(tag, htmlUrl);
   } catch {
     // fail silently — offline or API unavailable
   }
 }
 
-function showUpdateBanner(version, downloadUrl) {
+function showUpdateBanner(version, htmlUrl) {
+  _pendingHtmlUrl = htmlUrl;
   const el = document.getElementById('update-banner');
   if (!el) return;
   el.innerHTML =
-    `Update available: <strong>${esc(version)}</strong> &mdash; ` +
-    `<a id="update-banner-link" target="_blank" rel="noopener noreferrer" ` +
-    `style="color:var(--blue);text-decoration:none">Download</a>` +
+    `Update available: <strong>${esc(version)}</strong> &larr; ${esc(APP_VERSION)} &mdash; ` +
+    `<button id="update-self-btn" class="update-banner-btn" onclick="selfUpdate()">Update</button>` +
     `<button class="update-banner-dismiss" onclick="dismissUpdateBanner()" ` +
     `title="Dismiss">&#10005;</button>`;
-  // Set href via DOM property after validating the URL is https — prevents
-  // javascript: URLs from a compromised API response reaching an href sink.
-  try {
-    const u = new URL(downloadUrl);
-    if (u.protocol === 'https:') el.querySelector('#update-banner-link').href = downloadUrl;
-  } catch { /* invalid URL — leave the link without an href */ }
   el.style.display = '';
 }

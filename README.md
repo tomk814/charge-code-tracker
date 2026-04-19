@@ -12,10 +12,10 @@ No install. No account. No internet required. Just open the file.
 
 ### For end users
 
-1. Download `index.html` from the [latest release](../../releases/latest) (or run `npm run build` and grab `dist/index.html`)
-2. Create a folder for it somewhere convenient, e.g. `Documents/time_tracker/`
-3. Double-click the file — it opens in your browser
-4. Optionally, pin the tab so it persists across browser sessions
+1. Download the zip from the [latest release](../../releases/latest)
+2. Unzip it wherever you want to keep the file — e.g. `Documents/time_tracker/`
+3. Double-click `time_tracker.html` — it opens in your browser
+4. Bookmark it or pin the tab so it's always one click away
 
 That's it. Your charge codes and daily data are saved automatically in your browser.
 
