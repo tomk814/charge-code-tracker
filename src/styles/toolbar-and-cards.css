@@ -60,20 +60,7 @@
     gap: 6px;
   }
 
-  .footer-links {
-    font-size: 10px;
-    font-family: var(--font-mono);
-    color: var(--fg-2);
-  }
-
-  .footer-links a {
-    color: var(--fg-2);
-    text-decoration: none;
-  }
-
-  .footer-links a:hover { color: var(--fg-1); }
-
-  .footer-version {
+.footer-version {
     font-size: 10px;
     font-family: var(--font-mono);
     color: var(--fg-2);
