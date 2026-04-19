@@ -5,7 +5,8 @@ import { showModal } from './modal-infra.js';
 import { getSetting, setSetting } from './persistence.js';
 
 export function openHelp() {
-  showModal(`<h2>Instructions</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Instructions</h2>
     <div class="help-section-title">Daily workflow</div>
     <ul class="help-list">
       <li>Morning: click <strong>Start</strong>, set an <strong>Active</strong> CC to accumulate time on that number too.</li>
@@ -54,11 +55,13 @@ export function openHelp() {
 
     <div class="modal-actions">
       <button class="tool-btn primary" onclick="closeModal()">Done</button>
-    </div>`, 'wide');
+    </div>`;
+  showModal(_t.content, 'wide');
 }
 
 export function openAbout() {
-  showModal(`<h2>About</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>About</h2>
     <div style="margin-bottom:16px">
       <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
       <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version ${import.meta.env.VITE_APP_VERSION ?? 'dev'}</div>
@@ -81,7 +84,8 @@ THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
     </details>
     <div class="modal-actions">
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function toggleUpdateCheck() {
@@ -129,7 +133,8 @@ export function openSettings() {
 
   const coldStorageRow = row('Offload older days to CSV and prune from storage', `<button class="tool-btn" onclick="openColdStorage()">Cold storage\u2026</button>`);
 
-  showModal(`<h2>Settings</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Settings</h2>
     ${subtitle('UI')}
     ${row('Increment buttons', `<button class="tool-btn" id="incr-toggle-btn" onclick="toggleIncrements()">${state.showIncrements ? 'Scroll to Increment' : 'Click to Increment'}</button>`)}
     ${row('Charge codes', `<button class="tool-btn" id="codes-toggle-btn" onclick="toggleCodes()">${state.showCodes !== false ? 'Hide Codes' : 'Show Codes'}</button>`)}
@@ -153,5 +158,6 @@ export function openSettings() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="openHelp()">Help</button>
       <button class="tool-btn primary" onclick="closeModal()">Close</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }

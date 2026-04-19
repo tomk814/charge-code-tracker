@@ -15,37 +15,65 @@ export function openEndOfDay() {
   const total = parseFloat(state.codes.filter(c => !c.archived).reduce((s,c) => s + (day.hours[c.id]||0), 0).toFixed(1));
 
   if (!activeCCs.length) {
-    showModal(`<h2>End of day</h2>
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>End of day</h2>
       <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">No hours logged for this day.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
     return;
   }
 
   const notes = day.notes || {};
-  const rows = activeCCs.map(cc => {
+
+  // Build rows as DOM nodes — user-supplied text (label, code, note) via textContent/value, never innerHTML.
+  const rowsFrag = document.createDocumentFragment();
+  activeCCs.forEach(cc => {
     const prog = (cc.program || '').trim();
     const progDisplay = (cc.programNickname || prog).trim();
     const label = progDisplay ? `${progDisplay}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const savedNote = notes[cc.id] || '';
-    return `<div style="padding:5px 0;border-bottom:1px solid var(--bd-2)">
-      <div style="display:flex;align-items:baseline;gap:10px">
-        <span style="flex:1;min-width:0">
-          <div style="font-size:12px;color:var(--fg-0)">${esc(label)}</div>
-          <div style="font-size:10px;color:var(--fg-2);font-family:var(--font-mono)">${esc(cc.code)}</div>
-        </span>
-        <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0">${(day.hours[cc.id]||0).toFixed(1)}</span>
-      </div>
-      <input class="eod-note" id="eod-note-${cc.id}" value="${esc(savedNote)}" placeholder="note (optional)" oninput="this.value=this.value.replace(/,/g,'')">
-    </div>`;
-  }).join('');
 
-  showModal(`<h2>End of day</h2>
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'padding:5px 0;border-bottom:1px solid var(--bd-2)';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:baseline;gap:10px';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.style.cssText = 'flex:1;min-width:0';
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'font-size:12px;color:var(--fg-0)';
+    labelDiv.textContent = label;
+    const codeDiv = document.createElement('div');
+    codeDiv.style.cssText = 'font-size:10px;color:var(--fg-2);font-family:var(--font-mono)';
+    codeDiv.textContent = cc.code;
+    labelSpan.append(labelDiv, codeDiv);
+
+    const hoursSpan = document.createElement('span');
+    hoursSpan.style.cssText = 'font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--fg-0);min-width:36px;text-align:right;flex-shrink:0';
+    hoursSpan.textContent = (day.hours[cc.id]||0).toFixed(1);
+
+    row.append(labelSpan, hoursSpan);
+
+    const input = document.createElement('input');
+    input.className = 'eod-note';
+    input.id = `eod-note-${cc.id}`;
+    input.value = savedNote;
+    input.placeholder = 'note (optional)';
+    input.addEventListener('input', function() { this.value = this.value.replace(/,/g, ''); });
+
+    wrapper.append(row, input);
+    rowsFrag.appendChild(wrapper);
+  });
+
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>End of day</h2>
     <p style="font-size:11px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">${dateStr}</p>
     <div style="display:flex;gap:10px;padding:2px 0 5px;font-size:10px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bd-1)">
       <span style="flex:1">Charge code</span>
       <span style="min-width:36px;text-align:right">Hours</span>
     </div>
-    ${rows}
+    <div id="_eod-rows"></div>
     <div style="display:flex;gap:10px;padding:6px 0 2px;font-size:12px;font-family:var(--font-mono)">
       <span style="flex:1;color:var(--fg-2)">Total</span>
       <span style="font-weight:600;color:var(--fg-0);min-width:36px;text-align:right">${total.toFixed(1)}</span>
@@ -54,7 +82,9 @@ export function openEndOfDay() {
       <button class="tool-btn" id="eod-copy-btn" onclick="copyEndOfDay()">Copy to clipboard</button>
       <button class="tool-btn" onclick="saveEodNote()">Save</button>
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
-    </div>`);
+    </div>`;
+  _t.content.querySelector('#_eod-rows').replaceWith(rowsFrag);
+  showModal(_t.content);
 }
 
 function collectEodNotes() {
@@ -116,13 +146,15 @@ export function confirmReset() {
   const viewDt = new Date(viewDate + 'T12:00:00');
   const label = viewDate===today() ? 'today'
     : viewDt.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
-  showModal(`<h2>Reset day</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Reset day</h2>
     <p style="font-size:14px;color:var(--color-text-secondary)">This clears all hours, history, and clock sessions for ${label}. Charge codes are kept.</p>
     <p class="reset-warn">This cannot be undone.</p>
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn" style="color:var(--color-text-danger);border-color:var(--color-border-danger)" onclick="doReset()">Reset</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function doReset() {

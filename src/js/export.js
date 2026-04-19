@@ -68,7 +68,8 @@ export async function openExportCSV(defaultStart, defaultEnd) {
     }
   } catch (e) { /* ignore */ }
 
-  showModal(`<h2>Export CSV</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Export CSV</h2>
     <div class="field">
       <label>Start date</label>
       <input type="date" id="csv-start" value="${defaultStart}">
@@ -82,7 +83,8 @@ export async function openExportCSV(defaultStart, defaultEnd) {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" id="csv-export-btn" onclick="doExportCSV()">Export</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 
   function validateRange() {
     const s = document.getElementById('csv-start').value;

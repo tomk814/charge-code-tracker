@@ -41,9 +41,13 @@ export function openSpread() {
   const unallocHrs = parseFloat((clockHrs - loggedHrs).toFixed(1));
   const candidateCCs = state.codes.filter(c => !c.archived && !c.hidden && (day.hours[c.id]||0) > 0);
 
-  const bail = (msg) => showModal(`<h2>Allocate</h2>
+  const bail = (msg) => {
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>Allocate</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:14px">${msg}</p>
-    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
+  };
 
   if (clockHrs === 0)            return bail('No clock time recorded for this day.');
   if (candidateCCs.length === 0) return bail('No charge code hours to spread from — log some time first.');
@@ -51,21 +55,46 @@ export function openSpread() {
 
   _spreadState = {candidateCCs, day, unallocTenths: Math.round(unallocHrs * 10)};
 
-  const rows = candidateCCs.map(cc => {
+  // Build rows as DOM nodes — user-supplied text (label) via textContent, never innerHTML.
+  const rowsFrag = document.createDocumentFragment();
+  candidateCCs.forEach(cc => {
     const prog = (cc.program || '').trim();
     const label = prog ? `${prog}: ${cc.nickname || cc.name}` : (cc.nickname || cc.name);
     const defaultIncluded = cc.program !== 'Pay Adjustment';
     const checked = cc.spreadExcluded !== undefined ? !cc.spreadExcluded : defaultIncluded;
-    return `<div style="display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)">
-      <input type="checkbox" id="sc-${cc.id}" ${checked?'checked':''} onchange="refreshSpreadPreview()" style="cursor:pointer;accent-color:var(--blue);flex-shrink:0;margin:0">
-      <span style="flex:1;font-size:12px;color:var(--fg-0)">${esc(label)}</span>
-      <span style="font-family:var(--font-mono);font-size:12px;color:var(--fg-2);min-width:32px;text-align:right">${(day.hours[cc.id]||0).toFixed(1)}</span>
-      <span style="font-family:var(--font-mono);font-size:12px;color:var(--blue);min-width:36px;text-align:right" id="sp-add-${cc.id}"></span>
-      <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;min-width:36px;text-align:right" id="sp-after-${cc.id}"></span>
-    </div>`;
-  }).join('');
 
-  showModal(`<h2>Allocate</h2>
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd-2)';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `sc-${cc.id}`;
+    checkbox.checked = checked;
+    checkbox.style.cssText = 'cursor:pointer;accent-color:var(--blue);flex-shrink:0;margin:0';
+    checkbox.addEventListener('change', () => refreshSpreadPreview());
+
+    const labelSpan = document.createElement('span');
+    labelSpan.style.cssText = 'flex:1;font-size:12px;color:var(--fg-0)';
+    labelSpan.textContent = label;
+
+    const hoursSpan = document.createElement('span');
+    hoursSpan.style.cssText = 'font-family:var(--font-mono);font-size:12px;color:var(--fg-2);min-width:32px;text-align:right';
+    hoursSpan.textContent = (day.hours[cc.id]||0).toFixed(1);
+
+    const addSpan = document.createElement('span');
+    addSpan.id = `sp-add-${cc.id}`;
+    addSpan.style.cssText = 'font-family:var(--font-mono);font-size:12px;color:var(--blue);min-width:36px;text-align:right';
+
+    const afterSpan = document.createElement('span');
+    afterSpan.id = `sp-after-${cc.id}`;
+    afterSpan.style.cssText = 'font-family:var(--font-mono);font-size:13px;font-weight:600;min-width:36px;text-align:right';
+
+    div.append(checkbox, labelSpan, hoursSpan, addSpan, afterSpan);
+    rowsFrag.appendChild(div);
+  });
+
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Allocate</h2>
     <div style="display:flex;gap:16px;font-size:12px;color:var(--fg-1);font-family:var(--font-mono);margin-bottom:12px">
       <span>Clock&nbsp;<strong style="color:var(--fg-0)">${clockHrs.toFixed(1)} hr</strong></span>
       <span>Logged&nbsp;<strong style="color:var(--fg-0)">${loggedHrs.toFixed(1)} hr</strong></span>
@@ -78,7 +107,7 @@ export function openSpread() {
       <span style="min-width:36px;text-align:right">Add</span>
       <span style="min-width:36px;text-align:right">After</span>
     </div>
-    ${rows}
+    <div id="_spread-rows"></div>
     <div style="display:flex;gap:10px;padding:6px 0 0;font-size:12px;font-family:var(--font-mono)">
       <span style="width:13px;flex-shrink:0"></span>
       <span style="flex:1;color:var(--fg-2)">New total</span>
@@ -88,7 +117,9 @@ export function openSpread() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" id="sp-apply-btn" onclick="applySpread()">Apply</button>
-    </div>`);
+    </div>`;
+  _t.content.querySelector('#_spread-rows').replaceWith(rowsFrag);
+  showModal(_t.content);
 
   refreshSpreadPreview();
 }
