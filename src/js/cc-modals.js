@@ -2,7 +2,7 @@
 
 import { state } from './state.js';
 import { save } from './persistence.js';
-import { esc, uid } from './utilities.js';
+import { uid } from './utilities.js';
 import { showModal, closeModal } from './modal-infra.js';
 import { render } from './pay-period.js';
 import { getBlocks, blocksToFlat } from './cc-rendering.js';
@@ -326,18 +326,27 @@ export function openEditCC(id) {
   if (!cc) return;
   const _t = document.createElement('template');
   _t.innerHTML = `<h2>Edit charge code</h2>
-    <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" placeholder="e.g. 1234-001" autocomplete="off"></div>
-    <div class="field"><label>Program <span style="color:var(--red)">*</span></label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
-    <div class="field"><label>Program Nickname (Optional)</label><input id="e-programNickname" value="${esc(cc.programNickname||'')}" autocomplete="off"></div>
-    <div class="field"><label>Work Package (Optional)</label><input id="e-wp" value="${esc(cc.wp||'')}" placeholder="e.g. WP-001" autocomplete="off"></div>
-    <div class="field"><label>WP Nickname (Optional)</label><input id="e-wpNickname" value="${esc(cc.wpNickname||'')}" autocomplete="off"></div>
-    <div class="field"><label>Activity <span style="color:var(--red)">*</span></label><input id="e-name" value="${esc(cc.name)}" autocomplete="off"></div>
-    <div class="field"><label>Activity Nickname (Optional)</label><input id="e-nickname" value="${esc(cc.nickname||'')}" autocomplete="off"></div>
+    <div class="field"><label>Code / number</label><input id="e-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
+    <div class="field"><label>Program <span style="color:var(--red)">*</span></label><input id="e-program" placeholder="e.g. Program A" autocomplete="off"></div>
+    <div class="field"><label>Program Nickname (Optional)</label><input id="e-programNickname" autocomplete="off"></div>
+    <div class="field"><label>Work Package (Optional)</label><input id="e-wp" placeholder="e.g. WP-001" autocomplete="off"></div>
+    <div class="field"><label>WP Nickname (Optional)</label><input id="e-wpNickname" autocomplete="off"></div>
+    <div class="field"><label>Activity <span style="color:var(--red)">*</span></label><input id="e-name" autocomplete="off"></div>
+    <div class="field"><label>Activity Nickname (Optional)</label><input id="e-nickname" autocomplete="off"></div>
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
-      <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
+      <button class="tool-btn primary" id="_edit-save-btn">Save</button>
     </div>`;
-  showModal(_t.content);
+  const frag = _t.content;
+  frag.querySelector('#e-code').value        = cc.code          || '';
+  frag.querySelector('#e-program').value     = cc.program       || '';
+  frag.querySelector('#e-programNickname').value = cc.programNickname || '';
+  frag.querySelector('#e-wp').value          = cc.wp            || '';
+  frag.querySelector('#e-wpNickname').value  = cc.wpNickname    || '';
+  frag.querySelector('#e-name').value        = cc.name          || '';
+  frag.querySelector('#e-nickname').value    = cc.nickname      || '';
+  frag.querySelector('#_edit-save-btn').addEventListener('click', () => submitEditCC(id));
+  showModal(frag);
   setTimeout(()=>document.getElementById('e-code')?.focus(),50);
 }
 
@@ -368,21 +377,24 @@ export function confirmDeleteCC(id) {
   if (isProtectedCC(id)) return;
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
-  const label = esc(cc.nickname || cc.name);
   const isArchived = !!cc.archived;
   const archiveTip = isArchived
     ? ''
     : `<p style="font-size:13px;color:var(--fg-2);margin:0 0 16px">Did you mean to <strong>Archive</strong> it instead? Archived codes are hidden from the main view but preserve their history.</p>`;
   const _t = document.createElement('template');
   _t.innerHTML = `<h2 style="color:var(--red)">Delete charge code?</h2>
-    <p style="margin:0 0 8px">This will permanently delete <strong>${label}</strong> and remove it from all logged days. This cannot be undone.</p>
+    <p style="margin:0 0 8px">This will permanently delete <strong id="_del-label"></strong> and remove it from all logged days. This cannot be undone.</p>
     ${archiveTip}
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
-      ${isArchived ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${id}')">Archive instead</button>`}
-      <button class="tool-btn" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="deleteCC('${id}')">Delete forever</button>
+      ${isArchived ? '' : `<button class="tool-btn" id="_archive-btn">Archive instead</button>`}
+      <button class="tool-btn" id="_delete-btn" style="background:var(--red);color:#fff;border-color:var(--red)">Delete forever</button>
     </div>`;
-  showModal(_t.content);
+  const frag = _t.content;
+  frag.querySelector('#_del-label').textContent = cc.nickname || cc.name;
+  if (!isArchived) frag.querySelector('#_archive-btn').addEventListener('click', () => toggleArchiveCC(id));
+  frag.querySelector('#_delete-btn').addEventListener('click', () => deleteCC(id));
+  showModal(frag);
 }
 
 export function deleteCC(id) {
