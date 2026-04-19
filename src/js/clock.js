@@ -44,14 +44,14 @@ export function handleMidnightRollover(prevDate, newDate) {
   const ccMsg = (openSession && ccLabel)
     ? `<p style="margin:6px 0;font-size:12px">Active charge code <strong>${ccLabel}</strong> continues on the new day.</p>`
     : '';
-  showModal(
-    `<h2>&#9200; Day rolled over at midnight</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>&#9200; Day rolled over at midnight</h2>
     <p style="margin:4px 0 8px;font-size:12px;color:var(--fg-2)">${prevDate} &rarr; ${newDate}</p>
     ${sessionMsg}${ccMsg}
     <div class="modal-actions">
       <button class="tool-btn primary" onclick="closeModal()">OK</button>
-    </div>`
-  );
+    </div>`;
+  showModal(_t.content);
 }
 
 // ── Wall clock ───────────────────────────────────────────────────────────────
@@ -169,7 +169,8 @@ function renderClockSessionsModal() {
       }).join('')
     : '<p style="font-size:12px;color:var(--fg-2);padding:6px 0">No sessions yet.</p>';
   const displayHrs = (Math.floor(clockTotalHours()*10)/10).toFixed(1);
-  showModal(`<h2>Clock sessions</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Clock sessions</h2>
     <p style="font-size:10px;color:var(--fg-2);margin-bottom:8px;font-family:var(--font-mono)">24h format &mdash; HH:MM &nbsp;|&nbsp; scroll or shift+scroll to adjust &middot; leave end blank for running</p>
     <div id="clock-session-list">${rows}</div>
     <button class="tool-btn" style="margin-top:8px" onclick="addClockSession()">+ Add session</button>
@@ -180,7 +181,8 @@ function renderClockSessionsModal() {
       <button class="tool-btn" onclick="resetClockSession()">Reset</button>
       <button class="tool-btn" onclick="cancelClockSession()">Cancel</button>
       <button class="tool-btn primary" onclick="closeModal();renderClock()">Done</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function adjustClockSessionTime(i, field, deltaMinutes) {

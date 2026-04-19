@@ -14,7 +14,8 @@ export function openHolidays() {
     return `${parseInt(m)}/${parseInt(d)}/${y}`;
   }).join('\n');
 
-  showModal(`<h2>Holidays</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Holidays</h2>
     <p style="font-size:12px;color:var(--fg-2);margin-bottom:10px">
       One date per line (M/D/YYYY). Holiday days auto-fill 8 hours of Holiday time.
     </p>
@@ -25,7 +26,8 @@ export function openHolidays() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="saveHolidays()">Save</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
   setTimeout(() => document.getElementById('hol-textarea')?.focus(), 50);
 }
 

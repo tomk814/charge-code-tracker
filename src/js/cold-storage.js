@@ -32,7 +32,8 @@ export async function openColdStorage() {
     return ymdLocal(d);
   })();
 
-  showModal(`<h2>Move to Cold Storage</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Move to Cold Storage</h2>
     <div class="field">
       <label>Up to and including</label>
       <input type="date" id="cold-cutoff" max="${yest}" oninput="updateColdStoragePreview()">
@@ -42,7 +43,8 @@ export async function openColdStorage() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" id="cold-proceed-btn" disabled onclick="prepColdStorageConfirm()">Proceed</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function updateColdStoragePreview() {
@@ -99,7 +101,8 @@ export function prepColdStorageConfirm() {
   const last       = matching[matching.length - 1];
   const localCount = Object.keys(state.days).filter(d => d <= cutoff).length;
 
-  showModal(`<h2>Move to Cold Storage</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Move to Cold Storage</h2>
     <p style="font-size:13px;color:var(--fg-1);margin-bottom:8px">The following will be permanently deleted:</p>
     <ul style="font-size:13px;color:var(--fg-0);margin:0 0 10px 18px;line-height:1.8">
       <li>${n} day entr${n===1?'y':'ies'} (${esc(first)} through ${esc(last)}) from the backup archive file</li>
@@ -110,7 +113,8 @@ export function prepColdStorageConfirm() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn" style="color:var(--red);border-color:var(--bd-red)" onclick="doColdStorage('${cutoff}')">Save CSV &amp; delete</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export async function doColdStorage(cutoffISO) {
@@ -132,9 +136,11 @@ export async function doColdStorage(cutoffISO) {
   const allMerged = archive ? { ...archive.days, ...state.days } : { ...state.days };
   const csv       = buildRangeCSV('0000-00-00', cutoffISO, allMerged, state.codes);
   if (!csv) {
-    showModal(`<h2>Nothing to archive</h2>
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>Nothing to archive</h2>
       <p>No entries found before that date.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
     return;
   }
 
@@ -161,9 +167,11 @@ export async function doColdStorage(cutoffISO) {
     }
   } catch(e) {
     if (e.name === 'AbortError') return; // user cancelled — no deletions
-    showModal(`<h2>Error</h2>
+    const _t = document.createElement('template');
+    _t.innerHTML = `<h2>Error</h2>
       <p>CSV save failed. No data was deleted.</p>
-      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+      <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+    showModal(_t.content);
     return;
   }
 
@@ -178,9 +186,11 @@ export async function doColdStorage(cutoffISO) {
       await writable.write(JSON.stringify(archive, null, 2));
       await writable.close();
     } catch(e) {
-      showModal(`<h2>Error</h2>
+      const _t = document.createElement('template');
+      _t.innerHTML = `<h2>Error</h2>
         <p>CSV was saved but the archive could not be updated. Your archive file may be in an inconsistent state — re-link it or manually remove the archived entries.</p>
-        <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+        <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+      showModal(_t.content);
       return;
     }
   }
@@ -206,8 +216,10 @@ export async function doColdStorage(cutoffISO) {
   const orphanNotice = hasOrphans
     ? `<p style="font-size:12px;color:var(--yellow);margin-top:8px">Note: some entries referenced deleted charge codes and were not included in the CSV.</p>`
     : '';
-  showModal(`<h2>Cold storage complete</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Cold storage complete</h2>
     <p>${n} day${n===1?'':'s'} archived to CSV and removed from ${archiveNote}.</p>
     ${orphanNotice}
-    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`);
+    <div class="modal-actions"><button class="tool-btn primary" onclick="closeModal()">OK</button></div>`;
+  showModal(_t.content);
 }

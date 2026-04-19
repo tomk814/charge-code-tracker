@@ -15,7 +15,8 @@ export function isProtectedCC(id) {
 }
 
 export function openAddCC() {
-  showModal(`<h2>Add charge code</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Add charge code</h2>
     <div class="field"><label>Paste from Dayforce</label><input id="m-import" placeholder="Proj:1-1234.00 | Program | Work Package | Activity" autocomplete="off" oninput="parseDayforce()"></div>
     <hr style="border:none;border-top:1px solid var(--bd-2);margin:2px 0 12px">
     <div class="field"><label>Code / number</label><input id="m-code" placeholder="e.g. 1234-001" autocomplete="off"></div>
@@ -28,7 +29,8 @@ export function openAddCC() {
     <div class="modal-actions">
       <button class="tool-btn" onclick="closeModal()">Cancel</button>
       <button class="tool-btn primary" onclick="submitAddCC()">Add</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
   setTimeout(()=>document.getElementById('m-import')?.focus(),50);
 }
 
@@ -205,17 +207,20 @@ export function openManage() {
     ? '<p style="font-size:13px;color:var(--fg-2)">No charge codes yet.</p>'
     : '';
 
-  showModal(`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  const _t = document.createElement('template');
+  _t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <h2 style="margin:0">Manage charge codes</h2>
     <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-2);padding:2px 4px" title="Close">&times;</button>
   </div>${emptyState}${activeSection}${hiddenSection}${archivedSection}
-    <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`);
+    <div class="modal-actions"><button class="tool-btn" onclick="closeModal()">Done</button></div>`;
+  showModal(_t.content);
 }
 
 export function openEditCC(id) {
   const cc = state.codes.find(c => c.id === id);
   if (!cc) return;
-  showModal(`<h2>Edit charge code</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2>Edit charge code</h2>
     <div class="field"><label>Code / number</label><input id="e-code" value="${esc(cc.code)}" placeholder="e.g. 1234-001" autocomplete="off"></div>
     <div class="field"><label>Program <span style="color:var(--red)">*</span></label><input id="e-program" value="${esc(cc.program||'')}" placeholder="e.g. Program A" autocomplete="off"></div>
     <div class="field"><label>Program Nickname (Optional)</label><input id="e-programNickname" value="${esc(cc.programNickname||'')}" autocomplete="off"></div>
@@ -226,7 +231,8 @@ export function openEditCC(id) {
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       <button class="tool-btn primary" onclick="submitEditCC('${id}')">Save</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
   setTimeout(()=>document.getElementById('e-code')?.focus(),50);
 }
 
@@ -262,14 +268,16 @@ export function confirmDeleteCC(id) {
   const archiveTip = isArchived
     ? ''
     : `<p style="font-size:13px;color:var(--fg-2);margin:0 0 16px">Did you mean to <strong>Archive</strong> it instead? Archived codes are hidden from the main view but preserve their history.</p>`;
-  showModal(`<h2 style="color:var(--red)">Delete charge code?</h2>
+  const _t = document.createElement('template');
+  _t.innerHTML = `<h2 style="color:var(--red)">Delete charge code?</h2>
     <p style="margin:0 0 8px">This will permanently delete <strong>${label}</strong> and remove it from all logged days. This cannot be undone.</p>
     ${archiveTip}
     <div class="modal-actions">
       <button class="tool-btn" onclick="openManage()">Cancel</button>
       ${isArchived ? '' : `<button class="tool-btn" onclick="toggleArchiveCC('${id}')">Archive instead</button>`}
       <button class="tool-btn" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="deleteCC('${id}')">Delete forever</button>
-    </div>`);
+    </div>`;
+  showModal(_t.content);
 }
 
 export function deleteCC(id) {
