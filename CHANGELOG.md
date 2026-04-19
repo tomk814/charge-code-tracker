@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/tomk814/charge-code-tracker/compare/v1.2.0...v1.3.0) (2026-04-19)
+
+
+### Features
+
+* add standalone file to releases and add labels ([#61](https://github.com/tomk814/charge-code-tracker/issues/61)) ([4ac4b4f](https://github.com/tomk814/charge-code-tracker/commit/4ac4b4f69d55e7d9fc8b111772f8ecb74fda9e76))
+
 ## [1.2.0](https://github.com/tomk814/charge-code-tracker/compare/v1.1.0...v1.2.0) (2026-04-19)
 
 
