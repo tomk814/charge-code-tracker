@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/tomk814/charge-code-tracker/compare/v1.1.0...v1.2.0) (2026-04-19)
+
+
+### Features
+
+* Add CodeQL analysis workflow and security documentation ([#53](https://github.com/tomk814/charge-code-tracker/issues/53)) ([5120dc8](https://github.com/tomk814/charge-code-tracker/commit/5120dc88ead268b0b8027df25e6ca93162c1921a))
+* Add in-app self-update feature via File System Access API ([#57](https://github.com/tomk814/charge-code-tracker/issues/57)) ([ced3749](https://github.com/tomk814/charge-code-tracker/commit/ced37497454f60693669ad2a5ee6c97cfe79d6b5))
+
+
+### Bug Fixes
+
+* CodeQL badge links and findings ([#56](https://github.com/tomk814/charge-code-tracker/issues/56)) ([581958f](https://github.com/tomk814/charge-code-tracker/commit/581958f41a9c17beca7783663447b85d4782934f))
+* Correct CodeQL badge link in README.md ([581958f](https://github.com/tomk814/charge-code-tracker/commit/581958f41a9c17beca7783663447b85d4782934f))
+* Update CodeQL badge link in README.md ([581958f](https://github.com/tomk814/charge-code-tracker/commit/581958f41a9c17beca7783663447b85d4782934f))
+
 ## [1.1.0](https://github.com/tomk814/charge-code-tracker/compare/v1.0.0...v1.1.0) (2026-04-19)
 
 
