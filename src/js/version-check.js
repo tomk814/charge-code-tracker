@@ -37,56 +37,14 @@ export function dismissUpdateBanner() {
   if (el) el.style.display = 'none';
 }
 
-// Fetches the latest release HTML and writes it to disk via the File System
-// Access API, then prompts to reload. Falls back to a direct download anchor
-// when the API is unavailable (e.g. opened via file:// on older Chromium).
-export async function selfUpdate() {
+export function selfUpdate() {
   if (!_pendingHtmlUrl) return;
-
-  const btn = document.getElementById('update-self-btn');
-
-  if (!('showSaveFilePicker' in globalThis)) {
-    const a = document.createElement('a');
-    a.href = _pendingHtmlUrl;
-    a.download = 'time_tracker.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = 'Downloading…'; }
-
-  try {
-    const resp = await fetch(_pendingHtmlUrl);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const text = await resp.text();
-
-    const fh = await globalThis.showSaveFilePicker({
-      suggestedName: 'time_tracker.html',
-      types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }],
-    });
-    const writable = await fh.createWritable();
-    await writable.write(text);
-    await writable.close();
-
-    if (globalThis.confirm('time_tracker.html saved. Reload now to run the new version?')) {
-      globalThis.location.reload();
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
-      return;
-    }
-    const bannerEl = document.getElementById('update-banner');
-    if (bannerEl) {
-      const span = document.createElement('span');
-      span.style.color = 'var(--red)';
-      span.textContent = ' (download failed)';
-      bannerEl.appendChild(span);
-    }
-    if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
-  }
+  const a = document.createElement('a');
+  a.href = _pendingHtmlUrl;
+  a.download = 'time_tracker.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // _versionOverride is used by unit tests to bypass the APP_VERSION module constant.
