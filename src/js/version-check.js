@@ -79,9 +79,15 @@ function showUpdateBanner(version, downloadUrl) {
   if (!el) return;
   el.innerHTML =
     `Update available: <strong>${esc(version)}</strong> &mdash; ` +
-    `<a href="${esc(downloadUrl)}" target="_blank" rel="noopener noreferrer" ` +
+    `<a id="update-banner-link" target="_blank" rel="noopener noreferrer" ` +
     `style="color:var(--blue);text-decoration:none">Download</a>` +
     `<button class="update-banner-dismiss" onclick="dismissUpdateBanner()" ` +
     `title="Dismiss">&#10005;</button>`;
+  // Set href via DOM property after validating the URL is https — prevents
+  // javascript: URLs from a compromised API response reaching an href sink.
+  try {
+    const u = new URL(downloadUrl);
+    if (u.protocol === 'https:') el.querySelector('#update-banner-link').href = downloadUrl;
+  } catch { /* invalid URL — leave the link without an href */ }
   el.style.display = '';
 }

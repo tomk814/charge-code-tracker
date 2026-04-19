@@ -37,8 +37,15 @@ function mockFetch(tagName, { ok = true, assetUrl = null } = {}) {
 }
 
 // Track banner mutations via a fake element.
+// Includes a mock querySelector so tests can inspect the link href set via DOM property.
 function makeBannerEl() {
-  return { innerHTML: '', style: { display: 'none' } };
+  const link = { href: '' };
+  return {
+    innerHTML: '',
+    style: { display: 'none' },
+    querySelector: (sel) => sel === '#update-banner-link' ? link : null,
+    _link: link,
+  };
 }
 
 beforeEach(() => {
@@ -204,7 +211,7 @@ describe('checkForUpdates()', () => {
     const el = makeBannerEl();
     vi.spyOn(document, 'getElementById').mockReturnValue(el);
     await checkForUpdates({ _versionOverride: 'v1.0.0' });
-    expect(el.innerHTML).toContain('time_tracker.zip');
+    expect(el._link.href).toContain('time_tracker.zip');
   });
 
   it('falls back to html_url when there are no release assets', async () => {
@@ -212,7 +219,7 @@ describe('checkForUpdates()', () => {
     const el = makeBannerEl();
     vi.spyOn(document, 'getElementById').mockReturnValue(el);
     await checkForUpdates({ _versionOverride: 'v1.0.0' });
-    expect(el.innerHTML).toContain('/releases/tag/v1.1.0');
+    expect(el._link.href).toContain('/releases/tag/v1.1.0');
   });
 
   // ── Skip settings ──────────────────────────────────────────────────────────
