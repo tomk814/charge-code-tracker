@@ -46,8 +46,10 @@ jobs:
           path: time_tracker.zip
           archive: false
 
-      - name: Attach zip to GitHub Release
+      - name: Attach assets to GitHub Release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" time_tracker.zip --clobber
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" "time_tracker.zip#Starter Kit" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" "dist/time_tracker.html#Standalone File" --clobber
