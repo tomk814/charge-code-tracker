@@ -13,13 +13,15 @@ export function initVersionFooter() {
   if (el) el.textContent = APP_VERSION;
 }
 
-function parseVersion(v) {
+// Exported for unit tests only.
+export function parseVersion(v) {
   const m = String(v).replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)/);
   if (!m) return null;
   return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
 }
 
-function isNewer(current, latest) {
+// Exported for unit tests only.
+export function isNewer(current, latest) {
   for (let i = 0; i < 3; i++) {
     if (latest[i] > current[i]) return true;
     if (latest[i] < current[i]) return false;
@@ -32,11 +34,13 @@ export function dismissUpdateBanner() {
   if (el) el.style.display = 'none';
 }
 
-export async function checkForUpdates() {
+// _versionOverride is used by unit tests to bypass the APP_VERSION module constant.
+export async function checkForUpdates({ _versionOverride } = {}) {
   if (getSetting('disableUpdateCheck')) return;
-  if (APP_VERSION === 'dev') return;
+  const version = _versionOverride ?? APP_VERSION;
+  if (version === 'dev') return;
 
-  const current = parseVersion(APP_VERSION);
+  const current = parseVersion(version);
   if (!current) return;
 
   try {
