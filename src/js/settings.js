@@ -64,7 +64,14 @@ export function openAbout() {
   _t.innerHTML = `<h2>About</h2>
     <div style="margin-bottom:16px">
       <div style="font-size:15px;font-weight:600;color:var(--fg-0);margin-bottom:2px">Time Tracker</div>
-      <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:12px">Version ${import.meta.env.VITE_APP_VERSION ?? 'dev'}</div>
+      <div style="font-size:12px;color:var(--fg-2);font-family:var(--font-mono);margin-bottom:8px">Version ${import.meta.env.VITE_APP_VERSION ?? 'dev'}</div>
+      <div style="font-size:12px;color:var(--fg-2);margin-bottom:12px">
+        <a href="https://github.com/tomk814/charge-code-tracker/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">Report a bug</a>
+        &middot;
+        <a href="https://github.com/tomk814/charge-code-tracker/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">Request a feature</a>
+        &middot;
+        <a href="https://github.com/tomk814/charge-code-tracker" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">GitHub</a>
+      </div>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:8px">A lightweight time tracker for engineers who charge against multiple codes throughout the day. No login, no server - your data stays on your machine.</p>
       <p style="font-size:13px;color:var(--fg-1);line-height:1.5;margin-bottom:16px">Built by AI, Jockeyed by Tom Knight.</p>
       <!-- If this saves you a few minutes every day, a coffee is a great way to say thanks! -->

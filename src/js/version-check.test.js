@@ -291,9 +291,6 @@ describe('dismissUpdateBanner()', () => {
 // ── selfUpdate() ──────────────────────────────────────────────────────────────
 
 describe('selfUpdate()', () => {
-  // Each test that needs a pending URL must first call checkForUpdates() to
-  // populate _pendingHtmlUrl via showUpdateBanner().
-
   async function setPendingUrl() {
     mockFetch('v1.1.0');
     const bannerEl = makeBannerEl();
@@ -302,126 +299,22 @@ describe('selfUpdate()', () => {
     vi.restoreAllMocks();
   }
 
-  it('falls back to a download anchor when File System Access API is unavailable', async () => {
+  it('creates a download anchor and clicks it', async () => {
     await setPendingUrl();
-
-    // Ensure showSaveFilePicker is absent from globalThis
-    delete global.showSaveFilePicker;
 
     const createdEl = { href: '', download: '', click: vi.fn() };
     vi.spyOn(document, 'createElement').mockReturnValue(createdEl);
-    vi.spyOn(document, 'getElementById').mockReturnValue(null);
-    // Stub body methods that selfUpdate calls
     const origBody = document.body;
     document.body = { appendChild: vi.fn(), removeChild: vi.fn() };
 
-    await selfUpdate();
+    selfUpdate();
 
     expect(createdEl.download).toBe('time_tracker.html');
     expect(createdEl.href).toContain('time_tracker.html');
     expect(createdEl.click).toHaveBeenCalled();
+    expect(document.body.appendChild).toHaveBeenCalledWith(createdEl);
+    expect(document.body.removeChild).toHaveBeenCalledWith(createdEl);
 
     document.body = origBody;
-  });
-
-  it('restores the Update button when the user cancels the file picker', async () => {
-    await setPendingUrl();
-
-    const btn = { disabled: false, textContent: 'Update' };
-    vi.spyOn(document, 'getElementById').mockImplementation(id =>
-      id === 'update-self-btn' ? btn : null,
-    );
-
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, text: () => Promise.resolve('<html></html>') }),
-    );
-
-    const abortErr = Object.assign(new Error('Aborted'), { name: 'AbortError' });
-    global.showSaveFilePicker = vi.fn(() => Promise.reject(abortErr));
-
-    await selfUpdate();
-
-    expect(btn.disabled).toBe(false);
-    expect(btn.textContent).toBe('Update');
-
-    delete global.showSaveFilePicker;
-    delete global.fetch;
-  });
-
-  it('shows an error in the banner when the fetch fails', async () => {
-    await setPendingUrl();
-
-    const btn = { disabled: false, textContent: 'Update' };
-    const bannerEl = { ...makeBannerEl() };
-    vi.spyOn(document, 'getElementById').mockImplementation(id => {
-      if (id === 'update-self-btn') return btn;
-      if (id === 'update-banner') return bannerEl;
-      return null;
-    });
-
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: false, status: 404 }),
-    );
-    global.showSaveFilePicker = vi.fn();
-
-    await selfUpdate();
-
-    expect(bannerEl.appendChild).toHaveBeenCalled();
-    expect(btn.disabled).toBe(false);
-
-    delete global.showSaveFilePicker;
-    delete global.fetch;
-  });
-
-  it('writes the file and prompts to reload on success', async () => {
-    await setPendingUrl();
-
-    const btn = { disabled: false, textContent: 'Update' };
-    vi.spyOn(document, 'getElementById').mockReturnValue(btn);
-
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, text: () => Promise.resolve('<html>new</html>') }),
-    );
-
-    const writable = { write: vi.fn(), close: vi.fn() };
-    const fileHandle = { createWritable: vi.fn(() => Promise.resolve(writable)) };
-    global.showSaveFilePicker = vi.fn(() => Promise.resolve(fileHandle));
-    global.confirm = vi.fn(() => false); // user declines reload
-
-    await selfUpdate();
-
-    expect(writable.write).toHaveBeenCalledWith('<html>new</html>');
-    expect(writable.close).toHaveBeenCalled();
-    expect(global.confirm).toHaveBeenCalled();
-
-    delete global.showSaveFilePicker;
-    delete global.confirm;
-    delete global.fetch;
-  });
-
-  it('reloads the page when the user confirms', async () => {
-    await setPendingUrl();
-
-    vi.spyOn(document, 'getElementById').mockReturnValue(null);
-
-    global.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, text: () => Promise.resolve('<html>new</html>') }),
-    );
-
-    const writable = { write: vi.fn(), close: vi.fn() };
-    const fileHandle = { createWritable: vi.fn(() => Promise.resolve(writable)) };
-    global.showSaveFilePicker = vi.fn(() => Promise.resolve(fileHandle));
-    global.confirm = vi.fn(() => true);
-    const reloadSpy = vi.fn();
-    global.location = { reload: reloadSpy };
-
-    await selfUpdate();
-
-    expect(reloadSpy).toHaveBeenCalled();
-
-    delete global.showSaveFilePicker;
-    delete global.confirm;
-    delete global.location;
-    delete global.fetch;
   });
 });

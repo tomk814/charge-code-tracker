@@ -12,8 +12,10 @@ No install. No account. No internet required. Just open the file.
 
 ### For end users
 
-1. Download the zip from the [latest release](../../releases/latest)
-2. Unzip it wherever you want to keep the file — e.g. `Documents/time_tracker/`
+1. Go to the [latest release](../../releases/latest) and download one of:
+   - **Starter Kit** (zip) — recommended; includes the suggested folder layout with placeholder `backup.json` and `init.json` files
+   - **Standalone File** — just the HTML, if you already have a folder set up
+2. If you downloaded the zip, unzip it wherever you want to keep the file — e.g. `Documents/time_tracker/`
 3. Double-click `time_tracker.html` — it opens in your browser
 4. Bookmark it or pin the tab so it's always one click away
 
@@ -26,7 +28,7 @@ git clone https://github.com/tomk814/charge-code-tracker.git
 cd charge-code-tracker
 npm install
 npm run dev      # local dev server with hot reload
-npm run build    # produces dist/index.html (single self-contained file)
+npm run build    # produces dist/time_tracker.html (single self-contained file)
 npm test         # run the Vitest unit test suite (run before pushing)
 ```
 
@@ -159,7 +161,7 @@ There are two ways to use the tracker, depending on how much friction you're wil
 ## Technical notes
 
 - Source is modular ES modules under `src/`; `npm run build` produces a single self-contained HTML file via Vite + vite-plugin-singlefile.
-- The build output (`dist/index.html`) has no external dependencies, no CDN imports, works fully offline, and is suitable for `file://` use.
+- The build output (`dist/time_tracker.html`) has no external dependencies, no CDN imports, works fully offline, and is suitable for `file://` use.
 - localStorage key: `cc_tracker_v3`
 - Data is retained for the last 35 days (5 weeks). Older days are pruned automatically.
 - Migrates automatically from earlier versions (`cc_tracker_v2`).
