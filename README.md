@@ -1,5 +1,7 @@
 # Time Tracker
 
+[![CodeQL](https://github.com/tomk814/charge-code-tracker/actions/workflows/codeql.yml/badge.svg)](https://github.com/tomk814/charge-code-tracker/actions/workflows/codeql.yml)
+
 A lightweight, single-file HTML time tracker for engineers who charge time against multiple charge codes throughout the day, then transcribe totals into a formal system (e.g. Deltek Costpoint) at end of day.
 
 No install. No account. No internet required. Just open the file.
