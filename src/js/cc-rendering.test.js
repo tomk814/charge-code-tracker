@@ -122,6 +122,61 @@ describe('getBlocks()', () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0].type).toBe('program');
   });
+
+  it('uses programNickname as the block name when present', () => {
+    replaceState({
+      codes: [
+        grouped('a1', 'Program Alpha LRD', { programNickname: 'Alpha' }),
+        grouped('b2', 'Program Alpha LRD', { programNickname: 'Alpha' }),
+      ],
+      days: {},
+      holidays: [],
+    });
+    const blocks = getBlocks();
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].name).toBe('Alpha');
+    expect(blocks[0].codes).toHaveLength(2);
+  });
+
+  it('falls back to program name when programNickname is absent', () => {
+    replaceState({
+      codes: [grouped('a1', 'Prog A'), grouped('b2', 'Prog A')],
+      days: {},
+      holidays: [],
+    });
+    const blocks = getBlocks();
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].name).toBe('Prog A');
+  });
+
+  it('groups CCs with same programNickname across different program names', () => {
+    replaceState({
+      codes: [
+        grouped('a1', 'Prog A Long', { programNickname: 'Shared' }),
+        grouped('b2', 'Prog A Long', { programNickname: 'Shared' }),
+      ],
+      days: {},
+      holidays: [],
+    });
+    const blocks = getBlocks();
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].name).toBe('Shared');
+    expect(blocks[0].codes).toHaveLength(2);
+  });
+
+  it('treats empty programNickname the same as absent', () => {
+    replaceState({
+      codes: [
+        grouped('a1', 'Prog A', { programNickname: '' }),
+        grouped('b2', 'Prog A', { programNickname: '' }),
+      ],
+      days: {},
+      holidays: [],
+    });
+    const blocks = getBlocks();
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].name).toBe('Prog A');
+  });
 });
 
 // ── blocksToFlat() ────────────────────────────────────────────────────────────
